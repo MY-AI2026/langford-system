@@ -266,32 +266,36 @@ export async function runQuery(
     cache: "no-store",
   });
 
-  if (!res.ok) {
-    const errorText = await res.text().catch(() => "");
-    console.error(`[REST] runQuery failed:`, res.status, errorText);
-    // Check if it's an index error
-    if (errorText.includes("index") || errorText.includes("FAILED_PRECONDITION")) {
-      console.error("[REST] Missing Firestore index. Please check Firestore console for index creation link.");
-    }
-    return [];
-  }
-
   try {
+    if (!res.ok) {
+      const errorText = await res.text().catch(() => "");
+      console.error(`[REST] runQuery failed:`, res.status, errorText);
+      // Check if it's an index error
+      if (errorText.includes("index") || errorText.includes("FAILED_PRECONDITION")) {
+        console.error("[REST] Missing Firestore index. Please check Firestore console for index creation link.");
+      }
+      return [];
+    }
+
     const results = await res.json();
+    if (!results) {
+      console.warn("[REST] runQuery: no results returned");
+      return [];
+    }
     if (!Array.isArray(results)) {
-      console.error("[REST] runQuery: unexpected response format");
+      console.error("[REST] runQuery: unexpected response format", typeof results);
       return [];
     }
     return results
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      .filter((r: any) => r.document)
+      .filter((r: any) => r?.document)
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       .map((r: any) => ({
         id: r.document.name.split("/").pop(),
         ...parseFields(r.document.fields || {}),
       }));
   } catch (error) {
-    console.error("[REST] runQuery: error parsing results", error);
+    console.error("[REST] runQuery: critical error", error);
     return [];
   }
 }
@@ -326,6 +330,8 @@ export function createSubscription<T>(
       if (active) callback(data);
     } catch (e) {
       console.error("[REST subscription] poll error:", e);
+      // Return empty array on error to prevent crashes
+      if (active) callback([] as T[]);
     }
   }
 

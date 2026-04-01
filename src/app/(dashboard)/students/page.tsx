@@ -68,17 +68,37 @@ export default function StudentsPage() {
 
   useEffect(() => {
     if (!firebaseUser || !role) return;
-    const unsubscribe = subscribeToStudents(
-      {
-        role,
-        userId: firebaseUser.uid,
-        status: statusFilter !== "all" ? statusFilter : undefined,
-        showArchived,
-        searchQuery: search,
-      },
-      setStudents
-    );
-    return () => unsubscribe();
+
+    try {
+      const unsubscribe = subscribeToStudents(
+        {
+          role,
+          userId: firebaseUser.uid,
+          status: statusFilter !== "all" ? statusFilter : undefined,
+          showArchived,
+          searchQuery: search,
+        },
+        (data) => {
+          // Safely set students data
+          try {
+            setStudents(data || []);
+          } catch (err) {
+            console.error("Error setting students:", err);
+            setStudents([]);
+          }
+        }
+      );
+      return () => {
+        try {
+          unsubscribe();
+        } catch (err) {
+          console.error("Error unsubscribing:", err);
+        }
+      };
+    } catch (error) {
+      console.error("Error subscribing to students:", error);
+      setStudents([]);
+    }
   }, [firebaseUser, role, statusFilter, showArchived, search]);
 
   // Client-side date filter
