@@ -267,19 +267,33 @@ export async function runQuery(
   });
 
   if (!res.ok) {
-    console.error(`[REST] runQuery failed:`, res.status);
+    const errorText = await res.text().catch(() => "");
+    console.error(`[REST] runQuery failed:`, res.status, errorText);
+    // Check if it's an index error
+    if (errorText.includes("index") || errorText.includes("FAILED_PRECONDITION")) {
+      console.error("[REST] Missing Firestore index. Please check Firestore console for index creation link.");
+    }
     return [];
   }
 
-  const results = await res.json();
-  return results
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    .filter((r: any) => r.document)
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    .map((r: any) => ({
-      id: r.document.name.split("/").pop(),
-      ...parseFields(r.document.fields || {}),
-    }));
+  try {
+    const results = await res.json();
+    if (!Array.isArray(results)) {
+      console.error("[REST] runQuery: unexpected response format");
+      return [];
+    }
+    return results
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      .filter((r: any) => r.document)
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      .map((r: any) => ({
+        id: r.document.name.split("/").pop(),
+        ...parseFields(r.document.fields || {}),
+      }));
+  } catch (error) {
+    console.error("[REST] runQuery: error parsing results", error);
+    return [];
+  }
 }
 
 // Fetch a single document
