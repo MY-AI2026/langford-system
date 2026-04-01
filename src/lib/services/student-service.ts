@@ -82,57 +82,63 @@ export function subscribeToStudents(
   },
   callback: (students: Student[]) => void
 ): () => void {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const filtersArr: any[] = [
-    {
+  // SIMPLIFIED QUERY - Avoid composite index requirement by doing filtering client-side
+  // Only query by isArchived to minimize index dependencies
+  const structuredQuery = {
+    from: [{ collectionId: "students" }],
+    where: {
       fieldFilter: {
         field: { fieldPath: "isArchived" },
         op: "EQUAL",
         value: { booleanValue: filters.showArchived === true },
       },
     },
-  ];
-
-  if (filters.role === "sales") {
-    filtersArr.push({
-      fieldFilter: {
-        field: { fieldPath: "assignedSalesRepId" },
-        op: "EQUAL",
-        value: { stringValue: filters.userId },
-      },
-    });
-  }
-
-  const where =
-    filtersArr.length === 1
-      ? filtersArr[0]
-      : { compositeFilter: { op: "AND", filters: filtersArr } };
-
-  const structuredQuery = {
-    from: [{ collectionId: "students" }],
-    where,
-    orderBy: [
-      { field: { fieldPath: "createdAt" }, direction: "DESCENDING" },
-    ],
+    // Remove orderBy to avoid composite index requirement
+    // We'll sort client-side instead
   };
 
   return createSubscription<Student>(
     async () => {
-      let students = (await runQuery(structuredQuery)) as Student[];
+      try {
+        let students = (await runQuery(structuredQuery)) as Student[];
 
-      if (filters.status) {
-        students = students.filter((s) => s.status === filters.status);
-      }
-      if (filters.searchQuery) {
-        const search = filters.searchQuery.toLowerCase();
-        students = students.filter(
-          (s) =>
-            s.fullName?.toLowerCase().includes(search) ||
-            s.phone?.includes(search)
-        );
-      }
+        // Apply role-based filtering client-side
+        if (filters.role === "sales") {
+          students = students.filter((s) => s.assignedSalesRepId === filters.userId);
+        }
 
-      return students;
+        // Apply status filter client-side
+        if (filters.status) {
+          students = students.filter((s) => s.status === filters.status);
+        }
+
+        // Apply search filter client-side
+        if (filters.searchQuery) {
+          const search = filters.searchQuery.toLowerCase();
+          students = students.filter(
+            (s) =>
+              s.fullName?.toLowerCase().includes(search) ||
+              s.phone?.includes(search)
+          );
+        }
+
+        // Sort by createdAt client-side (descending - newest first)
+        students.sort((a, b) => {
+          const aDate = a.createdAt instanceof Date ? a.createdAt :
+                        typeof a.createdAt === 'string' ? new Date(a.createdAt) :
+                        a.createdAt?.toDate?.() || new Date(0);
+          const bDate = b.createdAt instanceof Date ? b.createdAt :
+                        typeof b.createdAt === 'string' ? new Date(b.createdAt) :
+                        b.createdAt?.toDate?.() || new Date(0);
+          return bDate.getTime() - aDate.getTime();
+        });
+
+        return students;
+      } catch (error) {
+        console.error("[subscribeToStudents] Query failed:", error);
+        // Return empty array instead of crashing
+        return [];
+      }
     },
     callback
   );
