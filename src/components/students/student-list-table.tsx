@@ -52,8 +52,10 @@ export function StudentListTable({
         </TableHeader>
         <TableBody>
           {students.map((student) => {
+            const paymentStatus = student.paymentSummary?.paymentStatus || "pending";
             const paymentConfig =
-              PAYMENT_STATUS_CONFIG[student.paymentSummary.paymentStatus];
+              PAYMENT_STATUS_CONFIG[paymentStatus] || PAYMENT_STATUS_CONFIG["pending"];
+            const remainingBalance = student.paymentSummary?.remainingBalance ?? 0;
             return (
               <TableRow key={student.id}>
                 <TableCell>
@@ -61,21 +63,21 @@ export function StudentListTable({
                     href={`/students/${student.id}`}
                     className="font-medium hover:text-primary hover:underline"
                   >
-                    {student.fullName}
+                    {student.fullName || "—"}
                   </Link>
                 </TableCell>
                 <TableCell className="text-muted-foreground">
-                  {formatPhone(student.phone)}
+                  {formatPhone(student.phone || "")}
                 </TableCell>
                 <TableCell>
-                  <StudentStatusBadge status={student.status} />
+                  <StudentStatusBadge status={student.status || "new"} />
                 </TableCell>
                 <TableCell className="text-muted-foreground">
-                  {student.leadSource}
+                  {student.leadSource || "—"}
                 </TableCell>
                 {showSalesRep && (
                   <TableCell className="text-muted-foreground">
-                    {student.assignedSalesRepName}
+                    {student.assignedSalesRepName || "—"}
                   </TableCell>
                 )}
                 <TableCell>
@@ -83,23 +85,23 @@ export function StudentListTable({
                     <Badge
                       variant="secondary"
                       className={cn(
-                        paymentConfig.bgColor,
-                        paymentConfig.color,
+                        paymentConfig?.bgColor,
+                        paymentConfig?.color,
                         "border-0 w-fit"
                       )}
                     >
-                      {paymentConfig.label}
+                      {paymentConfig?.label || "Unpaid"}
                     </Badge>
-                    {student.paymentSummary.remainingBalance > 0 && (
+                    {remainingBalance > 0 && (
                       <span className="mt-1 text-xs text-muted-foreground">
-                        {formatCurrency(student.paymentSummary.remainingBalance)}{" "}
+                        {formatCurrency(remainingBalance)}{" "}
                         remaining
                       </span>
                     )}
                   </div>
                 </TableCell>
                 <TableCell className="text-muted-foreground">
-                  {formatDate(student.registrationDate)}
+                  {formatDate(student.registrationDate || student.createdAt)}
                 </TableCell>
                 <TableCell>
                   <Link href={`/students/${student.id}`}>
