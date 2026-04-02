@@ -86,9 +86,13 @@ export async function addPayment(
   );
 
   await restUpdate(`students/${studentId}`, {
-    "paymentSummary.amountPaid": newAmountPaid,
-    "paymentSummary.remainingBalance": Math.max(0, newRemaining),
-    "paymentSummary.paymentStatus": newPaymentStatus,
+    paymentSummary: {
+      totalFees: (currentSummary.totalFees as number) || 0,
+      amountPaid: newAmountPaid,
+      remainingBalance: Math.max(0, newRemaining),
+      paymentStatus: newPaymentStatus,
+      hasOverdue: Boolean(currentSummary.hasOverdue) || false,
+    },
     updatedAt: new Date(),
   });
 
@@ -132,9 +136,13 @@ export async function setTotalFees(
   else if (amountPaid > 0) paymentStatus = "partial";
 
   await restUpdate(`students/${studentId}`, {
-    "paymentSummary.totalFees": totalFees,
-    "paymentSummary.remainingBalance": Math.max(0, remaining),
-    "paymentSummary.paymentStatus": paymentStatus,
+    paymentSummary: {
+      totalFees,
+      amountPaid,
+      remainingBalance: Math.max(0, remaining),
+      paymentStatus,
+      hasOverdue: false,
+    },
     updatedAt: new Date(),
   });
 

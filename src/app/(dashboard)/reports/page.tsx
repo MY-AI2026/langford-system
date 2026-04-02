@@ -71,7 +71,7 @@ function ReportsContent() {
         (s) => s.status === "enrolled" || s.status === "paid"
       ).length;
       const revenue = userStudents.reduce(
-        (sum, s) => sum + s.paymentSummary.amountPaid,
+        (sum, s) => sum + (s.paymentSummary?.amountPaid || 0),
         0
       );
       return {
@@ -116,9 +116,9 @@ function ReportsContent() {
       s.status,
       s.leadSource,
       s.assignedSalesRepName,
-      s.paymentSummary.totalFees,
-      s.paymentSummary.amountPaid,
-      s.paymentSummary.remainingBalance,
+      (s.paymentSummary?.totalFees || 0),
+      (s.paymentSummary?.amountPaid || 0),
+      (s.paymentSummary?.remainingBalance || 0),
     ]);
 
     const csv = [headers, ...rows].map((r) => r.join(",")).join("\n");

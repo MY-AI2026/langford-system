@@ -465,19 +465,19 @@ export default function StudentDetailPage() {
                   <div className="flex justify-between">
                     <span className="text-muted-foreground">Total Fees:</span>
                     <span className="font-medium">
-                      {formatCurrency(student.paymentSummary.totalFees)}
+                      {formatCurrency((student.paymentSummary?.totalFees || 0))}
                     </span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-muted-foreground">Paid:</span>
                     <span className="font-medium text-green-600">
-                      {formatCurrency(student.paymentSummary.amountPaid)}
+                      {formatCurrency((student.paymentSummary?.amountPaid || 0))}
                     </span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-muted-foreground">Remaining:</span>
                     <span className="font-medium text-langford-red">
-                      {formatCurrency(student.paymentSummary.remainingBalance)}
+                      {formatCurrency((student.paymentSummary?.remainingBalance || 0))}
                     </span>
                   </div>
                 </div>
@@ -486,7 +486,7 @@ export default function StudentDetailPage() {
           </div>
 
           {/* Evaluation Summary */}
-          {student.evaluation.evaluatedAt && (
+          {student.evaluation?.evaluatedAt && (
             <Card>
               <CardHeader>
                 <CardTitle className="text-base">Evaluation Summary</CardTitle>
@@ -496,25 +496,25 @@ export default function StudentDetailPage() {
                   <div>
                     <p className="text-xs text-muted-foreground">Test Score</p>
                     <p className="text-lg font-semibold">
-                      {student.evaluation.placementTestScore ?? "N/A"}
+                      {student.evaluation?.placementTestScore ?? "N/A"}
                     </p>
                   </div>
                   <div>
                     <p className="text-xs text-muted-foreground">Level</p>
                     <p className="text-lg font-semibold">
-                      {student.evaluation.finalLevel ?? "N/A"}
+                      {student.evaluation?.finalLevel ?? "N/A"}
                     </p>
                   </div>
                   <div>
                     <p className="text-xs text-muted-foreground">Interview</p>
                     <Badge
                       variant={
-                        student.evaluation.interviewStatus === "completed"
+                        student.evaluation?.interviewStatus === "completed"
                           ? "default"
                           : "secondary"
                       }
                     >
-                      {student.evaluation.interviewStatus === "completed"
+                      {student.evaluation?.interviewStatus === "completed"
                         ? "Completed"
                         : "Not Completed"}
                     </Badge>
@@ -522,7 +522,7 @@ export default function StudentDetailPage() {
                   <div>
                     <p className="text-xs text-muted-foreground">Date</p>
                     <p className="text-sm">
-                      {formatDate(student.evaluation.evaluatedAt)}
+                      {formatDate(student.evaluation?.evaluatedAt)}
                     </p>
                   </div>
                 </div>
@@ -575,7 +575,7 @@ export default function StudentDetailPage() {
             open={paymentDialogOpen}
             onOpenChange={setPaymentDialogOpen}
             onSubmit={handlePaymentSubmit}
-            remainingBalance={student.paymentSummary.remainingBalance}
+            remainingBalance={(student.paymentSummary?.remainingBalance || 0)}
             enrollments={enrollments}
           />
         </TabsContent>

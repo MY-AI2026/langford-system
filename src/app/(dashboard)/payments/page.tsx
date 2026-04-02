@@ -28,6 +28,17 @@ import { cn } from "@/lib/utils";
 import { DollarSign, AlertTriangle, CheckCircle } from "lucide-react";
 import Link from "next/link";
 
+// Safe accessor for paymentSummary
+function ps(student: Student) {
+  return student.paymentSummary || {
+    totalFees: 0,
+    amountPaid: 0,
+    remainingBalance: 0,
+    paymentStatus: "pending" as const,
+    hasOverdue: false,
+  };
+}
+
 export default function PaymentsPage() {
   const { role, firebaseUser } = useAuth();
   const [students, setStudents] = useState<Student[]>([]);
@@ -35,21 +46,25 @@ export default function PaymentsPage() {
 
   useEffect(() => {
     if (!firebaseUser || !role) return;
-    const unsub = subscribeToStudents(
-      { role, userId: firebaseUser.uid },
-      setStudents
-    );
-    return () => unsub();
+    try {
+      const unsub = subscribeToStudents(
+        { role, userId: firebaseUser.uid },
+        (data) => setStudents(data || [])
+      );
+      return () => unsub();
+    } catch {
+      setStudents([]);
+    }
   }, [firebaseUser, role]);
 
   const filtered =
     filter === "all"
       ? students
-      : students.filter((s) => s.paymentSummary.paymentStatus === filter);
+      : students.filter((s) => ps(s).paymentStatus === filter);
 
-  const totalFees = students.reduce((sum, s) => sum + s.paymentSummary.totalFees, 0);
-  const totalPaid = students.reduce((sum, s) => sum + s.paymentSummary.amountPaid, 0);
-  const totalPending = students.reduce((sum, s) => sum + s.paymentSummary.remainingBalance, 0);
+  const totalFees = students.reduce((sum, s) => sum + (ps(s).totalFees || 0), 0);
+  const totalPaid = students.reduce((sum, s) => sum + (ps(s).amountPaid || 0), 0);
+  const totalPending = students.reduce((sum, s) => sum + (ps(s).remainingBalance || 0), 0);
 
   return (
     <div className="space-y-6">
@@ -118,7 +133,8 @@ export default function PaymentsPage() {
           </TableHeader>
           <TableBody>
             {filtered.map((student) => {
-              const config = PAYMENT_STATUS_CONFIG[student.paymentSummary.paymentStatus];
+              const summary = ps(student);
+              const config = PAYMENT_STATUS_CONFIG[summary.paymentStatus] || PAYMENT_STATUS_CONFIG["pending"];
               return (
                 <TableRow key={student.id}>
                   <TableCell>
@@ -129,19 +145,19 @@ export default function PaymentsPage() {
                       {student.fullName}
                     </Link>
                   </TableCell>
-                  <TableCell>{formatCurrency(student.paymentSummary.totalFees)}</TableCell>
+                  <TableCell>{formatCurrency(summary.totalFees || 0)}</TableCell>
                   <TableCell className="text-green-600">
-                    {formatCurrency(student.paymentSummary.amountPaid)}
+                    {formatCurrency(summary.amountPaid || 0)}
                   </TableCell>
                   <TableCell className="text-langford-red">
-                    {formatCurrency(student.paymentSummary.remainingBalance)}
+                    {formatCurrency(summary.remainingBalance || 0)}
                   </TableCell>
                   <TableCell>
                     <Badge
                       variant="secondary"
-                      className={cn(config.bgColor, config.color, "border-0")}
+                      className={cn(config?.bgColor, config?.color, "border-0")}
                     >
-                      {config.label}
+                      {config?.label || "Pending"}
                     </Badge>
                   </TableCell>
                 </TableRow>

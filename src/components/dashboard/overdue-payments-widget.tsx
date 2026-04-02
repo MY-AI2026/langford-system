@@ -11,12 +11,12 @@ interface OverduePaymentsWidgetProps {
 }
 
 export function OverduePaymentsWidget({ students }: OverduePaymentsWidgetProps) {
-  const overdueStudents = students.filter(
-    (s) => s.paymentSummary.hasOverdue || s.paymentSummary.paymentStatus === "pending"
+  const overdueStudents = (students || []).filter(
+    (s) => s.paymentSummary?.hasOverdue || s.paymentSummary?.paymentStatus === "pending"
   );
 
   const totalOverdue = overdueStudents.reduce(
-    (sum, s) => sum + s.paymentSummary.remainingBalance,
+    (sum, s) => sum + (s.paymentSummary?.remainingBalance || 0),
     0
   );
 
@@ -46,7 +46,7 @@ export function OverduePaymentsWidget({ students }: OverduePaymentsWidgetProps) 
                 >
                   <span className="truncate">{student.fullName}</span>
                   <span className="font-medium text-langford-red">
-                    {formatCurrency(student.paymentSummary.remainingBalance)}
+                    {formatCurrency(student.paymentSummary?.remainingBalance || 0)}
                   </span>
                 </Link>
               ))}
