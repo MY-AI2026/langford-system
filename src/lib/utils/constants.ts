@@ -77,12 +77,18 @@ export const DEFAULT_LEAD_SOURCES = [
 ];
 
 export const DEFAULT_LEVELS = [
-  "A1",
-  "A2",
-  "B1",
-  "B2",
-  "C1",
-  "C2",
+  "Starter 1",
+  "Starter 2",
+  "Elementary 1",
+  "Elementary 2",
+  "Pre-Intermediate 1",
+  "Pre-Intermediate 2",
+  "Intermediate 1",
+  "Intermediate 2",
+  "Upper-Intermediate 1",
+  "Upper-Intermediate 2",
+  "Advanced 1",
+  "Advanced 2",
 ];
 
 export const DEFAULT_CURRENCY = "KWD";
