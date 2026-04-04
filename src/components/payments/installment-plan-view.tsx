@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import {
   subscribeToInstallmentPlans,
   markInstallmentPaid,
+  deleteInstallmentPlan,
 } from "@/lib/services/installment-service";
 import { InstallmentPlan, InstallmentItem } from "@/lib/types";
 import { formatCurrency, formatDate } from "@/lib/utils/format";
@@ -11,13 +12,23 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { CheckCircle2, Plus } from "lucide-react";
+import { CheckCircle2, Plus, Trash2 } from "lucide-react";
 import { InstallmentPlanForm } from "./installment-plan-form";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { toast } from "sonner";
 
 interface InstallmentPlanViewProps {
   studentId: string;
   userId: string;
+  isAdmin?: boolean;
+  userName?: string;
 }
 
 function statusVariant(
@@ -31,11 +42,15 @@ function statusVariant(
 export function InstallmentPlanView({
   studentId,
   userId,
+  isAdmin = false,
+  userName = "",
 }: InstallmentPlanViewProps) {
   const [plans, setPlans] = useState<InstallmentPlan[]>([]);
   const [loading, setLoading] = useState(true);
   const [formOpen, setFormOpen] = useState(false);
   const [markingPaid, setMarkingPaid] = useState<string | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<InstallmentPlan | null>(null);
+  const [deleting, setDeleting] = useState(false);
 
   useEffect(() => {
     const unsub = subscribeToInstallmentPlans(studentId, (data) => {
@@ -67,9 +82,26 @@ export function InstallmentPlanView({
     }
   }
 
+  async function handleDeletePlan() {
+    if (!deleteTarget) return;
+    setDeleting(true);
+    try {
+      await deleteInstallmentPlan(studentId, deleteTarget, userId, userName);
+      toast.success("Installment plan deleted successfully");
+    } catch {
+      toast.error("Failed to delete installment plan");
+    } finally {
+      setDeleting(false);
+      setDeleteTarget(null);
+    }
+  }
+
   if (loading) {
     return <Skeleton className="h-32 w-full" />;
   }
+
+  const paidCount = (plan: InstallmentPlan) =>
+    plan.installments.filter((i) => i.status === "paid").length;
 
   return (
     <div className="space-y-4">
@@ -98,9 +130,22 @@ export function InstallmentPlanView({
                   {plan.numberOfInstallments} installments &mdash;{" "}
                   {formatCurrency(plan.totalFees)} total
                 </span>
-                <span className="text-xs text-muted-foreground">
-                  Created {formatDate(plan.createdAt)}
-                </span>
+                <div className="flex items-center gap-2">
+                  <span className="text-xs text-muted-foreground">
+                    Created {formatDate(plan.createdAt)}
+                  </span>
+                  {isAdmin && (
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      title="Delete Plan"
+                      className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                      onClick={() => setDeleteTarget(plan)}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  )}
+                </div>
               </CardTitle>
             </CardHeader>
             <CardContent>
@@ -166,6 +211,35 @@ export function InstallmentPlanView({
         studentId={studentId}
         userId={userId}
       />
+
+      <Dialog open={!!deleteTarget} onOpenChange={(open) => { if (!open && !deleting) setDeleteTarget(null); }}>
+        <DialogContent showCloseButton={false}>
+          <DialogHeader>
+            <DialogTitle>Delete Installment Plan</DialogTitle>
+            <DialogDescription>
+              Are you sure you want to delete this installment plan?
+            </DialogDescription>
+          </DialogHeader>
+          {deleteTarget && (
+            <div className="rounded-md bg-muted p-3 text-sm space-y-1">
+              <p><span className="font-medium">Total:</span> {formatCurrency(deleteTarget.totalFees)}</p>
+              <p><span className="font-medium">Installments:</span> {deleteTarget.numberOfInstallments}</p>
+              <p><span className="font-medium">Paid:</span> {paidCount(deleteTarget)} of {deleteTarget.numberOfInstallments}</p>
+            </div>
+          )}
+          <p className="text-sm text-destructive">
+            This will delete the plan and all linked payments. The student&apos;s balance will be recalculated. This action cannot be undone.
+          </p>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setDeleteTarget(null)} disabled={deleting}>
+              Cancel
+            </Button>
+            <Button variant="destructive" onClick={handleDeletePlan} disabled={deleting}>
+              {deleting ? "Deleting..." : "Delete Plan"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

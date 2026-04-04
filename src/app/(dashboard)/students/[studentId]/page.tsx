@@ -583,6 +583,8 @@ export default function StudentDetailPage() {
             <InstallmentPlanView
               studentId={studentId}
               userId={firebaseUser.uid}
+              isAdmin={role === "admin"}
+              userName={userData?.displayName || ""}
             />
           )}
           <PaymentForm
