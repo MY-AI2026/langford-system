@@ -7,6 +7,7 @@ import {
   fetchDoc,
   restCreate,
   restUpdate,
+  restDelete,
 } from "@/lib/firebase/rest-helpers";
 
 // ─── Public API ──────────────────────────────────────────────────────────────
@@ -116,6 +117,91 @@ export async function addPayment(
   });
 
   return paymentId;
+}
+
+export async function deletePayment(
+  studentId: string,
+  payment: Payment,
+  userId: string,
+  userName: string
+): Promise<void> {
+  // 1. Delete the payment document
+  await restDelete(`students/${studentId}/payments/${payment.id}`);
+
+  // 2. Recalculate paymentSummary
+  const studentData = await fetchDoc(`students/${studentId}`);
+  if (!studentData) throw new Error("Student not found");
+
+  const currentSummary = (studentData.paymentSummary as Record<string, number | string | boolean>) || {
+    totalFees: 0, amountPaid: 0, remainingBalance: 0, paymentStatus: "pending",
+  };
+
+  const newAmountPaid = Math.max(0, ((currentSummary.amountPaid as number) || 0) - payment.amount);
+  const totalFees = (currentSummary.totalFees as number) || 0;
+  const newRemaining = totalFees - newAmountPaid;
+
+  let newPaymentStatus: PaymentStatus = "pending";
+  if (newRemaining <= 0 && totalFees > 0) newPaymentStatus = "paid";
+  else if (newAmountPaid > 0) newPaymentStatus = "partial";
+
+  await restUpdate(`students/${studentId}`, {
+    paymentSummary: {
+      totalFees,
+      amountPaid: newAmountPaid,
+      remainingBalance: Math.max(0, newRemaining),
+      paymentStatus: newPaymentStatus,
+      hasOverdue: Boolean(currentSummary.hasOverdue) || false,
+    },
+    updatedAt: new Date(),
+  });
+
+  // 3. If installment payment, reset the installment item
+  if (payment.isInstallment && payment.installmentNumber) {
+    const plans = (await runQuery(
+      { from: [{ collectionId: "installmentPlans" }] },
+      `students/${studentId}`
+    )) as Array<{ id: string; installments: Array<Record<string, unknown>> }>;
+
+    for (const plan of plans) {
+      const installments = plan.installments || [];
+      const hasMatch = installments.some(
+        (item: Record<string, unknown>) => item.installmentNumber === payment.installmentNumber
+      );
+      if (hasMatch) {
+        const updated = installments.map((item: Record<string, unknown>) => {
+          if (item.installmentNumber === payment.installmentNumber) {
+            return { ...item, status: "pending", paidDate: null, paymentId: null };
+          }
+          return item;
+        });
+        await restUpdate(`students/${studentId}/installmentPlans/${plan.id}`, {
+          installments: updated,
+          updatedAt: new Date(),
+        });
+        break;
+      }
+    }
+  }
+
+  // 4. Activity log
+  const { addActivityLogEntry } = await import("./student-service");
+  await addActivityLogEntry(studentId, {
+    type: "payment",
+    description: `Payment of ${payment.amount} deleted (Receipt: ${payment.receiptNumber}). Deleted by ${userName}`,
+    createdBy: userId,
+    createdByName: userName,
+    followUpDate: null,
+  });
+
+  // 5. Audit log
+  await writeAuditLog({
+    action: "delete",
+    entityType: "payment",
+    entityId: payment.id,
+    userId,
+    userName,
+    changes: { amount: { from: payment.amount, to: 0 } },
+  });
 }
 
 export async function setTotalFees(

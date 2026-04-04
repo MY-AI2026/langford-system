@@ -24,7 +24,7 @@ import {
   subscribeToActivityLog,
   addActivityLogEntry,
 } from "@/lib/services/student-service";
-import { addPayment, setTotalFees } from "@/lib/services/payment-service";
+import { addPayment, setTotalFees, deletePayment } from "@/lib/services/payment-service";
 import { subscribeToPayments } from "@/lib/services/payment-service";
 import { subscribeToEnrollments } from "@/lib/services/enrollment-service";
 import { Student, Payment, ActivityLogEntry, StudentStatus, Enrollment } from "@/lib/types";
@@ -236,6 +236,18 @@ export default function StudentDetailPage() {
       toast.success("Payment recorded");
     } catch {
       toast.error("Failed to record payment");
+    }
+  }
+
+  async function handleDeletePayment(payment: Payment) {
+    if (!firebaseUser || !userData) return;
+    try {
+      await deletePayment(studentId, payment, firebaseUser.uid, userData.displayName);
+      const updated = await getStudent(studentId);
+      if (updated) setStudent(updated);
+      toast.success("Payment deleted successfully");
+    } catch {
+      toast.error("Failed to delete payment");
     }
   }
 
@@ -564,6 +576,8 @@ export default function StudentDetailPage() {
             studentName={student.fullName}
             studentPhone={student.phone}
             studentCivilId={student.civilId}
+            isAdmin={role === "admin"}
+            onDeletePayment={handleDeletePayment}
           />
           {firebaseUser && (
             <InstallmentPlanView
