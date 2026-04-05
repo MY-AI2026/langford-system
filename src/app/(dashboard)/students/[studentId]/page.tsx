@@ -325,6 +325,7 @@ export default function StudentDetailPage() {
         title={student.fullName}
         description={student.isArchived ? "Archived" : undefined}
         action={
+          role !== "accountant" ? (
           <div className="flex gap-2">
             <Link href={`/students/${studentId}/edit`}>
               <Button variant="outline" size="sm">
@@ -354,28 +355,31 @@ export default function StudentDetailPage() {
               </Button>
             )}
           </div>
+          ) : undefined
         }
       />
 
       {/* Quick info bar */}
       <div className="flex flex-wrap items-center gap-4">
         <StudentStatusBadge status={student.status} />
-        <Select
-          value={student.status}
-          onValueChange={(val) => handleStatusChange(val as StudentStatus)}
-        >
-          <SelectTrigger className="w-40">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            {PIPELINE_STATUSES.map((s) => (
-              <SelectItem key={s} value={s}>
-                {STUDENT_STATUS_CONFIG[s].label}
-              </SelectItem>
-            ))}
-            <SelectItem value="lost">Lost</SelectItem>
-          </SelectContent>
-        </Select>
+        {role !== "accountant" && (
+          <Select
+            value={student.status}
+            onValueChange={(val) => handleStatusChange(val as StudentStatus)}
+          >
+            <SelectTrigger className="w-40">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {PIPELINE_STATUSES.map((s) => (
+                <SelectItem key={s} value={s}>
+                  {STUDENT_STATUS_CONFIG[s].label}
+                </SelectItem>
+              ))}
+              <SelectItem value="lost">Lost</SelectItem>
+            </SelectContent>
+          </Select>
+        )}
         {student.lostReason && (
           <Badge variant="destructive">Lost: {student.lostReason}</Badge>
         )}
@@ -463,13 +467,15 @@ export default function StudentDetailPage() {
               <CardHeader className="pb-2">
                 <CardTitle className="flex items-center justify-between text-sm text-muted-foreground">
                   Payment Summary
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => setFeesDialogOpen(true)}
-                  >
-                    Set Fees
-                  </Button>
+                  {role !== "accountant" && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => setFeesDialogOpen(true)}
+                    >
+                      Set Fees
+                    </Button>
+                  )}
                 </CardTitle>
               </CardHeader>
               <CardContent>
@@ -545,7 +551,7 @@ export default function StudentDetailPage() {
 
         {/* Enrollments Tab */}
         <TabsContent value="enrollments">
-          <EnrollmentTab studentId={studentId} studentName={student.fullName} studentCivilId={student.civilId} />
+          <EnrollmentTab studentId={studentId} studentName={student.fullName} studentCivilId={student.civilId} readOnly={role === "accountant"} />
         </TabsContent>
 
         {/* Evaluation Tab */}
@@ -555,29 +561,54 @@ export default function StudentDetailPage() {
               <CardTitle className="text-base">Student Evaluation</CardTitle>
             </CardHeader>
             <CardContent>
-              <EvaluationForm
-                defaultValues={student.evaluation}
-                onSubmit={handleEvaluationSubmit}
-              />
+              {role === "accountant" ? (
+                <div className="space-y-3">
+                  <div className="grid gap-4 sm:grid-cols-2">
+                    <div>
+                      <p className="text-xs text-muted-foreground">Test Score</p>
+                      <p className="text-sm font-medium">{student.evaluation?.placementTestScore ?? "N/A"}</p>
+                    </div>
+                    <div>
+                      <p className="text-xs text-muted-foreground">Level</p>
+                      <p className="text-sm font-medium">{student.evaluation?.finalLevel ?? "N/A"}</p>
+                    </div>
+                    <div>
+                      <p className="text-xs text-muted-foreground">Interview Status</p>
+                      <p className="text-sm font-medium">{student.evaluation?.interviewStatus === "completed" ? "Completed" : "Not Completed"}</p>
+                    </div>
+                    <div>
+                      <p className="text-xs text-muted-foreground">Interview Notes</p>
+                      <p className="text-sm font-medium">{student.evaluation?.interviewNotes || "N/A"}</p>
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <EvaluationForm
+                  defaultValues={student.evaluation}
+                  onSubmit={handleEvaluationSubmit}
+                />
+              )}
             </CardContent>
           </Card>
         </TabsContent>
 
         {/* Payments Tab */}
         <TabsContent value="payments" className="space-y-4">
-          <div className="flex justify-end">
-            <Button onClick={() => setPaymentDialogOpen(true)}>
-              <Plus className="mr-2 h-4 w-4" />
-              Record Payment
-            </Button>
-          </div>
+          {role !== "accountant" && (
+            <div className="flex justify-end">
+              <Button onClick={() => setPaymentDialogOpen(true)}>
+                <Plus className="mr-2 h-4 w-4" />
+                Record Payment
+              </Button>
+            </div>
+          )}
           <PaymentHistoryTable
             payments={payments}
             studentName={student.fullName}
             studentPhone={student.phone}
             studentCivilId={student.civilId}
             isAdmin={role === "admin"}
-            onDeletePayment={handleDeletePayment}
+            onDeletePayment={role !== "accountant" ? handleDeletePayment : undefined}
           />
           {firebaseUser && (
             <InstallmentPlanView
@@ -585,27 +616,32 @@ export default function StudentDetailPage() {
               userId={firebaseUser.uid}
               isAdmin={role === "admin"}
               userName={userData?.displayName || ""}
+              readOnly={role === "accountant"}
             />
           )}
-          <PaymentForm
-            open={paymentDialogOpen}
-            onOpenChange={setPaymentDialogOpen}
-            onSubmit={handlePaymentSubmit}
-            remainingBalance={(student.paymentSummary?.remainingBalance || 0)}
-            enrollments={enrollments}
-          />
+          {role !== "accountant" && (
+            <PaymentForm
+              open={paymentDialogOpen}
+              onOpenChange={setPaymentDialogOpen}
+              onSubmit={handlePaymentSubmit}
+              remainingBalance={(student.paymentSummary?.remainingBalance || 0)}
+              enrollments={enrollments}
+            />
+          )}
         </TabsContent>
 
         {/* Activity Tab */}
         <TabsContent value="activity" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-base">Add Note / Follow-up</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <AddNoteForm onSubmit={handleAddNote} />
-            </CardContent>
-          </Card>
+          {role !== "accountant" && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-base">Add Note / Follow-up</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <AddNoteForm onSubmit={handleAddNote} />
+              </CardContent>
+            </Card>
+          )}
           <ActivityLogList activities={activities} />
         </TabsContent>
 
@@ -616,7 +652,7 @@ export default function StudentDetailPage() {
 
         {/* Documents Tab */}
         <TabsContent value="documents">
-          <DocumentUpload studentId={studentId} />
+          <DocumentUpload studentId={studentId} readOnly={role === "accountant"} />
         </TabsContent>
       </Tabs>
 

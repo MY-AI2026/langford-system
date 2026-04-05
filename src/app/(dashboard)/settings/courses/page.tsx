@@ -9,6 +9,7 @@ import {
   CourseInput,
 } from "@/lib/services/course-service";
 import { Course, CourseCategory } from "@/lib/types";
+import { useAuth } from "@/contexts/auth-context";
 import { RoleGate } from "@/components/auth/role-gate";
 import { PageHeader } from "@/components/layout/page-header";
 import { Card, CardContent } from "@/components/ui/card";
@@ -203,6 +204,8 @@ function CourseForm({
 }
 
 function CoursesContent() {
+  const { role } = useAuth();
+  const isReadOnly = role === "accountant";
   const [courses, setCourses] = useState<Course[]>([]);
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -282,15 +285,17 @@ function CoursesContent() {
         <p className="text-sm text-muted-foreground">
           {filteredCourses.length} course(s)
         </p>
-        <Button
-          onClick={() => {
-            setEditingCourse(null);
-            setDialogOpen(true);
-          }}
-        >
-          <Plus className="mr-2 h-4 w-4" />
-          Add Course
-        </Button>
+        {!isReadOnly && (
+          <Button
+            onClick={() => {
+              setEditingCourse(null);
+              setDialogOpen(true);
+            }}
+          >
+            <Plus className="mr-2 h-4 w-4" />
+            Add Course
+          </Button>
+        )}
       </div>
 
       {filteredCourses.length === 0 ? (
@@ -330,25 +335,27 @@ function CoursesContent() {
                     )}
                   </div>
                 </div>
-                <div className="flex gap-1">
-                  <Button
-                    size="icon"
-                    variant="ghost"
-                    onClick={() => {
-                      setEditingCourse(course);
-                      setDialogOpen(true);
-                    }}
-                  >
-                    <Pencil className="h-4 w-4" />
-                  </Button>
-                  <Button
-                    size="icon"
-                    variant="ghost"
-                    onClick={() => setDeleteTarget(course)}
-                  >
-                    <Trash2 className="h-4 w-4 text-red-500" />
-                  </Button>
-                </div>
+                {!isReadOnly && (
+                  <div className="flex gap-1">
+                    <Button
+                      size="icon"
+                      variant="ghost"
+                      onClick={() => {
+                        setEditingCourse(course);
+                        setDialogOpen(true);
+                      }}
+                    >
+                      <Pencil className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      size="icon"
+                      variant="ghost"
+                      onClick={() => setDeleteTarget(course)}
+                    >
+                      <Trash2 className="h-4 w-4 text-red-500" />
+                    </Button>
+                  </div>
+                )}
               </CardContent>
             </Card>
           ))}
@@ -422,7 +429,7 @@ function CoursesContent() {
 
 export default function CoursesPage() {
   return (
-    <RoleGate allowedRoles={["admin", "coordinator"]}>
+    <RoleGate allowedRoles={["admin", "coordinator", "accountant"]}>
       <div className="space-y-6">
         <PageHeader
           title="Courses"

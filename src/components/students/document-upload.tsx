@@ -22,6 +22,7 @@ import { toast } from "sonner";
 
 interface DocumentUploadProps {
   studentId: string;
+  readOnly?: boolean;
 }
 
 function fileIcon(name: string) {
@@ -32,7 +33,7 @@ function fileIcon(name: string) {
   return <FileText className="h-5 w-5 text-muted-foreground" />;
 }
 
-export function DocumentUpload({ studentId }: DocumentUploadProps) {
+export function DocumentUpload({ studentId, readOnly = false }: DocumentUploadProps) {
   const [documents, setDocuments] = useState<StorageDocument[]>([]);
   const [loading, setLoading] = useState(true);
   const [uploading, setUploading] = useState(false);
@@ -94,25 +95,27 @@ export function DocumentUpload({ studentId }: DocumentUploadProps) {
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <h3 className="text-base font-semibold">Documents</h3>
-        <div>
-          <input
-            ref={fileInputRef}
-            type="file"
-            accept=".pdf,.jpg,.jpeg,.png"
-            className="hidden"
-            onChange={handleFileChange}
-            disabled={uploading}
-          />
-          <Button
-            size="sm"
-            variant="outline"
-            onClick={() => fileInputRef.current?.click()}
-            disabled={uploading}
-          >
-            <Upload className="mr-2 h-4 w-4" />
-            {uploading ? "Uploading..." : "Upload Document"}
-          </Button>
-        </div>
+        {!readOnly && (
+          <div>
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept=".pdf,.jpg,.jpeg,.png"
+              className="hidden"
+              onChange={handleFileChange}
+              disabled={uploading}
+            />
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => fileInputRef.current?.click()}
+              disabled={uploading}
+            >
+              <Upload className="mr-2 h-4 w-4" />
+              {uploading ? "Uploading..." : "Upload Document"}
+            </Button>
+          </div>
+        )}
       </div>
 
       {uploading && (
@@ -142,15 +145,17 @@ export function DocumentUpload({ studentId }: DocumentUploadProps) {
                     <Download className="h-4 w-4" />
                   </Button>
                 </a>
-                <Button
-                  size="icon"
-                  variant="ghost"
-                  title="Delete"
-                  disabled={deleting === doc.path}
-                  onClick={() => handleDelete(doc)}
-                >
-                  <Trash2 className="h-4 w-4 text-red-500" />
-                </Button>
+                {!readOnly && (
+                  <Button
+                    size="icon"
+                    variant="ghost"
+                    title="Delete"
+                    disabled={deleting === doc.path}
+                    onClick={() => handleDelete(doc)}
+                  >
+                    <Trash2 className="h-4 w-4 text-red-500" />
+                  </Button>
+                )}
               </CardContent>
             </Card>
           ))}

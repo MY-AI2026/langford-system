@@ -29,6 +29,7 @@ interface InstallmentPlanViewProps {
   userId: string;
   isAdmin?: boolean;
   userName?: string;
+  readOnly?: boolean;
 }
 
 function statusVariant(
@@ -44,6 +45,7 @@ export function InstallmentPlanView({
   userId,
   isAdmin = false,
   userName = "",
+  readOnly = false,
 }: InstallmentPlanViewProps) {
   const [plans, setPlans] = useState<InstallmentPlan[]>([]);
   const [loading, setLoading] = useState(true);
@@ -107,14 +109,16 @@ export function InstallmentPlanView({
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <h3 className="text-base font-semibold">Installment Plans</h3>
-        <Button
-          size="sm"
-          variant="outline"
-          onClick={() => setFormOpen(true)}
-        >
-          <Plus className="mr-2 h-4 w-4" />
-          Create Plan
-        </Button>
+        {!readOnly && (
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={() => setFormOpen(true)}
+          >
+            <Plus className="mr-2 h-4 w-4" />
+            Create Plan
+          </Button>
+        )}
       </div>
 
       {plans.length === 0 ? (
@@ -175,7 +179,7 @@ export function InstallmentPlanView({
                       <Badge variant={statusVariant(effectiveStatus)} className="capitalize">
                         {effectiveStatus}
                       </Badge>
-                      {item.status === "pending" && (
+                      {!readOnly && item.status === "pending" && (
                         <Button
                           size="sm"
                           variant="ghost"

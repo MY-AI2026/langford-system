@@ -131,12 +131,14 @@ export default function StudentsPage() {
               <Download className="mr-2 h-4 w-4" />
               Export
             </Button>
-            <Link href="/students/new">
-              <Button>
-                <Plus className="mr-2 h-4 w-4" />
-                Add Student
-              </Button>
-            </Link>
+            {role !== "accountant" && (
+              <Link href="/students/new">
+                <Button>
+                  <Plus className="mr-2 h-4 w-4" />
+                  Add Student
+                </Button>
+              </Link>
+            )}
           </div>
         }
       />

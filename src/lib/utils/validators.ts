@@ -48,7 +48,7 @@ export const installmentPlanSchema = z.object({
 export const userSchema = z.object({
   email: z.string().email("Please enter a valid email"),
   displayName: z.string().min(2, "Name must be at least 2 characters"),
-  role: z.enum(["admin", "sales", "instructor", "coordinator"]),
+  role: z.enum(["admin", "sales", "instructor", "coordinator", "accountant"]),
   phone: z.string(),
   monthlyTarget: z.number().min(0),
   password: z.string().min(6, "Password must be at least 6 characters"),

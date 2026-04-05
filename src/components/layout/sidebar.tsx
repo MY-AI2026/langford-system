@@ -62,6 +62,13 @@ export function Sidebar({ open, onClose }: SidebarProps) {
     { href: "/settings/courses", label: t("courses"), icon: BookOpen },
   ];
 
+  const accountantNavItems = [
+    { href: "/dashboard", label: t("dashboard"), icon: LayoutDashboard },
+    { href: "/students", label: t("students"), icon: GraduationCap },
+    { href: "/payments", label: t("payments"), icon: CreditCard },
+    { href: "/settings/courses", label: t("courses"), icon: BookOpen },
+  ];
+
   const navItems =
     role === "admin"
       ? adminNavItems
@@ -69,7 +76,9 @@ export function Sidebar({ open, onClose }: SidebarProps) {
         ? instructorNavItems
         : role === "coordinator"
           ? coordinatorNavItems
-          : salesNavItems;
+          : role === "accountant"
+            ? accountantNavItems
+            : salesNavItems;
 
   return (
     <>

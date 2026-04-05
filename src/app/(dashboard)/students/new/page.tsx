@@ -12,7 +12,13 @@ import { toast } from "sonner";
 
 export default function NewStudentPage() {
   const router = useRouter();
-  const { firebaseUser, userData } = useAuth();
+  const { firebaseUser, userData, role } = useAuth();
+
+  // Accountant is read-only — redirect away from create page
+  if (role === "accountant") {
+    router.replace("/students");
+    return null;
+  }
 
   async function handleSubmit(data: StudentFormData) {
     if (!firebaseUser || !userData) return;

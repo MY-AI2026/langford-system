@@ -18,6 +18,7 @@ interface EnrollmentTabProps {
   studentId: string;
   studentName: string;
   studentCivilId?: string;
+  readOnly?: boolean;
 }
 
 const STATUS_BADGE_VARIANT: Record<string, "default" | "secondary" | "destructive" | "outline"> = {
@@ -45,7 +46,7 @@ const CATEGORY_LABELS: Record<string, string> = {
   other: "Other",
 };
 
-export function EnrollmentTab({ studentId, studentName, studentCivilId }: EnrollmentTabProps) {
+export function EnrollmentTab({ studentId, studentName, studentCivilId, readOnly = false }: EnrollmentTabProps) {
   const { role, firebaseUser, userData } = useAuth();
   const [enrollments, setEnrollments] = useState<Enrollment[]>([]);
   const [loading, setLoading] = useState(true);
@@ -93,10 +94,12 @@ export function EnrollmentTab({ studentId, studentName, studentCivilId }: Enroll
       {/* Header */}
       <div className="flex items-center justify-between">
         <h3 className="text-lg font-semibold">Course Enrollments</h3>
-        <Button size="sm" onClick={() => setEnrollDialogOpen(true)}>
-          <Plus className="mr-2 h-4 w-4" />
-          Enroll in Course
-        </Button>
+        {!readOnly && (
+          <Button size="sm" onClick={() => setEnrollDialogOpen(true)}>
+            <Plus className="mr-2 h-4 w-4" />
+            Enroll in Course
+          </Button>
+        )}
       </div>
 
       {/* Summary Card */}
@@ -169,7 +172,7 @@ export function EnrollmentTab({ studentId, studentName, studentCivilId }: Enroll
                     )}
                   </div>
                   <div className="flex gap-1 shrink-0">
-                    {enrollment.status === "active" && role === "admin" && (
+                    {!readOnly && enrollment.status === "active" && role === "admin" && (
                       <Button
                         size="sm"
                         variant="outline"

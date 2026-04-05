@@ -16,7 +16,13 @@ import { toast } from "sonner";
 export default function EditStudentPage() {
   const params = useParams();
   const router = useRouter();
-  const { firebaseUser, userData } = useAuth();
+  const { firebaseUser, userData, role } = useAuth();
+
+  // Accountant is read-only — redirect away from edit page
+  if (role === "accountant") {
+    router.replace("/students");
+    return null;
+  }
   const studentId = params.studentId as string;
   const [student, setStudent] = useState<Student | null>(null);
   const [loading, setLoading] = useState(true);
