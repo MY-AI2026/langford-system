@@ -221,6 +221,10 @@ export async function createStudent(
       paymentStatus: "pending",
       hasOverdue: false,
     },
+    ieltsSummary: {
+      totalPaid: 0,
+      paymentsCount: 0,
+    },
   };
 
   const newId = await restCreate("students", studentData);

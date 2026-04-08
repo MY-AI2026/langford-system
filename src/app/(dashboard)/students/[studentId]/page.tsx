@@ -9,6 +9,7 @@ import { EvaluationForm } from "@/components/evaluation/evaluation-form";
 import { PaymentForm } from "@/components/payments/payment-form";
 import { PaymentHistoryTable } from "@/components/payments/payment-history-table";
 import { InstallmentPlanView } from "@/components/payments/installment-plan-view";
+import { IeltsPaymentDialog, IeltsPaymentFormData } from "@/components/payments/ielts-payment-dialog";
 import { ActivityLogList } from "@/components/activity/activity-log-list";
 import { AddNoteForm } from "@/components/activity/add-note-form";
 import { AttendanceTracker } from "@/components/students/attendance-tracker";
@@ -24,7 +25,7 @@ import {
   subscribeToActivityLog,
   addActivityLogEntry,
 } from "@/lib/services/student-service";
-import { addPayment, setTotalFees, deletePayment } from "@/lib/services/payment-service";
+import { addPayment, addIeltsPayment, setTotalFees, deletePayment } from "@/lib/services/payment-service";
 import { subscribeToPayments } from "@/lib/services/payment-service";
 import { subscribeToEnrollments } from "@/lib/services/enrollment-service";
 import { Student, Payment, ActivityLogEntry, StudentStatus, Enrollment } from "@/lib/types";
@@ -83,6 +84,7 @@ export default function StudentDetailPage() {
   const [enrollments, setEnrollments] = useState<Enrollment[]>([]);
   const [loading, setLoading] = useState(true);
   const [paymentDialogOpen, setPaymentDialogOpen] = useState(false);
+  const [ieltsDialogOpen, setIeltsDialogOpen] = useState(false);
   const [feesDialogOpen, setFeesDialogOpen] = useState(false);
   const [lostDialogOpen, setLostDialogOpen] = useState(false);
   const [lostReason, setLostReason] = useState("");
@@ -236,6 +238,28 @@ export default function StudentDetailPage() {
       toast.success("Payment recorded");
     } catch {
       toast.error("Failed to record payment");
+    }
+  }
+
+  async function handleIeltsPaymentSubmit(data: IeltsPaymentFormData) {
+    if (!firebaseUser || !userData) return;
+    try {
+      await addIeltsPayment(
+        studentId,
+        {
+          amount: data.amount,
+          method: data.method,
+          paymentDate: data.paymentDate,
+          notes: data.notes,
+        },
+        firebaseUser.uid,
+        userData.displayName
+      );
+      const updated = await getStudent(studentId);
+      if (updated) setStudent(updated);
+      toast.success("IELTS payment recorded");
+    } catch {
+      toast.error("Failed to record IELTS payment");
     }
   }
 
@@ -501,6 +525,47 @@ export default function StudentDetailPage() {
                 </div>
               </CardContent>
             </Card>
+
+            {/* IELTS Exam Fees — separate from main payment summary */}
+            <Card className="border-blue-200 dark:border-blue-900">
+              <CardHeader className="pb-2">
+                <CardTitle className="flex items-center justify-between text-sm text-muted-foreground">
+                  <span className="flex items-center gap-2">
+                    <span className="inline-block h-2 w-2 rounded-full bg-blue-500" />
+                    IELTS Exam Fees
+                  </span>
+                  {(role === "admin" || role === "sales") && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => setIeltsDialogOpen(true)}
+                    >
+                      <Plus className="mr-1 h-3 w-3" />
+                      Add
+                    </Button>
+                  )}
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-1 text-sm">
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Total Paid:</span>
+                    <span className="font-medium text-blue-600">
+                      {formatCurrency(student.ieltsSummary?.totalPaid || 0)}
+                    </span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Payments:</span>
+                    <span className="font-medium">
+                      {student.ieltsSummary?.paymentsCount || 0}
+                    </span>
+                  </div>
+                  <p className="pt-1 text-xs text-muted-foreground">
+                    Separate from course fees
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
           </div>
 
           {/* Evaluation Summary */}
@@ -595,7 +660,17 @@ export default function StudentDetailPage() {
         {/* Payments Tab */}
         <TabsContent value="payments" className="space-y-4">
           {role !== "accountant" && (
-            <div className="flex justify-end">
+            <div className="flex flex-wrap justify-end gap-2">
+              {(role === "admin" || role === "sales") && (
+                <Button
+                  variant="outline"
+                  onClick={() => setIeltsDialogOpen(true)}
+                  className="border-blue-200 text-blue-700 hover:bg-blue-50 dark:border-blue-800 dark:text-blue-300 dark:hover:bg-blue-950"
+                >
+                  <Plus className="mr-2 h-4 w-4" />
+                  Record IELTS Payment
+                </Button>
+              )}
               <Button onClick={() => setPaymentDialogOpen(true)}>
                 <Plus className="mr-2 h-4 w-4" />
                 Record Payment
@@ -626,6 +701,13 @@ export default function StudentDetailPage() {
               onSubmit={handlePaymentSubmit}
               remainingBalance={(student.paymentSummary?.remainingBalance || 0)}
               enrollments={enrollments}
+            />
+          )}
+          {(role === "admin" || role === "sales") && (
+            <IeltsPaymentDialog
+              open={ieltsDialogOpen}
+              onOpenChange={setIeltsDialogOpen}
+              onSubmit={handleIeltsPaymentSubmit}
             />
           )}
         </TabsContent>

@@ -128,32 +128,51 @@ export async function deletePayment(
   // 1. Delete the payment document
   await restDelete(`students/${studentId}/payments/${payment.id}`);
 
-  // 2. Recalculate paymentSummary
+  // 2. Read student data
   const studentData = await fetchDoc(`students/${studentId}`);
   if (!studentData) throw new Error("Student not found");
 
-  const currentSummary = (studentData.paymentSummary as Record<string, number | string | boolean>) || {
-    totalFees: 0, amountPaid: 0, remainingBalance: 0, paymentStatus: "pending",
-  };
+  // 2a. If this is an IELTS payment, update ONLY ieltsSummary
+  if (payment.category === "ielts") {
+    const currentIelts = (studentData.ieltsSummary as Record<string, number>) || {
+      totalPaid: 0,
+      paymentsCount: 0,
+    };
+    const newTotalPaid = Math.max(0, ((currentIelts.totalPaid as number) || 0) - payment.amount);
+    const newCount = Math.max(0, ((currentIelts.paymentsCount as number) || 0) - 1);
 
-  const newAmountPaid = Math.max(0, ((currentSummary.amountPaid as number) || 0) - payment.amount);
-  const totalFees = (currentSummary.totalFees as number) || 0;
-  const newRemaining = totalFees - newAmountPaid;
+    await restUpdate(`students/${studentId}`, {
+      ieltsSummary: {
+        totalPaid: newTotalPaid,
+        paymentsCount: newCount,
+      },
+      updatedAt: new Date(),
+    });
+  } else {
+    // 2b. Main payment - recalculate paymentSummary
+    const currentSummary = (studentData.paymentSummary as Record<string, number | string | boolean>) || {
+      totalFees: 0, amountPaid: 0, remainingBalance: 0, paymentStatus: "pending",
+    };
 
-  let newPaymentStatus: PaymentStatus = "pending";
-  if (newRemaining <= 0 && totalFees > 0) newPaymentStatus = "paid";
-  else if (newAmountPaid > 0) newPaymentStatus = "partial";
+    const newAmountPaid = Math.max(0, ((currentSummary.amountPaid as number) || 0) - payment.amount);
+    const totalFees = (currentSummary.totalFees as number) || 0;
+    const newRemaining = totalFees - newAmountPaid;
 
-  await restUpdate(`students/${studentId}`, {
-    paymentSummary: {
-      totalFees,
-      amountPaid: newAmountPaid,
-      remainingBalance: Math.max(0, newRemaining),
-      paymentStatus: newPaymentStatus,
-      hasOverdue: Boolean(currentSummary.hasOverdue) || false,
-    },
-    updatedAt: new Date(),
-  });
+    let newPaymentStatus: PaymentStatus = "pending";
+    if (newRemaining <= 0 && totalFees > 0) newPaymentStatus = "paid";
+    else if (newAmountPaid > 0) newPaymentStatus = "partial";
+
+    await restUpdate(`students/${studentId}`, {
+      paymentSummary: {
+        totalFees,
+        amountPaid: newAmountPaid,
+        remainingBalance: Math.max(0, newRemaining),
+        paymentStatus: newPaymentStatus,
+        hasOverdue: Boolean(currentSummary.hasOverdue) || false,
+      },
+      updatedAt: new Date(),
+    });
+  }
 
   // 3. If installment payment, reset the installment item
   if (payment.isInstallment && payment.installmentNumber) {
@@ -202,6 +221,82 @@ export async function deletePayment(
     userName,
     changes: { amount: { from: payment.amount, to: 0 } },
   });
+}
+
+/** Add IELTS exam payment - separate from main paymentSummary */
+export async function addIeltsPayment(
+  studentId: string,
+  data: {
+    amount: number;
+    method: PaymentMethod;
+    paymentDate: Date;
+    notes?: string;
+  },
+  userId: string,
+  userName: string
+): Promise<string> {
+  const receiptNumber = generateReceiptNumber();
+
+  // Read current student data via REST
+  const studentData = await fetchDoc(`students/${studentId}`);
+  if (!studentData) throw new Error("Student not found");
+
+  const currentIelts = (studentData.ieltsSummary as Record<string, number>) || {
+    totalPaid: 0,
+    paymentsCount: 0,
+  };
+
+  const newTotalPaid = ((currentIelts.totalPaid as number) || 0) + data.amount;
+  const newCount = ((currentIelts.paymentsCount as number) || 0) + 1;
+
+  // Create payment in subcollection with category="ielts"
+  const paymentData: Record<string, unknown> = {
+    amount: data.amount,
+    paymentDate: data.paymentDate,
+    method: data.method,
+    receiptNumber,
+    notes: data.notes || "",
+    isInstallment: false,
+    installmentNumber: null,
+    category: "ielts",
+    createdBy: userId,
+    createdAt: new Date(),
+  };
+
+  const paymentId = await restCreate(
+    `students/${studentId}/payments`,
+    paymentData
+  );
+
+  // Update ONLY ieltsSummary - does NOT touch paymentSummary
+  await restUpdate(`students/${studentId}`, {
+    ieltsSummary: {
+      totalPaid: newTotalPaid,
+      paymentsCount: newCount,
+    },
+    updatedAt: new Date(),
+  });
+
+  // Activity log
+  const { addActivityLogEntry } = await import("./student-service");
+  await addActivityLogEntry(studentId, {
+    type: "payment",
+    description: `IELTS exam payment of ${data.amount} recorded (${data.method}). Receipt: ${receiptNumber}`,
+    createdBy: userId,
+    createdByName: userName,
+    followUpDate: null,
+  });
+
+  await writeAuditLog({
+    action: "payment",
+    entityType: "payment",
+    entityId: paymentId,
+    userId,
+    userName,
+    changes: { amount: { from: 0, to: data.amount }, category: { from: null, to: "ielts" } },
+  });
+
+  return paymentId;
 }
 
 export async function setTotalFees(

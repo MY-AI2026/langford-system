@@ -93,6 +93,8 @@ export const DEFAULT_LEVELS = [
 
 export const DEFAULT_CURRENCY = "KWD";
 
+export const IELTS_EXAM_FEE = 96;
+
 export const COURSE_CATEGORIES: Record<CourseCategory, { label: string; labelAr: string }> = {
   general_english: { label: "General English", labelAr: "إنجليزي عام" },
   exam_prep: { label: "Exam Preparation", labelAr: "تحضير اختبارات" },

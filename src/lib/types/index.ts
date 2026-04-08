@@ -75,6 +75,13 @@ export interface PaymentSummary {
   hasOverdue: boolean;
 }
 
+export type PaymentCategory = "main" | "ielts";
+
+export interface IeltsSummary {
+  totalPaid: number;
+  paymentsCount: number;
+}
+
 export interface Student {
   id: string;
   fullName: string;
@@ -95,6 +102,7 @@ export interface Student {
   interestedCourse?: string;
   evaluation: Evaluation;
   paymentSummary: PaymentSummary;
+  ieltsSummary?: IeltsSummary;
 }
 
 export interface ActivityLogEntry {
@@ -121,6 +129,7 @@ export interface Payment {
   installmentNumber: number | null;
   courseId?: string;
   courseName?: string;
+  category?: PaymentCategory; // "main" (default) or "ielts"
   createdBy: string;
   createdAt: Timestamp;
 }

@@ -83,7 +83,16 @@ export function PaymentHistoryTable({
           <TableBody>
             {payments.map((payment) => (
               <TableRow key={payment.id}>
-                <TableCell>{formatDate(payment.paymentDate)}</TableCell>
+                <TableCell>
+                  <div className="flex items-center gap-2">
+                    {formatDate(payment.paymentDate)}
+                    {payment.category === "ielts" && (
+                      <Badge className="border-0 bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-200">
+                        IELTS
+                      </Badge>
+                    )}
+                  </div>
+                </TableCell>
                 <TableCell className="font-medium">
                   {formatCurrency(payment.amount)}
                 </TableCell>
