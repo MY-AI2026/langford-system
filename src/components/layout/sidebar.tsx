@@ -16,6 +16,7 @@ import {
   ShieldCheck,
   BookOpen,
   ClipboardCheck,
+  MessageSquare,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useFollowupCount } from "@/hooks/use-followup-count";
@@ -38,6 +39,7 @@ export function Sidebar({ open, onClose }: SidebarProps) {
     { href: "/pipeline", label: t("pipeline"), icon: Kanban },
     { href: "/payments", label: t("payments"), icon: CreditCard },
     { href: "/reports", label: t("reports"), icon: BarChart3 },
+    { href: "/reports/student-notes", label: "Student Notes", icon: MessageSquare },
     { href: "/reports/logins", label: t("loginReport"), icon: LogIn },
     { href: "/reports/audit", label: t("auditLog"), icon: ShieldCheck },
     { href: "/settings", label: t("settings"), icon: Settings },
@@ -67,6 +69,7 @@ export function Sidebar({ open, onClose }: SidebarProps) {
     { href: "/students", label: t("students"), icon: GraduationCap },
     { href: "/payments", label: t("payments"), icon: CreditCard },
     { href: "/settings/courses", label: t("courses"), icon: BookOpen },
+    { href: "/reports/student-notes", label: "Student Notes", icon: MessageSquare },
   ];
 
   const navItems =
