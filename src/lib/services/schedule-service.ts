@@ -1,4 +1,4 @@
-import { ScheduleEntry, ScheduleStudent, DayPattern, DayOfWeek, User } from "@/lib/types";
+import { ScheduleEntry, ScheduleStudent, DayPattern, DayOfWeek, User, Student } from "@/lib/types";
 import {
   fetchCollection,
   createSubscription,
@@ -147,7 +147,7 @@ async function getEntriesByPatternGroup(patternGroupId: string): Promise<Schedul
 /** Fetch enrolled students for a course with their names and levels */
 export async function fetchStudentsForCourse(courseId: string): Promise<ScheduleStudent[]> {
   // Fetch all students and check their enrollments subcollections
-  const allStudents = await fetchCollection("students");
+  const allStudents = (await fetchCollection("students")) as Student[];
   const students: ScheduleStudent[] = [];
 
   const batchSize = 10;
@@ -175,12 +175,12 @@ export async function fetchStudentsForCourse(courseId: string): Promise<Schedule
           if (active.length > 0) {
             return {
               studentId: student.id,
-              studentName: (student as Record<string, unknown>).fullName as string || "Unknown Student",
-              level: ((student as Record<string, unknown>).evaluation as Record<string, unknown>)?.finalLevel as string || null,
+              studentName: student.fullName || "Unknown Student",
+              level: student.evaluation?.finalLevel || null,
             };
           }
-        } catch {
-          // ignore fetch errors
+        } catch (err) {
+          console.error(`[schedule] Error fetching enrollments for student ${student.id}:`, err);
         }
         return null;
       })

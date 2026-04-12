@@ -165,6 +165,63 @@ export async function updateEnrollment(
   }
 }
 
+/** Delete (remove) enrollment using REST API — admin only */
+export async function deleteEnrollment(
+  studentId: string,
+  enrollmentId: string,
+  courseName: string,
+  userId: string,
+  userName: string
+): Promise<void> {
+  const token = await getToken();
+  const url = `${BASE}/students/${studentId}/enrollments/${enrollmentId}`;
+
+  const res = await fetch(url, {
+    method: "DELETE",
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+    cache: "no-store",
+  });
+
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    console.error("[enrollment-service] deleteEnrollment REST error:", err);
+    throw new Error("Failed to delete enrollment");
+  }
+
+  // Activity log (non-blocking)
+  try {
+    const { addActivityLogEntry } = await import("./student-service");
+    await addActivityLogEntry(studentId, {
+      type: "enrollment",
+      description: `Removed from ${courseName}`,
+      createdBy: userId,
+      createdByName: userName,
+      followUpDate: null,
+    });
+  } catch (e) {
+    console.error("[enrollment-service] activity log error:", e);
+  }
+
+  // Audit log (non-blocking)
+  try {
+    await writeAuditLog({
+      action: "delete",
+      entityType: "enrollment",
+      entityId: enrollmentId,
+      userId,
+      userName,
+      changes: {
+        courseName: { from: courseName, to: null },
+        status: { from: "deleted", to: null },
+      },
+    });
+  } catch (e) {
+    console.error("[enrollment-service] audit log error:", e);
+  }
+}
+
 /** Complete enrollment using REST API */
 export async function completeEnrollment(
   studentId: string,

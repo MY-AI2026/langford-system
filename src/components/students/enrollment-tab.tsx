@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { subscribeToEnrollments, completeEnrollment } from "@/lib/services/enrollment-service";
+import { subscribeToEnrollments, completeEnrollment, deleteEnrollment } from "@/lib/services/enrollment-service";
 import { useAuth } from "@/contexts/auth-context";
 import { Enrollment } from "@/lib/types";
 import { formatDate, formatCurrency } from "@/lib/utils/format";
@@ -9,7 +9,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Plus, CheckCircle2, Award, BookOpen, Clock, GraduationCap } from "lucide-react";
+import { Plus, CheckCircle2, Award, BookOpen, Clock, GraduationCap, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { EnrollDialog } from "./enroll-dialog";
 import { CertificateDialog } from "./certificate-dialog";
@@ -54,6 +54,7 @@ export function EnrollmentTab({ studentId, studentName, studentCivilId, readOnly
   const [certDialogOpen, setCertDialogOpen] = useState(false);
   const [selectedEnrollment, setSelectedEnrollment] = useState<Enrollment | null>(null);
   const [completing, setCompleting] = useState<string | null>(null);
+  const [deleting, setDeleting] = useState<string | null>(null);
 
   useEffect(() => {
     const unsub = subscribeToEnrollments(studentId, (data) => {
@@ -77,6 +78,26 @@ export function EnrollmentTab({ studentId, studentName, studentCivilId, readOnly
       toast.error("Failed to complete enrollment");
     } finally {
       setCompleting(null);
+    }
+  }
+
+  async function handleDelete(enrollment: Enrollment) {
+    if (!firebaseUser || !userData) return;
+    if (!confirm(`Are you sure you want to remove "${enrollment.courseName}" enrollment?`)) return;
+    setDeleting(enrollment.id);
+    try {
+      await deleteEnrollment(
+        studentId,
+        enrollment.id,
+        enrollment.courseName,
+        firebaseUser.uid,
+        userData.displayName
+      );
+      toast.success(`Removed from ${enrollment.courseName}`);
+    } catch {
+      toast.error("Failed to remove enrollment");
+    } finally {
+      setDeleting(null);
     }
   }
 
@@ -191,6 +212,18 @@ export function EnrollmentTab({ studentId, studentName, studentCivilId, readOnly
                       >
                         <Award className="mr-1 h-3 w-3" />
                         Certificate
+                      </Button>
+                    )}
+                    {!readOnly && role === "admin" && (
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="text-destructive hover:text-destructive"
+                        disabled={deleting === enrollment.id}
+                        onClick={() => handleDelete(enrollment)}
+                      >
+                        <Trash2 className="mr-1 h-3 w-3" />
+                        {deleting === enrollment.id ? "..." : "Remove"}
                       </Button>
                     )}
                   </div>
