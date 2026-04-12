@@ -65,5 +65,9 @@ service cloud.firestore {
     match /auditLog/{logId} {
       allow read, write: if isSignedIn();
     }
+
+    match /schedules/{scheduleId} {
+      allow read, write: if isSignedIn();
+    }
   }
 }
