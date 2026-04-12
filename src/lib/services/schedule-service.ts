@@ -25,35 +25,20 @@ export function subscribeToSchedulesByInstructor(
   const structuredQuery = {
     from: [{ collectionId: "schedules" }],
     where: {
-      compositeFilter: {
-        op: "AND",
-        filters: [
-          {
-            fieldFilter: {
-              field: { fieldPath: "instructorId" },
-              op: "EQUAL",
-              value: { stringValue: instructorId },
-            },
-          },
-          {
-            fieldFilter: {
-              field: { fieldPath: "isActive" },
-              op: "EQUAL",
-              value: { booleanValue: true },
-            },
-          },
-        ],
+      fieldFilter: {
+        field: { fieldPath: "instructorId" },
+        op: "EQUAL",
+        value: { stringValue: instructorId },
       },
     },
-    orderBy: [
-      { field: { fieldPath: "dayOfWeek" }, direction: "ASCENDING" },
-      { field: { fieldPath: "startTime" }, direction: "ASCENDING" },
-    ],
   };
 
   return createSubscription<ScheduleEntry>(
     async () => {
-      return (await runQuery(structuredQuery)) as ScheduleEntry[];
+      const results = (await runQuery(structuredQuery)) as ScheduleEntry[];
+      return results
+        .filter((e) => e.isActive !== false)
+        .sort((a, b) => a.dayOfWeek - b.dayOfWeek || a.startTime.localeCompare(b.startTime));
     },
     callback,
     10000
@@ -161,51 +146,48 @@ async function getEntriesByPatternGroup(patternGroupId: string): Promise<Schedul
 
 /** Fetch enrolled students for a course with their names and levels */
 export async function fetchStudentsForCourse(courseId: string): Promise<ScheduleStudent[]> {
-  const structuredQuery = {
-    from: [{ collectionId: "enrollments", allDescendants: true }],
-    where: {
-      compositeFilter: {
-        op: "AND",
-        filters: [
-          {
-            fieldFilter: {
-              field: { fieldPath: "courseId" },
-              op: "EQUAL",
-              value: { stringValue: courseId },
-            },
-          },
-          {
-            fieldFilter: {
-              field: { fieldPath: "status" },
-              op: "EQUAL",
-              value: { stringValue: "active" },
-            },
-          },
-        ],
-      },
-    },
-  };
-
-  const enrollments = await runQuery(structuredQuery);
+  // Fetch all students and check their enrollments subcollections
+  const allStudents = await fetchCollection("students");
   const students: ScheduleStudent[] = [];
 
-  for (const enr of enrollments) {
-    let studentName = "Unknown Student";
-    let level: string | null = null;
-    try {
-      const studentDoc = await fetchDoc(`students/${enr.studentId}`);
-      if (studentDoc) {
-        studentName = studentDoc.fullName || "Unknown Student";
-        level = studentDoc.evaluation?.finalLevel || null;
-      }
-    } catch {
-      // ignore fetch errors
+  const batchSize = 10;
+  for (let i = 0; i < allStudents.length; i += batchSize) {
+    const batch = allStudents.slice(i, i + batchSize);
+    const results = await Promise.all(
+      batch.map(async (student) => {
+        try {
+          const enrollments = await runQuery(
+            {
+              from: [{ collectionId: "enrollments" }],
+              where: {
+                fieldFilter: {
+                  field: { fieldPath: "courseId" },
+                  op: "EQUAL",
+                  value: { stringValue: courseId },
+                },
+              },
+            },
+            `students/${student.id}`
+          );
+          const active = enrollments.filter(
+            (e: Record<string, unknown>) => e.status === "active"
+          );
+          if (active.length > 0) {
+            return {
+              studentId: student.id,
+              studentName: (student as Record<string, unknown>).fullName as string || "Unknown Student",
+              level: ((student as Record<string, unknown>).evaluation as Record<string, unknown>)?.finalLevel as string || null,
+            };
+          }
+        } catch {
+          // ignore fetch errors
+        }
+        return null;
+      })
+    );
+    for (const r of results) {
+      if (r) students.push(r);
     }
-    students.push({
-      studentId: enr.studentId as string,
-      studentName,
-      level,
-    });
   }
 
   return students;
@@ -230,36 +212,18 @@ export async function checkTimeConflict(
   const structuredQuery = {
     from: [{ collectionId: "schedules" }],
     where: {
-      compositeFilter: {
-        op: "AND",
-        filters: [
-          {
-            fieldFilter: {
-              field: { fieldPath: "instructorId" },
-              op: "EQUAL",
-              value: { stringValue: instructorId },
-            },
-          },
-          {
-            fieldFilter: {
-              field: { fieldPath: "dayOfWeek" },
-              op: "EQUAL",
-              value: { integerValue: String(dayOfWeek) },
-            },
-          },
-          {
-            fieldFilter: {
-              field: { fieldPath: "isActive" },
-              op: "EQUAL",
-              value: { booleanValue: true },
-            },
-          },
-        ],
+      fieldFilter: {
+        field: { fieldPath: "instructorId" },
+        op: "EQUAL",
+        value: { stringValue: instructorId },
       },
     },
   };
 
-  const entries = (await runQuery(structuredQuery)) as ScheduleEntry[];
+  const allEntries = (await runQuery(structuredQuery)) as ScheduleEntry[];
+  const entries = allEntries.filter(
+    (e) => e.isActive !== false && e.dayOfWeek === dayOfWeek
+  );
 
   for (const entry of entries) {
     if (excludeEntryId && entry.id === excludeEntryId) continue;
