@@ -66,4 +66,6 @@ Student management and sales tracking system for Langford International Institut
 - Fixed Firestore queries to avoid composite index requirements (client-side filtering)
 - Added `schedules` collection to Firestore security rules
 - Added **delete enrollment** (Remove button) for admin in enrollment tab
-- Improved `fetchStudentsForCourse` with proper typing and error logging
+- Rewrote `fetchStudentsForCourse` to use **collection group query** on enrollments (fast single query instead of per-student iteration)
+- Added `enrollments` collection group rule to Firestore security rules
+- **Collection group queries ARE supported** for: activityLog, payments, enrollments (rules + auto indexes)
