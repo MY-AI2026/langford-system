@@ -123,7 +123,9 @@ export type TranslationKey =
   | "coordinator"
   | "admin"
   | "sales"
-  | "role";
+  | "role"
+  | "schedule"
+  | "weeklySchedule";
 
 export const translations: Record<Language, Record<TranslationKey, string>> = {
   en: {
@@ -250,6 +252,8 @@ export const translations: Record<Language, Record<TranslationKey, string>> = {
     admin: "Admin",
     sales: "Sales",
     role: "Role",
+    schedule: "Schedule",
+    weeklySchedule: "Weekly Schedule",
   },
   ar: {
     dashboard: "لوحة التحكم",
@@ -375,5 +379,7 @@ export const translations: Record<Language, Record<TranslationKey, string>> = {
     admin: "مدير",
     sales: "مبيعات",
     role: "الدور",
+    schedule: "الجدول",
+    weeklySchedule: "الجدول الأسبوعي",
   },
 };

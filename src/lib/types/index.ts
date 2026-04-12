@@ -42,7 +42,40 @@ export type EntityType =
   | "payment"
   | "user"
   | "installmentPlan"
-  | "enrollment";
+  | "enrollment"
+  | "schedule";
+
+// ─── Schedule Types ───────────────────────────────────────────────────────────
+
+export type DayOfWeek = 0 | 1 | 2 | 3 | 4 | 5 | 6;
+// 0=Sun, 1=Mon, 2=Tue, 3=Wed, 4=Thu, 5=Fri, 6=Sat
+
+export type DayPattern = "sat_mon_wed" | "sun_tue_thu" | "custom";
+
+export interface ScheduleEntry {
+  id: string;
+  instructorId: string;
+  instructorName: string;
+  courseId: string | null;
+  courseName: string;
+  dayOfWeek: DayOfWeek;
+  startTime: string;       // "HH:mm" 24-hour
+  endTime: string;         // "HH:mm" 24-hour
+  room: string;
+  notes: string;
+  dayPattern: DayPattern;
+  patternGroupId: string | null;
+  isActive: boolean;
+  createdBy: string;
+  createdAt: Timestamp;
+  updatedAt: Timestamp;
+}
+
+export interface ScheduleStudent {
+  studentId: string;
+  studentName: string;
+  level: string | null;
+}
 
 export type InstallmentStatus = "pending" | "paid" | "overdue";
 

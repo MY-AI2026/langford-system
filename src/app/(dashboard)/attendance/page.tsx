@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import { useAuth } from "@/contexts/auth-context";
 import { subscribeToCourses } from "@/lib/services/course-service";
 import { subscribeToEnrollments } from "@/lib/services/enrollment-service";
@@ -28,9 +29,12 @@ interface StudentAttendanceRecord {
 
 function AttendanceContent() {
   const { firebaseUser, role } = useAuth();
+  const searchParams = useSearchParams();
+  const courseIdParam = searchParams.get("courseId");
   const [courses, setCourses] = useState<Course[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedCourse, setSelectedCourse] = useState<Course | null>(null);
+  const [autoSelected, setAutoSelected] = useState(false);
   const [enrollments, setEnrollments] = useState<Enrollment[]>([]);
   const [loadingEnrollments, setLoadingEnrollments] = useState(false);
   const [attendanceDate, setAttendanceDate] = useState(
@@ -55,6 +59,17 @@ function AttendanceContent() {
     });
     return () => unsub();
   }, [firebaseUser, role]);
+
+  // Auto-select course from URL query param
+  useEffect(() => {
+    if (courseIdParam && courses.length > 0 && !autoSelected) {
+      const course = courses.find((c) => c.id === courseIdParam);
+      if (course) {
+        setSelectedCourse(course);
+        setAutoSelected(true);
+      }
+    }
+  }, [courseIdParam, courses, autoSelected]);
 
   // When a course is selected, we need to find students enrolled in that course.
   // We subscribe to enrollments for each student, but that's per-student.

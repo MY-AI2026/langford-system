@@ -17,6 +17,7 @@ import {
   BookOpen,
   ClipboardCheck,
   MessageSquare,
+  CalendarDays,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useFollowupCount } from "@/hooks/use-followup-count";
@@ -44,6 +45,7 @@ export function Sidebar({ open, onClose }: SidebarProps) {
     { href: "/reports/audit", label: t("auditLog"), icon: ShieldCheck },
     { href: "/settings", label: t("settings"), icon: Settings },
     { href: "/settings/courses", label: t("courses"), icon: BookOpen },
+    { href: "/schedule", label: t("schedule"), icon: CalendarDays },
   ];
 
   const salesNavItems = [
@@ -55,6 +57,7 @@ export function Sidebar({ open, onClose }: SidebarProps) {
 
   const instructorNavItems = [
     { href: "/dashboard", label: t("dashboard"), icon: LayoutDashboard },
+    { href: "/schedule", label: t("schedule"), icon: CalendarDays },
     { href: "/attendance", label: t("attendance"), icon: ClipboardCheck },
   ];
 
@@ -62,6 +65,7 @@ export function Sidebar({ open, onClose }: SidebarProps) {
     { href: "/dashboard", label: t("dashboard"), icon: LayoutDashboard },
     { href: "/students", label: t("students"), icon: GraduationCap },
     { href: "/settings/courses", label: t("courses"), icon: BookOpen },
+    { href: "/schedule", label: t("schedule"), icon: CalendarDays },
   ];
 
   const accountantNavItems = [
