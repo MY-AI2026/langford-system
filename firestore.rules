@@ -54,6 +54,10 @@ service cloud.firestore {
       allow read: if isSignedIn();
     }
 
+    match /{path=**}/enrollments/{enrollmentId} {
+      allow read: if isSignedIn();
+    }
+
     match /loginLogs/{logId} {
       allow read, write: if isSignedIn();
     }

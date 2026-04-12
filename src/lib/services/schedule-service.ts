@@ -146,51 +146,60 @@ async function getEntriesByPatternGroup(patternGroupId: string): Promise<Schedul
 
 /** Fetch enrolled students for a course with their names and levels */
 export async function fetchStudentsForCourse(courseId: string): Promise<ScheduleStudent[]> {
-  // Fetch all students and check their enrollments subcollections
-  const allStudents = (await fetchCollection("students")) as Student[];
-  const students: ScheduleStudent[] = [];
+  try {
+    // Collection group query across all students' enrollments subcollections
+    const enrollments = await runQuery({
+      from: [{ collectionId: "enrollments", allDescendants: true }],
+      where: {
+        fieldFilter: {
+          field: { fieldPath: "courseId" },
+          op: "EQUAL",
+          value: { stringValue: courseId },
+        },
+      },
+    });
 
-  const batchSize = 10;
-  for (let i = 0; i < allStudents.length; i += batchSize) {
-    const batch = allStudents.slice(i, i + batchSize);
+    // Filter active enrollments and extract studentId from document path
+    const activeEnrollments = enrollments.filter(
+      (e: Record<string, unknown>) => e.status === "active"
+    );
+
+    if (activeEnrollments.length === 0) return [];
+
+    // Get unique student IDs from enrollments
+    const studentIds = [...new Set(
+      activeEnrollments.map((e: Record<string, unknown>) => e.studentId as string).filter(Boolean)
+    )];
+
+    // Fetch student details in parallel
+    const students: ScheduleStudent[] = [];
     const results = await Promise.all(
-      batch.map(async (student) => {
+      studentIds.map(async (sid) => {
         try {
-          const enrollments = await runQuery(
-            {
-              from: [{ collectionId: "enrollments" }],
-              where: {
-                fieldFilter: {
-                  field: { fieldPath: "courseId" },
-                  op: "EQUAL",
-                  value: { stringValue: courseId },
-                },
-              },
-            },
-            `students/${student.id}`
-          );
-          const active = enrollments.filter(
-            (e: Record<string, unknown>) => e.status === "active"
-          );
-          if (active.length > 0) {
+          const student = await fetchDoc(`students/${sid}`) as Student | null;
+          if (student) {
             return {
-              studentId: student.id,
+              studentId: sid,
               studentName: student.fullName || "Unknown Student",
               level: student.evaluation?.finalLevel || null,
             };
           }
         } catch (err) {
-          console.error(`[schedule] Error fetching enrollments for student ${student.id}:`, err);
+          console.error(`[schedule] Error fetching student ${sid}:`, err);
         }
         return null;
       })
     );
+
     for (const r of results) {
       if (r) students.push(r);
     }
-  }
 
-  return students;
+    return students;
+  } catch (err) {
+    console.error("[schedule] fetchStudentsForCourse error:", err);
+    return [];
+  }
 }
 
 /** Get all active instructors */
