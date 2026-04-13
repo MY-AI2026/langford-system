@@ -176,11 +176,20 @@ export function subscribeToActivityLog(
 export function subscribeToRecentActivities(
   callback: (entries: ActivityLogEntry[]) => void
 ): () => void {
-  // Disabled: collection group queries on activityLog require indexes
-  // that are not yet available. Return empty to prevent error flooding.
-  // TODO: Re-enable when collection group indexes are created in Firebase Console.
-  callback([]);
-  return () => {};
+  const structuredQuery = {
+    from: [{ collectionId: "activityLog", allDescendants: true }],
+    orderBy: [
+      { field: { fieldPath: "createdAt" }, direction: "DESCENDING" },
+    ],
+    limit: 20,
+  };
+
+  return createSubscription<ActivityLogEntry>(
+    async () => {
+      return (await runQuery(structuredQuery)) as ActivityLogEntry[];
+    },
+    callback
+  );
 }
 
 export async function createStudent(
