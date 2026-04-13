@@ -128,6 +128,13 @@ export default function DashboardPage() {
 
   // ── Stats ────────────────────────────────────────────────────────────────────
   const totalStudents = students.filter((s) => s.status !== "lost").length;
+  const ieltsRevenue = students.reduce(
+    (sum, s) => sum + (s.ieltsSummary?.totalPaid ?? 0),
+    0
+  );
+  const ieltsBookingsCount = students.filter(
+    (s) => (s.ieltsSummary?.paymentsCount ?? 0) > 0
+  ).length;
   const totalRevenue = students.reduce(
     (sum, s) => sum + (s.paymentSummary?.amountPaid ?? 0),
     0
@@ -337,6 +344,8 @@ export default function DashboardPage() {
         totalRevenue={totalRevenue}
         pendingPayments={pendingPayments}
         conversionRate={conversionRate}
+        ieltsRevenue={ieltsRevenue}
+        ieltsBookingsCount={ieltsBookingsCount}
       />
 
       <div className="grid gap-6 lg:grid-cols-2">

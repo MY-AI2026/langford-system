@@ -1,7 +1,7 @@
 "use client";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { GraduationCap, DollarSign, Clock, TrendingUp } from "lucide-react";
+import { GraduationCap, DollarSign, Clock, TrendingUp, FileCheck, BookMarked } from "lucide-react";
 import { formatCurrency } from "@/lib/utils/format";
 
 interface StatsCardsProps {
@@ -9,6 +9,8 @@ interface StatsCardsProps {
   totalRevenue: number;
   pendingPayments: number;
   conversionRate: number;
+  ieltsRevenue: number;
+  ieltsBookingsCount: number;
 }
 
 export function StatsCards({
@@ -16,6 +18,8 @@ export function StatsCards({
   totalRevenue,
   pendingPayments,
   conversionRate,
+  ieltsRevenue,
+  ieltsBookingsCount,
 }: StatsCardsProps) {
   const stats = [
     {
@@ -28,9 +32,18 @@ export function StatsCards({
     {
       title: "Total Revenue",
       value: formatCurrency(totalRevenue),
+      subtitle: "Course fees only",
       icon: DollarSign,
       color: "text-green-600",
       bgColor: "bg-green-50",
+    },
+    {
+      title: "IELTS Exam Bookings",
+      value: formatCurrency(ieltsRevenue),
+      subtitle: `${ieltsBookingsCount} booking${ieltsBookingsCount !== 1 ? "s" : ""}`,
+      icon: FileCheck,
+      color: "text-purple-600",
+      bgColor: "bg-purple-50",
     },
     {
       title: "Pending Payments",
@@ -49,7 +62,7 @@ export function StatsCards({
   ];
 
   return (
-    <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+    <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
       {stats.map((stat) => (
         <Card key={stat.title}>
           <CardHeader className="flex flex-row items-center justify-between pb-2">
@@ -62,6 +75,9 @@ export function StatsCards({
           </CardHeader>
           <CardContent>
             <p className="text-2xl font-bold">{stat.value}</p>
+            {stat.subtitle && (
+              <p className="text-xs text-muted-foreground mt-1">{stat.subtitle}</p>
+            )}
           </CardContent>
         </Card>
       ))}
