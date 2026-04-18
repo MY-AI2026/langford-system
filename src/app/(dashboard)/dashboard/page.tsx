@@ -19,7 +19,8 @@ import {
 } from "@/lib/services/student-service";
 import { getSalesUsers } from "@/lib/services/user-service";
 import { subscribeToCourses } from "@/lib/services/course-service";
-import { Student, ActivityLogEntry, User, Course } from "@/lib/types";
+import { subscribeToEmbassyPayments } from "@/lib/services/embassy-payment-service";
+import { Student, ActivityLogEntry, User, Course, EmbassyPayment } from "@/lib/types";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { BookOpen, Users, ClipboardCheck, CalendarDays, GraduationCap } from "lucide-react";
@@ -32,6 +33,7 @@ export default function DashboardPage() {
   const [salesUsers, setSalesUsers] = useState<User[]>([]);
   const [courses, setCourses] = useState<Course[]>([]);
   const [allCourses, setAllCourses] = useState<Course[]>([]);
+  const [embassyPayments, setEmbassyPayments] = useState<EmbassyPayment[]>([]);
 
   useEffect(() => {
     if (!firebaseUser || !role) return;
@@ -45,6 +47,9 @@ export default function DashboardPage() {
     // Real-time activity feed (admin only)
     const unsubActivities =
       role === "admin" ? subscribeToRecentActivities(setActivities) : () => {};
+
+    // Embassy payments (admin, accountant, sales — for IELTS net view)
+    const unsubEmbassy = subscribeToEmbassyPayments(setEmbassyPayments);
 
     // Load sales users for leaderboard (admin only, one-time)
     if (role === "admin") {
@@ -77,6 +82,7 @@ export default function DashboardPage() {
       unsubActivities();
       unsubCourses();
       unsubAllCourses();
+      unsubEmbassy();
     };
   }, [firebaseUser, role]);
 
@@ -135,6 +141,10 @@ export default function DashboardPage() {
   const ieltsBookingsCount = students.filter(
     (s) => (s.ieltsSummary?.paymentsCount ?? 0) > 0
   ).length;
+  const embassyPaid = embassyPayments.reduce(
+    (sum, p) => sum + (p.amount ?? 0),
+    0
+  );
   const totalRevenue = students.reduce(
     (sum, s) => sum + (s.paymentSummary?.amountPaid ?? 0),
     0
@@ -346,6 +356,7 @@ export default function DashboardPage() {
         conversionRate={conversionRate}
         ieltsRevenue={ieltsRevenue}
         ieltsBookingsCount={ieltsBookingsCount}
+        embassyPaid={embassyPaid}
       />
 
       <div className="grid gap-6 lg:grid-cols-2">

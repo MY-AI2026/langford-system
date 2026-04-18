@@ -1,7 +1,7 @@
 "use client";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { GraduationCap, DollarSign, Clock, TrendingUp, FileCheck, BookMarked } from "lucide-react";
+import { GraduationCap, DollarSign, Clock, TrendingUp, FileCheck, TrendingDown, Calculator } from "lucide-react";
 import { formatCurrency } from "@/lib/utils/format";
 
 interface StatsCardsProps {
@@ -11,6 +11,7 @@ interface StatsCardsProps {
   conversionRate: number;
   ieltsRevenue: number;
   ieltsBookingsCount: number;
+  embassyPaid: number;
 }
 
 export function StatsCards({
@@ -20,7 +21,9 @@ export function StatsCards({
   conversionRate,
   ieltsRevenue,
   ieltsBookingsCount,
+  embassyPaid,
 }: StatsCardsProps) {
+  const netIelts = ieltsRevenue - embassyPaid;
   const stats = [
     {
       title: "Total Students",
@@ -38,12 +41,28 @@ export function StatsCards({
       bgColor: "bg-green-50",
     },
     {
-      title: "IELTS Exam Bookings",
+      title: "IELTS Bookings",
       value: formatCurrency(ieltsRevenue),
       subtitle: `${ieltsBookingsCount} booking${ieltsBookingsCount !== 1 ? "s" : ""}`,
       icon: FileCheck,
       color: "text-purple-600",
       bgColor: "bg-purple-50",
+    },
+    {
+      title: "Paid to Embassy",
+      value: formatCurrency(embassyPaid),
+      subtitle: "IELTS transfers",
+      icon: TrendingDown,
+      color: "text-orange-600",
+      bgColor: "bg-orange-50",
+    },
+    {
+      title: "Net IELTS",
+      value: formatCurrency(netIelts),
+      subtitle: "Bookings − Embassy",
+      icon: Calculator,
+      color: netIelts >= 0 ? "text-emerald-600" : "text-red-600",
+      bgColor: "bg-emerald-50",
     },
     {
       title: "Pending Payments",
@@ -62,7 +81,7 @@ export function StatsCards({
   ];
 
   return (
-    <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
+    <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
       {stats.map((stat) => (
         <Card key={stat.title}>
           <CardHeader className="flex flex-row items-center justify-between pb-2">

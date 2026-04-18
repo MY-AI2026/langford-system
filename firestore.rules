@@ -73,5 +73,9 @@ service cloud.firestore {
     match /schedules/{scheduleId} {
       allow read, write: if isSignedIn();
     }
+
+    match /embassyPayments/{paymentId} {
+      allow read, write: if isSignedIn();
+    }
   }
 }

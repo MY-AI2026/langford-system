@@ -208,6 +208,18 @@ export interface SystemSettings {
   instituteAddress: string;
 }
 
+export interface EmbassyPayment {
+  id: string;
+  studentId: string;
+  studentName: string;
+  amount: number;
+  paymentDate: Timestamp;
+  notes?: string;
+  createdBy: string;
+  createdByName: string;
+  createdAt: Timestamp;
+}
+
 export interface Course {
   id: string;
   name: string;
