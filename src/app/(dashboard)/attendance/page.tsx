@@ -87,57 +87,114 @@ function AttendanceContent() {
     // Since the enrollment service is per-student, we'll use a REST query approach.
     async function loadEnrollmentsForCourse() {
       try {
-        const { runQuery } = await import("@/lib/firebase/rest-helpers");
+        const { runQuery, fetchDoc } = await import("@/lib/firebase/rest-helpers");
+        // SIMPLIFIED QUERY - filter only by courseId to avoid composite index requirement.
+        // Status filter is applied client-side.
+        // Collection group query on `enrollments` returns docs from all students.
+        // The REST endpoint for a root collection-group query is :runQuery at the root
+        // with `allDescendants: true`. We also need the server to resolve document paths,
+        // so we additionally extract studentId from the document path.
         const structuredQuery = {
           from: [{ collectionId: "enrollments", allDescendants: true }],
           where: {
-            compositeFilter: {
-              op: "AND",
-              filters: [
-                {
-                  fieldFilter: {
-                    field: { fieldPath: "courseId" },
-                    op: "EQUAL",
-                    value: { stringValue: selectedCourse!.id },
-                  },
-                },
-                {
-                  fieldFilter: {
-                    field: { fieldPath: "status" },
-                    op: "EQUAL",
-                    value: { stringValue: "active" },
-                  },
-                },
-              ],
+            fieldFilter: {
+              field: { fieldPath: "courseId" },
+              op: "EQUAL",
+              value: { stringValue: selectedCourse!.id },
             },
           },
         };
-        const results = (await runQuery(structuredQuery)) as Enrollment[];
-        setEnrollments(results);
 
-        // Initialize attendance records
-        // We need student names. The enrollment has studentId but we need to
-        // fetch student names. For simplicity, we'll use the document path approach.
-        // Actually, let's also query students
-        const { fetchDoc } = await import("@/lib/firebase/rest-helpers");
-        const studentRecords: StudentAttendanceRecord[] = [];
-        for (const enr of results) {
-          let studentName = "Unknown Student";
-          try {
-            const studentDoc = await fetchDoc(`students/${enr.studentId}`);
-            if (studentDoc) {
-              studentName = studentDoc.fullName || "Unknown Student";
-            }
-          } catch {
-            // ignore
-          }
-          studentRecords.push({
-            studentId: enr.studentId,
-            studentName,
-            enrollmentId: enr.id,
-            status: "present",
-          });
+        // runQuery parses document data, but loses the parent path (studentId).
+        // We call the REST endpoint directly to preserve `document.name` so we can
+        // extract studentId from the path: students/{studentId}/enrollments/{id}
+        const { auth } = await import("@/lib/firebase/config");
+        const token = auth.currentUser ? await auth.currentUser.getIdToken() : null;
+        const projectId = process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID!;
+        const url = `https://firestore.googleapis.com/v1/projects/${projectId}/databases/(default)/documents:runQuery`;
+        const res = await fetch(url, {
+          method: "POST",
+          headers: {
+            ...(token ? { Authorization: `Bearer ${token}` } : {}),
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ structuredQuery }),
+          cache: "no-store",
+        });
+
+        if (!res.ok) {
+          console.error("[attendance] enrollments query failed:", res.status);
+          setEnrollments([]);
+          setRecords([]);
+          return;
         }
+
+        const rawResults = await res.json();
+        const parseValue = (v: unknown): unknown => {
+          if (v === null || v === undefined) return null;
+          const val = v as Record<string, unknown>;
+          if ("stringValue" in val) return val.stringValue;
+          if ("integerValue" in val) return Number(val.integerValue);
+          if ("doubleValue" in val) return val.doubleValue;
+          if ("booleanValue" in val) return val.booleanValue;
+          if ("nullValue" in val) return null;
+          if ("timestampValue" in val) return val.timestampValue;
+          if ("mapValue" in val) {
+            const fields = (val.mapValue as Record<string, Record<string, unknown>>)?.fields || {};
+            const out: Record<string, unknown> = {};
+            for (const [k, vv] of Object.entries(fields)) out[k] = parseValue(vv);
+            return out;
+          }
+          return null;
+        };
+
+        type RawDoc = {
+          document?: {
+            name: string;
+            fields?: Record<string, Record<string, unknown>>;
+          };
+        };
+
+        const activeEnrollments: Array<Enrollment & { _studentId: string }> = [];
+        for (const r of rawResults as RawDoc[]) {
+          if (!r.document) continue;
+          const pathParts = r.document.name.split("/");
+          // path: projects/.../documents/students/{studentId}/enrollments/{id}
+          const studentsIdx = pathParts.indexOf("students");
+          const studentId = studentsIdx >= 0 ? pathParts[studentsIdx + 1] : "";
+          const id = pathParts[pathParts.length - 1];
+          const fields = r.document.fields || {};
+          const parsed: Record<string, unknown> = { id };
+          for (const [k, v] of Object.entries(fields)) parsed[k] = parseValue(v);
+
+          // Client-side filter for active status
+          if (parsed.status !== "active") continue;
+
+          activeEnrollments.push({ ...(parsed as unknown as Enrollment), _studentId: studentId });
+        }
+
+        setEnrollments(activeEnrollments as Enrollment[]);
+
+        // Fetch student names in parallel
+        const studentRecords: StudentAttendanceRecord[] = await Promise.all(
+          activeEnrollments.map(async (enr) => {
+            let studentName = "Unknown Student";
+            try {
+              const studentDoc = await fetchDoc(`students/${enr._studentId}`);
+              if (studentDoc) {
+                studentName = studentDoc.fullName || "Unknown Student";
+              }
+            } catch {
+              // ignore
+            }
+            return {
+              studentId: enr._studentId,
+              studentName,
+              enrollmentId: enr.id,
+              status: "present" as AttendanceStatus,
+            };
+          })
+        );
         setRecords(studentRecords);
       } catch (e) {
         console.error("Failed to load enrollments:", e);

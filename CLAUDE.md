@@ -1,5 +1,13 @@
 @AGENTS.md
 
+# 📍 أنا في: Langford / Main App (Next.js) — sub-project 01
+
+> **الذاكرة الرئيسية:** اقرأ الأول `~/Desktop/مشاريعي/_system/CLAUDE.md`
+> **الـ sub-project doc:** `~/Desktop/مشاريعي/01-Langford/sub-projects/01-main-app-nextjs.md`
+> **قواعد عامة:** مصري فصيح دايماً، محافظ على الكود الموجود، PR فقط (مش push للـ main).
+
+---
+
 # Langford Student Management System
 
 ## Project Overview
