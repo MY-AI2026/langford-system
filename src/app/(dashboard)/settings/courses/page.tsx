@@ -8,7 +8,8 @@ import {
   deleteCourse,
   CourseInput,
 } from "@/lib/services/course-service";
-import { Course, CourseCategory } from "@/lib/types";
+import { subscribeToUsers } from "@/lib/services/user-service";
+import { Course, CourseCategory, User } from "@/lib/types";
 import { useAuth } from "@/contexts/auth-context";
 import { RoleGate } from "@/components/auth/role-gate";
 import { PageHeader } from "@/components/layout/page-header";
@@ -75,14 +76,20 @@ const emptyForm: CourseInput = {
   defaultFees: 0,
   maxStudents: 20,
   isActive: true,
+  instructorId: "",
+  instructorName: "",
 };
+
+const UNASSIGNED_INSTRUCTOR = "__none__";
 
 function CourseForm({
   initial,
+  instructors,
   onSave,
   onCancel,
 }: {
   initial: CourseInput;
+  instructors: User[];
   onSave: (data: CourseInput) => Promise<void>;
   onCancel: () => void;
 }) {
@@ -158,6 +165,41 @@ function CourseForm({
           />
         </div>
       </div>
+      <div className="space-y-2">
+        <Label>Assigned Instructor</Label>
+        <Select
+          value={form.instructorId || UNASSIGNED_INSTRUCTOR}
+          onValueChange={(val) => {
+            const id = val ?? UNASSIGNED_INSTRUCTOR;
+            if (id === UNASSIGNED_INSTRUCTOR) {
+              setForm({ ...form, instructorId: "", instructorName: "" });
+            } else {
+              const chosen = instructors.find((u) => u.uid === id);
+              setForm({
+                ...form,
+                instructorId: id,
+                instructorName: chosen?.displayName || "",
+              });
+            }
+          }}
+        >
+          <SelectTrigger>
+            <SelectValue placeholder="Select instructor (optional)" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value={UNASSIGNED_INSTRUCTOR}>— Unassigned —</SelectItem>
+            {instructors.map((u) => (
+              <SelectItem key={u.uid} value={u.uid}>
+                {u.displayName}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        <p className="text-xs text-muted-foreground">
+          The assigned instructor will see this course under their Attendance page.
+        </p>
+      </div>
+
       <div className="grid grid-cols-2 gap-3">
         <div className="space-y-2">
           <Label>Default Fees (KWD)</Label>
@@ -207,6 +249,7 @@ function CoursesContent() {
   const { role } = useAuth();
   const isReadOnly = role === "accountant";
   const [courses, setCourses] = useState<Course[]>([]);
+  const [instructors, setInstructors] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingCourse, setEditingCourse] = useState<Course | null>(null);
@@ -217,6 +260,13 @@ function CoursesContent() {
     const unsub = subscribeToCourses((data) => {
       setCourses(data);
       setLoading(false);
+    });
+    return () => unsub();
+  }, []);
+
+  useEffect(() => {
+    const unsub = subscribeToUsers((users) => {
+      setInstructors(users.filter((u) => u.role === "instructor" && u.isActive !== false));
     });
     return () => unsub();
   }, []);
@@ -327,7 +377,16 @@ function CoursesContent() {
                       {course.description}
                     </p>
                   )}
-                  <div className="flex gap-4 text-xs text-muted-foreground">
+                  <div className="flex flex-wrap gap-4 text-xs text-muted-foreground">
+                    {course.instructorName ? (
+                      <span className="text-blue-700 dark:text-blue-300">
+                        👨‍🏫 {course.instructorName}
+                      </span>
+                    ) : (
+                      <span className="text-amber-700 dark:text-amber-400">
+                        ⚠️ No instructor assigned
+                      </span>
+                    )}
                     {course.duration && <span>Duration: {course.duration}</span>}
                     <span>Max: {course.maxStudents} students</span>
                     {course.defaultFees > 0 && (
@@ -388,9 +447,12 @@ function CoursesContent() {
                     defaultFees: editingCourse.defaultFees || 0,
                     maxStudents: editingCourse.maxStudents,
                     isActive: editingCourse.isActive,
+                    instructorId: editingCourse.instructorId || "",
+                    instructorName: editingCourse.instructorName || "",
                   }
                 : emptyForm
             }
+            instructors={instructors}
             onSave={handleSave}
             onCancel={() => {
               setDialogOpen(false);
