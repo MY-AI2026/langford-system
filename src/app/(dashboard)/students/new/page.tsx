@@ -49,7 +49,7 @@ export default function NewStudentPage() {
     } catch (error) {
       if (error instanceof Error && error.message.startsWith("PHONE_DUPLICATE:")) {
         const existingName = error.message.substring("PHONE_DUPLICATE:".length);
-        toast.error(`رقم التلفون مسجّل بالفعل للطالب: ${existingName}`);
+        toast.error(`لا يمكن تسجيل الطالب — الطالب مسجل مسبقاً باسم: ${existingName}`);
       } else {
         toast.error("Failed to create student");
         console.error(error);
