@@ -65,8 +65,13 @@ export default function EditStudentPage() {
 
       toast.success("Student updated");
       router.push(`/students/${studentId}`);
-    } catch {
-      toast.error("Failed to update student");
+    } catch (error) {
+      if (error instanceof Error && error.message.startsWith("PHONE_DUPLICATE:")) {
+        const existingName = error.message.substring("PHONE_DUPLICATE:".length);
+        toast.error(`رقم التلفون مسجّل بالفعل للطالب: ${existingName}`);
+      } else {
+        toast.error("Failed to update student");
+      }
     }
   }
 

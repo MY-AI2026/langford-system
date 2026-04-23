@@ -192,6 +192,35 @@ export function subscribeToRecentActivities(
   );
 }
 
+/**
+ * Check if a phone number already exists in the students collection.
+ * Returns the matching student or null.
+ * Pass `excludeStudentId` when editing an existing student so we don't
+ * flag the student against themselves.
+ */
+export async function findStudentByPhone(
+  phone: string,
+  excludeStudentId?: string
+): Promise<Student | null> {
+  const normalizedPhone = phone.trim().replace(/\s+/g, "");
+  const query = {
+    from: [{ collectionId: "students" }],
+    where: {
+      fieldFilter: {
+        field: { fieldPath: "phone" },
+        op: "EQUAL",
+        value: { stringValue: normalizedPhone },
+      },
+    },
+    limit: 5,
+  };
+  const results = (await runQuery(query)) as Student[];
+  const others = excludeStudentId
+    ? results.filter((s) => s.id !== excludeStudentId)
+    : results;
+  return others.length > 0 ? others[0] : null;
+}
+
 export async function createStudent(
   data: {
     fullName: string;
@@ -204,6 +233,12 @@ export async function createStudent(
   userId: string,
   userName: string
 ): Promise<string> {
+  // ── Phone uniqueness check ──────────────────────────────────────────────────
+  const existingWithPhone = await findStudentByPhone(data.phone);
+  if (existingWithPhone) {
+    throw new Error(`PHONE_DUPLICATE:${existingWithPhone.fullName}`);
+  }
+
   const now = new Date();
   const studentData: Record<string, unknown> = {
     ...data,
@@ -261,6 +296,14 @@ export async function updateStudent(
   userName: string,
   changes?: Record<string, { from: unknown; to: unknown }>
 ) {
+  // ── Phone uniqueness check (only when phone is being changed) ──────────────
+  if (data.phone) {
+    const existingWithPhone = await findStudentByPhone(data.phone, studentId);
+    if (existingWithPhone) {
+      throw new Error(`PHONE_DUPLICATE:${existingWithPhone.fullName}`);
+    }
+  }
+
   await restUpdate(`students/${studentId}`, { ...data, updatedAt: new Date() });
 
   if (changes && Object.keys(changes).length > 0) {

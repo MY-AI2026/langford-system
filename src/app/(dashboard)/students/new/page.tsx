@@ -47,8 +47,13 @@ export default function NewStudentPage() {
       toast.success("Student created successfully");
       router.push(`/students/${studentId}`);
     } catch (error) {
-      toast.error("Failed to create student");
-      console.error(error);
+      if (error instanceof Error && error.message.startsWith("PHONE_DUPLICATE:")) {
+        const existingName = error.message.substring("PHONE_DUPLICATE:".length);
+        toast.error(`رقم التلفون مسجّل بالفعل للطالب: ${existingName}`);
+      } else {
+        toast.error("Failed to create student");
+        console.error(error);
+      }
     }
   }
 
