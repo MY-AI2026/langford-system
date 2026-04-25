@@ -28,6 +28,7 @@ export const evaluationSchema = z.object({
 
 export const paymentSchema = z.object({
   amount: z.coerce.number().positive("Amount must be greater than 0"),
+  totalAmount: z.coerce.number().min(0).optional(),
   method: z.enum(["cash", "card", "bank_transfer", "online"]),
   paymentDate: z.date(),
   notes: z.string().optional().default(""),

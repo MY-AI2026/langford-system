@@ -33,9 +33,9 @@ export function StatsCards({
       bgColor: "bg-blue-50",
     },
     {
-      title: "Total Revenue",
+      title: "إجمالي الدخل المحصل",
       value: formatCurrency(totalRevenue),
-      subtitle: "Course fees only",
+      subtitle: "المدفوع فعلياً",
       icon: DollarSign,
       color: "text-green-600",
       bgColor: "bg-green-50",
@@ -65,8 +65,9 @@ export function StatsCards({
       bgColor: "bg-emerald-50",
     },
     {
-      title: "Pending Payments",
+      title: "المبالغ غير المحصلة",
       value: formatCurrency(pendingPayments),
+      subtitle: "متبقي + أقساط لم تدفع",
       icon: Clock,
       color: "text-yellow-600",
       bgColor: "bg-yellow-50",

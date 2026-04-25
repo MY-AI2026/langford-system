@@ -29,6 +29,8 @@ interface PaymentFormProps {
   onOpenChange: (open: boolean) => void;
   onSubmit: (data: PaymentFormData) => Promise<void>;
   remainingBalance?: number;
+  totalFees?: number;
+  amountPaid?: number;
   enrollments?: Enrollment[];
 }
 
@@ -37,8 +39,11 @@ export function PaymentForm({
   onOpenChange,
   onSubmit,
   remainingBalance,
+  totalFees = 0,
+  amountPaid = 0,
   enrollments,
 }: PaymentFormProps) {
+  const isFirstPayment = totalFees <= 0;
   const {
     register,
     handleSubmit,
@@ -51,6 +56,7 @@ export function PaymentForm({
     resolver: zodResolver(paymentSchema) as any,
     defaultValues: {
       amount: 0,
+      totalAmount: 0,
       method: "cash",
       paymentDate: new Date(),
       notes: "",
@@ -58,6 +64,14 @@ export function PaymentForm({
       courseName: "",
     },
   });
+
+  const watchedTotal = watch("totalAmount") || 0;
+  const watchedAmount = watch("amount") || 0;
+  const effectiveTotal = isFirstPayment ? Number(watchedTotal) : totalFees;
+  const liveRemaining = Math.max(
+    0,
+    effectiveTotal - amountPaid - Number(watchedAmount || 0)
+  );
 
   const activeEnrollments = enrollments?.filter((e) => e.status === "active") || [];
 
@@ -88,11 +102,38 @@ export function PaymentForm({
         </DialogHeader>
         <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="amount">
-              Amount *
-              {remainingBalance !== undefined && (
+            <Label htmlFor="totalAmount">
+              الإجمالي المتفق عليه (Total) {isFirstPayment ? "*" : ""}
+              {!isFirstPayment && (
                 <span className="ml-2 text-xs text-muted-foreground">
-                  (Remaining: {remainingBalance.toFixed(3)} KWD)
+                  (مقفول — تم تحديده من قبل)
+                </span>
+              )}
+            </Label>
+            <Input
+              id="totalAmount"
+              type="number"
+              step="0.001"
+              min={0}
+              placeholder="0.000"
+              readOnly={!isFirstPayment}
+              value={isFirstPayment ? undefined : totalFees.toFixed(3)}
+              {...(isFirstPayment ? register("totalAmount") : {})}
+              className={!isFirstPayment ? "bg-muted" : ""}
+            />
+            {errors.totalAmount && (
+              <p className="text-sm text-destructive">
+                {errors.totalAmount.message}
+              </p>
+            )}
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="amount">
+              المدفوع الآن (Paid Now) *
+              {remainingBalance !== undefined && !isFirstPayment && (
+                <span className="ml-2 text-xs text-muted-foreground">
+                  (المتبقي قبل الدفع: {remainingBalance.toFixed(3)} KWD)
                 </span>
               )}
             </Label>
@@ -110,6 +151,29 @@ export function PaymentForm({
               </p>
             )}
           </div>
+
+          {effectiveTotal > 0 && (
+            <div className="rounded-lg border bg-muted/40 p-3 text-sm space-y-1">
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">الإجمالي:</span>
+                <span className="font-medium">{effectiveTotal.toFixed(3)} KWD</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">المدفوع سابقاً:</span>
+                <span>{amountPaid.toFixed(3)} KWD</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">المدفوع الآن:</span>
+                <span>{Number(watchedAmount || 0).toFixed(3)} KWD</span>
+              </div>
+              <div className="flex justify-between border-t pt-1 mt-1">
+                <span className="font-medium">المتبقي بعد الدفع:</span>
+                <span className={`font-semibold ${liveRemaining > 0 ? "text-amber-600" : "text-green-600"}`}>
+                  {liveRemaining.toFixed(3)} KWD
+                </span>
+              </div>
+            </div>
+          )}
 
           <div className="space-y-2">
             <Label>Payment Method *</Label>

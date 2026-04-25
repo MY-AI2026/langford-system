@@ -224,6 +224,7 @@ export default function StudentDetailPage() {
         studentId,
         {
           amount: data.amount,
+          totalAmount: data.totalAmount,
           method: data.method,
           paymentDate: data.paymentDate,
           notes: data.notes,
@@ -700,6 +701,8 @@ export default function StudentDetailPage() {
               onOpenChange={setPaymentDialogOpen}
               onSubmit={handlePaymentSubmit}
               remainingBalance={(student.paymentSummary?.remainingBalance || 0)}
+              totalFees={(student.paymentSummary?.totalFees || 0)}
+              amountPaid={(student.paymentSummary?.amountPaid || 0)}
               enrollments={enrollments}
             />
           )}

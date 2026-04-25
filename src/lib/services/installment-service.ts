@@ -71,10 +71,37 @@ export async function createInstallmentPlan(
     updatedAt: now,
   };
 
-  return restCreate(
+  const planId = await restCreate(
     `students/${studentId}/installmentPlans`,
     planData
   );
+
+  // Sync paymentSummary.totalFees so dashboard "uncollected" includes installments
+  const studentData = await fetchDoc(`students/${studentId}`);
+  if (studentData) {
+    const summary = (studentData.paymentSummary as Record<string, number | string | boolean>) || {};
+    const existingTotal = (summary.totalFees as number) || 0;
+    const amountPaid = (summary.amountPaid as number) || 0;
+    const newTotal = Math.max(existingTotal, data.totalFees);
+    const newRemaining = newTotal - amountPaid;
+
+    let newStatus: PaymentStatus = "pending";
+    if (newRemaining <= 0 && newTotal > 0) newStatus = "paid";
+    else if (amountPaid > 0) newStatus = "partial";
+
+    await restUpdate(`students/${studentId}`, {
+      paymentSummary: {
+        totalFees: newTotal,
+        amountPaid,
+        remainingBalance: Math.max(0, newRemaining),
+        paymentStatus: newStatus,
+        hasOverdue: Boolean(summary.hasOverdue) || false,
+      },
+      updatedAt: now,
+    });
+  }
+
+  return planId;
 }
 
 export async function markInstallmentPaid(

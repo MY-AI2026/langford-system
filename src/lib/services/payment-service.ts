@@ -39,6 +39,7 @@ export async function addPayment(
   studentId: string,
   data: {
     amount: number;
+    totalAmount?: number;
     method: PaymentMethod;
     paymentDate: Date;
     notes?: string;
@@ -60,8 +61,14 @@ export async function addPayment(
     totalFees: 0, amountPaid: 0, remainingBalance: 0, paymentStatus: "pending",
   };
 
+  const existingTotal = (currentSummary.totalFees as number) || 0;
+  const effectiveTotal =
+    existingTotal > 0
+      ? existingTotal
+      : (data.totalAmount && data.totalAmount > 0 ? data.totalAmount : 0);
+
   const newAmountPaid = ((currentSummary.amountPaid as number) || 0) + data.amount;
-  const newRemaining = ((currentSummary.totalFees as number) || 0) - newAmountPaid;
+  const newRemaining = effectiveTotal - newAmountPaid;
 
   let newPaymentStatus: PaymentStatus = "partial";
   if (newRemaining <= 0) newPaymentStatus = "paid";
@@ -88,7 +95,7 @@ export async function addPayment(
 
   await restUpdate(`students/${studentId}`, {
     paymentSummary: {
-      totalFees: (currentSummary.totalFees as number) || 0,
+      totalFees: effectiveTotal,
       amountPaid: newAmountPaid,
       remainingBalance: Math.max(0, newRemaining),
       paymentStatus: newPaymentStatus,
