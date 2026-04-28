@@ -67,6 +67,14 @@
   ],
   "fieldOverrides": [
     {
+      "collectionGroup": "activityLog",
+      "fieldPath": "isFollowUpDone",
+      "indexes": [
+        { "order": "ASCENDING", "queryScope": "COLLECTION_GROUP" },
+        { "order": "ASCENDING", "queryScope": "COLLECTION" }
+      ]
+    },
+    {
       "collectionGroup": "enrollments",
       "fieldPath": "courseId",
       "indexes": [

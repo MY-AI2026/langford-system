@@ -67,7 +67,16 @@ Student management and sales tracking system for Langford International Institut
 3. Deploy: `npx vercel --prod --yes`
 4. If new Firestore collection added: `npx firebase deploy --only firestore:rules`
 
-## Recent Changes (2026-04-12)
+## Recent Changes (2026-04-28)
+- Re-enabled **`useFollowupCount` sidebar badge** — collection group query on `activityLog` with field override on `isFollowUpDone`, polling 30s
+- Added `*.pdf` to `.gitignore` (sales/training drafts kept out of repo)
+- Prevent **duplicate phone numbers** across students (Arabic error message)
+- **Course → instructor assignment** so attendance lists students for the assigned instructor
+- Added **embassy transfer tracking** + separate **IELTS exam bookings card** on dashboard
+- Added Firestore collection-group field overrides for `enrollments` (`courseId`, `instructorId`, `status`)
+- Dashboard charts + follow-ups + coordinator view enhancements
+
+### Earlier (2026-04-12)
 - Added **accountant** role (read-only access to students, payments, courses)
 - Added **student notes report** (`/reports/student-notes`) — admin + accountant, with CSV export
 - Added **weekly teacher schedule** (`/schedule`) — admin, coordinator, instructor
