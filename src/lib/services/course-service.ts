@@ -8,7 +8,13 @@ import {
   restDelete,
 } from "@/lib/firebase/rest-helpers";
 
-export type CourseInput = Omit<Course, "id" | "createdAt" | "updatedAt">;
+export type CourseInput = Omit<
+  Course,
+  "id" | "createdAt" | "updatedAt" | "startDate" | "endDate"
+> & {
+  startDate?: Date | null;
+  endDate?: Date | null;
+};
 
 /** REST-based polling subscription (replaces onSnapshot) */
 export function subscribeToCourses(

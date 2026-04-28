@@ -36,6 +36,7 @@ export async function createEnrollment(
     courseCategory: CourseCategory;
     level?: string;
     startDate: Date;
+    endDate?: Date | null;
     fees: number;
     instructorId?: string;
     instructorName?: string;
@@ -49,6 +50,9 @@ export async function createEnrollment(
 
   const now = new Date().toISOString();
   const startDateISO = data.startDate.toISOString();
+  const endDateField = data.endDate
+    ? { timestampValue: data.endDate.toISOString() }
+    : { nullValue: "NULL_VALUE" };
 
   const fields: Record<string, unknown> = {
     studentId: { stringValue: studentId },
@@ -57,7 +61,7 @@ export async function createEnrollment(
     courseCategory: { stringValue: data.courseCategory },
     level: { stringValue: data.level || "" },
     startDate: { timestampValue: startDateISO },
-    endDate: { nullValue: "NULL_VALUE" },
+    endDate: endDateField,
     status: { stringValue: "active" },
     fees: { doubleValue: data.fees },
     amountPaid: { doubleValue: 0 },

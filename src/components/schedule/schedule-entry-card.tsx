@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { ScheduleEntry } from "@/lib/types";
+import { ScheduleEntry, Course } from "@/lib/types";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -10,8 +10,9 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import { Pencil, Trash2, ClipboardCheck, MapPin } from "lucide-react";
+import { Pencil, Trash2, ClipboardCheck, MapPin, CalendarRange } from "lucide-react";
 import { ScheduleStudentList } from "./schedule-student-list";
+import { formatDate } from "@/lib/utils/format";
 
 // Color palette for schedule entries
 const ENTRY_COLORS = [
@@ -36,6 +37,7 @@ function getEntryColor(courseId: string | null, courseName: string): string {
 
 interface ScheduleEntryCardProps {
   entry: ScheduleEntry;
+  course?: Course;
   editable?: boolean;
   onEdit?: (entry: ScheduleEntry) => void;
   onDelete?: (entry: ScheduleEntry) => void;
@@ -43,6 +45,7 @@ interface ScheduleEntryCardProps {
 
 export function ScheduleEntryCard({
   entry,
+  course,
   editable = false,
   onEdit,
   onDelete,
@@ -89,6 +92,16 @@ export function ScheduleEntryCard({
             <p className="text-sm text-muted-foreground">
               {formatTime(entry.startTime)} - {formatTime(entry.endTime)}
             </p>
+            {(course?.startDate || course?.endDate) && (
+              <div className="mt-1 flex items-center gap-1 text-sm text-muted-foreground">
+                <CalendarRange className="h-3.5 w-3.5" />
+                <span>
+                  {course.startDate ? formatDate(course.startDate) : "—"}
+                  {" → "}
+                  {course.endDate ? formatDate(course.endDate) : "—"}
+                </span>
+              </div>
+            )}
             {entry.room && (
               <div className="mt-1 flex items-center gap-1 text-sm text-muted-foreground">
                 <MapPin className="h-3.5 w-3.5" />
