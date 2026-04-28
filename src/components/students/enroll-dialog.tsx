@@ -24,11 +24,21 @@ interface EnrollDialogProps {
   studentId: string;
 }
 
+function tsToDateInput(value: unknown): string {
+  if (!value) return "";
+  if (typeof (value as { toDate?: () => Date }).toDate === "function") {
+    return (value as { toDate: () => Date }).toDate().toISOString().split("T")[0];
+  }
+  if (value instanceof Date) return value.toISOString().split("T")[0];
+  return "";
+}
+
 export function EnrollDialog({ open, onOpenChange, studentId }: EnrollDialogProps) {
   const { firebaseUser, userData } = useAuth();
   const [courses, setCourses] = useState<Course[]>([]);
   const [courseId, setCourseId] = useState("");
   const [startDate, setStartDate] = useState(new Date().toISOString().split("T")[0]);
+  const [endDate, setEndDate] = useState("");
   const [fees, setFees] = useState(0);
   const [notes, setNotes] = useState("");
   const [saving, setSaving] = useState(false);
@@ -40,14 +50,19 @@ export function EnrollDialog({ open, onOpenChange, studentId }: EnrollDialogProp
     return () => unsub();
   }, []);
 
-  // Auto-fill fees when course changes
+  // Auto-fill fees and course dates when course changes
   useEffect(() => {
-    if (courseId) {
-      const course = courses.find((c) => c.id === courseId);
-      if (course?.defaultFees) {
-        setFees(course.defaultFees);
-      }
+    if (!courseId) return;
+    const course = courses.find((c) => c.id === courseId);
+    if (!course) return;
+    if (course.defaultFees) {
+      setFees(course.defaultFees);
     }
+    const courseStart = tsToDateInput(course.startDate);
+    const courseEnd = tsToDateInput(course.endDate);
+    if (courseStart) setStartDate(courseStart);
+    if (courseEnd) setEndDate(courseEnd);
+    else setEndDate("");
   }, [courseId, courses]);
 
   // Reset form when dialog opens
@@ -55,6 +70,7 @@ export function EnrollDialog({ open, onOpenChange, studentId }: EnrollDialogProp
     if (open) {
       setCourseId("");
       setStartDate(new Date().toISOString().split("T")[0]);
+      setEndDate("");
       setFees(0);
       setNotes("");
     }
@@ -80,6 +96,11 @@ export function EnrollDialog({ open, onOpenChange, studentId }: EnrollDialogProp
       return;
     }
 
+    if (endDate && endDate < startDate) {
+      toast.error("End date must be after start date");
+      return;
+    }
+
     setSaving(true);
     try {
       await createEnrollment(
@@ -90,6 +111,7 @@ export function EnrollDialog({ open, onOpenChange, studentId }: EnrollDialogProp
           courseCategory: (course.category || "other") as CourseCategory,
           level: course.level || undefined,
           startDate: new Date(startDate),
+          endDate: endDate ? new Date(endDate) : null,
           fees,
           instructorId: course.instructorId,
           instructorName: course.instructorName,
@@ -138,15 +160,31 @@ export function EnrollDialog({ open, onOpenChange, studentId }: EnrollDialogProp
             )}
           </div>
 
-          <div className="space-y-2">
-            <Label>Start Date *</Label>
-            <Input
-              type="date"
-              value={startDate}
-              onChange={(e) => setStartDate(e.target.value)}
-              required
-            />
+          <div className="grid grid-cols-2 gap-2">
+            <div className="space-y-2">
+              <Label>Start Date *</Label>
+              <Input
+                type="date"
+                value={startDate}
+                onChange={(e) => setStartDate(e.target.value)}
+                required
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>End Date</Label>
+              <Input
+                type="date"
+                value={endDate}
+                onChange={(e) => setEndDate(e.target.value)}
+                min={startDate || undefined}
+              />
+            </div>
           </div>
+          {selectedCourse?.startDate || selectedCourse?.endDate ? (
+            <p className="text-xs text-muted-foreground -mt-1">
+              Auto-filled from course dates. Adjust if needed.
+            </p>
+          ) : null}
 
           <div className="space-y-2">
             <Label>Fees (KWD)</Label>

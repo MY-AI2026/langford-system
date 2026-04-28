@@ -29,6 +29,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { toast } from "sonner";
+import { formatDate } from "@/lib/utils/format";
 
 const DAY_NAMES: { value: DayOfWeek; label: string; labelAr: string }[] = [
   { value: 6, label: "Saturday", labelAr: "السبت" },
@@ -327,6 +328,17 @@ export function ScheduleEntryForm({
                 onChange={(e) => setCourseName(e.target.value)}
               />
             )}
+            {courseSource === "existing" && courseId && (() => {
+              const c = courses.find((x) => x.id === courseId);
+              if (!c || (!c.startDate && !c.endDate)) return null;
+              return (
+                <p className="text-xs text-muted-foreground">
+                  Course period: {c.startDate ? formatDate(c.startDate) : "—"}
+                  {" → "}
+                  {c.endDate ? formatDate(c.endDate) : "—"}
+                </p>
+              );
+            })()}
           </div>
 
           {/* Day Pattern (only for new entries) */}

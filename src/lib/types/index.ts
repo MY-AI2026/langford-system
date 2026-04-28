@@ -231,6 +231,8 @@ export interface Course {
   maxStudents: number;
   instructorId?: string;
   instructorName?: string;
+  startDate?: Timestamp | null;
+  endDate?: Timestamp | null;
   isActive: boolean;
   createdAt: Timestamp;
   updatedAt: Timestamp;

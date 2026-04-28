@@ -2,13 +2,14 @@
 
 import { useEffect, useState } from "react";
 import { useAuth } from "@/contexts/auth-context";
-import { ScheduleEntry } from "@/lib/types";
+import { ScheduleEntry, Course } from "@/lib/types";
 import {
   subscribeToSchedulesByInstructor,
   subscribeToAllSchedules,
   deleteScheduleEntry,
   deleteSchedulePattern,
 } from "@/lib/services/schedule-service";
+import { subscribeToCourses } from "@/lib/services/course-service";
 import { RoleGate } from "@/components/auth/role-gate";
 import { PageHeader } from "@/components/layout/page-header";
 import { WeeklyCalendarGrid } from "@/components/schedule/weekly-calendar-grid";
@@ -32,6 +33,7 @@ function CoordinatorScheduleView() {
   const [selectedInstructorId, setSelectedInstructorId] = useState<string | null>(null);
   const [selectedInstructorName, setSelectedInstructorName] = useState("");
   const [entries, setEntries] = useState<ScheduleEntry[]>([]);
+  const [courses, setCourses] = useState<Course[]>([]);
   const [loading, setLoading] = useState(false);
   const [formOpen, setFormOpen] = useState(false);
   const [editEntry, setEditEntry] = useState<ScheduleEntry | null>(null);
@@ -50,6 +52,11 @@ function CoordinatorScheduleView() {
     });
     return () => unsub();
   }, [selectedInstructorId, refreshKey]);
+
+  useEffect(() => {
+    const unsub = subscribeToCourses(setCourses);
+    return () => unsub();
+  }, []);
 
   function handleEdit(entry: ScheduleEntry) {
     setEditEntry(entry);
@@ -114,6 +121,7 @@ function CoordinatorScheduleView() {
       ) : (
         <WeeklyCalendarGrid
           entries={entries}
+          courses={courses}
           editable
           onEdit={handleEdit}
           onDelete={setDeleteTarget}
@@ -159,6 +167,7 @@ function CoordinatorScheduleView() {
 function InstructorScheduleView() {
   const { firebaseUser } = useAuth();
   const [entries, setEntries] = useState<ScheduleEntry[]>([]);
+  const [courses, setCourses] = useState<Course[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -169,6 +178,11 @@ function InstructorScheduleView() {
     });
     return () => unsub();
   }, [firebaseUser]);
+
+  useEffect(() => {
+    const unsub = subscribeToCourses(setCourses);
+    return () => unsub();
+  }, []);
 
   if (loading) {
     return (
@@ -192,7 +206,7 @@ function InstructorScheduleView() {
     );
   }
 
-  return <WeeklyCalendarGrid entries={entries} />;
+  return <WeeklyCalendarGrid entries={entries} courses={courses} />;
 }
 
 export default function SchedulePage() {

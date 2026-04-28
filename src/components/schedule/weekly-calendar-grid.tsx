@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { ScheduleEntry, DayOfWeek } from "@/lib/types";
+import { ScheduleEntry, DayOfWeek, Course } from "@/lib/types";
 import { ScheduleEntryCard } from "./schedule-entry-card";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { cn } from "@/lib/utils";
@@ -32,6 +32,7 @@ function timeToMinutes(time: string): number {
 
 interface WeeklyCalendarGridProps {
   entries: ScheduleEntry[];
+  courses?: Course[];
   editable?: boolean;
   onEdit?: (entry: ScheduleEntry) => void;
   onDelete?: (entry: ScheduleEntry) => void;
@@ -39,10 +40,12 @@ interface WeeklyCalendarGridProps {
 
 export function WeeklyCalendarGrid({
   entries,
+  courses = [],
   editable = false,
   onEdit,
   onDelete,
 }: WeeklyCalendarGridProps) {
+  const courseById = new Map(courses.map((c) => [c.id, c]));
   const [mobileDay, setMobileDay] = useState<string>(String(WEEK_DAYS[0].value));
 
   function getEntriesForDay(day: DayOfWeek): ScheduleEntry[] {
@@ -131,6 +134,7 @@ export function WeeklyCalendarGrid({
                     >
                       <ScheduleEntryCard
                         entry={entry}
+                        course={entry.courseId ? courseById.get(entry.courseId) : undefined}
                         editable={editable}
                         onEdit={onEdit}
                         onDelete={onDelete}
@@ -186,6 +190,7 @@ export function WeeklyCalendarGrid({
                     <div key={entry.id} className="h-24">
                       <ScheduleEntryCard
                         entry={entry}
+                        course={entry.courseId ? courseById.get(entry.courseId) : undefined}
                         editable={editable}
                         onEdit={onEdit}
                         onDelete={onDelete}

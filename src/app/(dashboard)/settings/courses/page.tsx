@@ -37,7 +37,17 @@ import {
 } from "@/components/ui/dialog";
 import { Plus, Pencil, Trash2 } from "lucide-react";
 import { toast } from "sonner";
-import { formatCurrency } from "@/lib/utils/format";
+import { formatCurrency, formatDate } from "@/lib/utils/format";
+
+function toDateInputValue(value: unknown): string {
+  if (!value) return "";
+  if (value instanceof Date) return value.toISOString().split("T")[0];
+  if (typeof value === "string") return value.split("T")[0];
+  if (typeof (value as { toDate?: () => Date }).toDate === "function") {
+    return (value as { toDate: () => Date }).toDate().toISOString().split("T")[0];
+  }
+  return "";
+}
 
 const CATEGORY_OPTIONS: { value: CourseCategory; label: string }[] = [
   { value: "general_english", label: "General English" },
@@ -78,6 +88,8 @@ const emptyForm: CourseInput = {
   isActive: true,
   instructorId: "",
   instructorName: "",
+  startDate: null,
+  endDate: null,
 };
 
 const UNASSIGNED_INSTRUCTOR = "__none__";
@@ -94,6 +106,12 @@ function CourseForm({
   onCancel: () => void;
 }) {
   const [form, setForm] = useState<CourseInput>(initial);
+  const [startDateStr, setStartDateStr] = useState<string>(
+    toDateInputValue(initial.startDate)
+  );
+  const [endDateStr, setEndDateStr] = useState<string>(
+    toDateInputValue(initial.endDate)
+  );
   const [saving, setSaving] = useState(false);
 
   async function handleSubmit(e: React.FormEvent) {
@@ -102,9 +120,17 @@ function CourseForm({
       toast.error("Course name is required");
       return;
     }
+    if (startDateStr && endDateStr && endDateStr < startDateStr) {
+      toast.error("End date must be after start date");
+      return;
+    }
     setSaving(true);
     try {
-      await onSave(form);
+      await onSave({
+        ...form,
+        startDate: startDateStr ? new Date(startDateStr) : null,
+        endDate: endDateStr ? new Date(endDateStr) : null,
+      });
     } finally {
       setSaving(false);
     }
@@ -165,6 +191,29 @@ function CourseForm({
           />
         </div>
       </div>
+      <div className="grid grid-cols-2 gap-3">
+        <div className="space-y-2">
+          <Label>Start Date</Label>
+          <Input
+            type="date"
+            value={startDateStr}
+            onChange={(e) => setStartDateStr(e.target.value)}
+          />
+        </div>
+        <div className="space-y-2">
+          <Label>End Date</Label>
+          <Input
+            type="date"
+            value={endDateStr}
+            onChange={(e) => setEndDateStr(e.target.value)}
+            min={startDateStr || undefined}
+          />
+        </div>
+      </div>
+      <p className="text-xs text-muted-foreground -mt-2">
+        These dates apply automatically to all students enrolled in this course
+        and appear on the instructor&apos;s schedule.
+      </p>
       <div className="space-y-2">
         <Label>Assigned Instructor</Label>
         <Select
@@ -388,6 +437,13 @@ function CoursesContent() {
                       </span>
                     )}
                     {course.duration && <span>Duration: {course.duration}</span>}
+                    {(course.startDate || course.endDate) && (
+                      <span>
+                        📅 {course.startDate ? formatDate(course.startDate) : "—"}
+                        {" → "}
+                        {course.endDate ? formatDate(course.endDate) : "—"}
+                      </span>
+                    )}
                     <span>Max: {course.maxStudents} students</span>
                     {course.defaultFees > 0 && (
                       <span>Fees: {formatCurrency(course.defaultFees)}</span>
@@ -449,6 +505,12 @@ function CoursesContent() {
                     isActive: editingCourse.isActive,
                     instructorId: editingCourse.instructorId || "",
                     instructorName: editingCourse.instructorName || "",
+                    startDate: editingCourse.startDate
+                      ? editingCourse.startDate.toDate()
+                      : null,
+                    endDate: editingCourse.endDate
+                      ? editingCourse.endDate.toDate()
+                      : null,
                   }
                 : emptyForm
             }
