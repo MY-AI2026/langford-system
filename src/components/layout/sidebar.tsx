@@ -19,6 +19,7 @@ import {
   MessageSquare,
   CalendarDays,
   FileCheck,
+  Wallet,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useFollowupCount } from "@/hooks/use-followup-count";
@@ -42,6 +43,7 @@ export function Sidebar({ open, onClose }: SidebarProps) {
     { href: "/payments", label: t("payments"), icon: CreditCard },
     { href: "/payments/embassy", label: "Embassy Transfers", icon: FileCheck },
     { href: "/reports", label: t("reports"), icon: BarChart3 },
+    { href: "/reports/outstanding-balances", label: "Outstanding Balances", icon: Wallet },
     { href: "/reports/student-notes", label: "Student Notes", icon: MessageSquare },
     { href: "/reports/logins", label: t("loginReport"), icon: LogIn },
     { href: "/reports/audit", label: t("auditLog"), icon: ShieldCheck },
@@ -76,6 +78,7 @@ export function Sidebar({ open, onClose }: SidebarProps) {
     { href: "/payments", label: t("payments"), icon: CreditCard },
     { href: "/payments/embassy", label: "Embassy Transfers", icon: FileCheck },
     { href: "/settings/courses", label: t("courses"), icon: BookOpen },
+    { href: "/reports/outstanding-balances", label: "Outstanding Balances", icon: Wallet },
     { href: "/reports/student-notes", label: "Student Notes", icon: MessageSquare },
   ];
 
