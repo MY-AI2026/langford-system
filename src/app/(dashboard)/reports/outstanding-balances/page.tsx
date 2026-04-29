@@ -75,11 +75,16 @@ function toDate(val: unknown): Date | null {
 
 function classifyDue(due: Date | null): DueRow["status"] {
   if (!due) return "upcoming";
-  const now = new Date();
-  const sevenDays = new Date();
-  sevenDays.setDate(sevenDays.getDate() + 7);
-  if (due < now) return "overdue";
-  if (due <= sevenDays) return "due_soon";
+  // Normalize to calendar day so an installment due today is not marked overdue
+  // mid-day (dueDate is stored at 00:00 while `new Date()` carries the current time).
+  const startOfToday = new Date();
+  startOfToday.setHours(0, 0, 0, 0);
+  const sevenDaysAhead = new Date(startOfToday);
+  sevenDaysAhead.setDate(sevenDaysAhead.getDate() + 7);
+  const dueDay = new Date(due);
+  dueDay.setHours(0, 0, 0, 0);
+  if (dueDay < startOfToday) return "overdue";
+  if (dueDay <= sevenDaysAhead) return "due_soon";
   return "upcoming";
 }
 
