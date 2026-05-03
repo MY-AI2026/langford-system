@@ -415,10 +415,13 @@ export async function deleteStudent(studentId: string, userId: string, userName:
     if (actRes.ok) {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const actDocs = (await actRes.json()).filter((r: any) => r.document);
-      for (const r of actDocs) {
-        const docId = (r.document.name as string).split("/").pop();
-        await restDelete(`students/${studentId}/activityLog/${docId}`);
-      }
+      await Promise.all(
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        actDocs.map((r: any) => {
+          const docId = (r.document.name as string).split("/").pop();
+          return restDelete(`students/${studentId}/activityLog/${docId}`);
+        })
+      );
     }
 
     // Delete payments subcollection
@@ -434,10 +437,13 @@ export async function deleteStudent(studentId: string, userId: string, userName:
     if (payRes.ok) {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const payDocs = (await payRes.json()).filter((r: any) => r.document);
-      for (const r of payDocs) {
-        const docId = (r.document.name as string).split("/").pop();
-        await restDelete(`students/${studentId}/payments/${docId}`);
-      }
+      await Promise.all(
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        payDocs.map((r: any) => {
+          const docId = (r.document.name as string).split("/").pop();
+          return restDelete(`students/${studentId}/payments/${docId}`);
+        })
+      );
     }
   } catch (e) {
     console.warn("[student-service] subcollection delete failed:", e);

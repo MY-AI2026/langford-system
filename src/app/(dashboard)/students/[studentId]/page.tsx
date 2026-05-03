@@ -12,6 +12,7 @@ import { InstallmentPlanView } from "@/components/payments/installment-plan-view
 import { IeltsPaymentDialog, IeltsPaymentFormData } from "@/components/payments/ielts-payment-dialog";
 import { ActivityLogList } from "@/components/activity/activity-log-list";
 import { AddNoteForm } from "@/components/activity/add-note-form";
+import { RoleGate } from "@/components/auth/role-gate";
 import { AttendanceTracker } from "@/components/students/attendance-tracker";
 import { DocumentUpload } from "@/components/students/document-upload";
 import { EnrollmentTab } from "@/components/students/enrollment-tab";
@@ -73,6 +74,14 @@ import {
 import Link from "next/link";
 
 export default function StudentDetailPage() {
+  return (
+    <RoleGate allowedRoles={["admin", "sales", "coordinator", "accountant"]}>
+      <StudentDetailPageContent />
+    </RoleGate>
+  );
+}
+
+function StudentDetailPageContent() {
   const params = useParams();
   const router = useRouter();
   const { firebaseUser, userData, role } = useAuth();

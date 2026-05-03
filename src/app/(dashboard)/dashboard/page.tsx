@@ -132,41 +132,69 @@ export default function DashboardPage() {
       .slice(0, 10);
   }, [students]);
 
+  // ── Monthly reset for sales/accountant ───────────────────────────────────────
+  // Stats reset on the 1st of each month based on student.createdAt (the month
+  // the receivable was created). Follow-ups and overdue widgets are NOT filtered —
+  // collection chasers must keep seeing all open balances regardless of month.
+  const now = new Date();
+  const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+  const isMonthlyView = role === "sales" || role === "accountant";
+
+  function inCurrentMonth(ts: Student["createdAt"] | undefined): boolean {
+    if (!ts) return false;
+    try {
+      return ts.toDate() >= monthStart;
+    } catch {
+      return false;
+    }
+  }
+
+  // For sales/accountant: scope stats to students created this month.
+  // Admin sees everything (org-wide view).
+  const statsStudents = isMonthlyView
+    ? students.filter((s) => inCurrentMonth(s.createdAt))
+    : students;
+
   // ── Stats ────────────────────────────────────────────────────────────────────
-  const totalStudents = students.filter((s) => s.status !== "lost").length;
-  const ieltsRevenue = students.reduce(
+  const totalStudents = statsStudents.filter((s) => s.status !== "lost").length;
+  const ieltsRevenue = statsStudents.reduce(
     (sum, s) => sum + (s.ieltsSummary?.totalPaid ?? 0),
     0
   );
-  const ieltsBookingsCount = students.filter(
+  const ieltsBookingsCount = statsStudents.filter(
     (s) => (s.ieltsSummary?.paymentsCount ?? 0) > 0
   ).length;
-  const embassyPaid = embassyPayments.reduce(
+  // Embassy payments: filter by paymentDate this month for sales/accountant
+  const scopedEmbassy = isMonthlyView
+    ? embassyPayments.filter((p) => {
+        try {
+          return p.paymentDate?.toDate?.() >= monthStart;
+        } catch { return false; }
+      })
+    : embassyPayments;
+  const embassyPaid = scopedEmbassy.reduce(
     (sum, p) => sum + (p.amount ?? 0),
     0
   );
-  const totalRevenue = students.reduce(
+  const totalRevenue = statsStudents.reduce(
     (sum, s) => sum + (s.paymentSummary?.amountPaid ?? 0),
     0
   );
-  const pendingPayments = students.reduce(
+  const pendingPayments = statsStudents.reduce(
     (sum, s) => sum + (s.paymentSummary?.remainingBalance ?? 0),
     0
   );
-  const enrolledOrPaid = students.filter(
+  const enrolledOrPaid = statsStudents.filter(
     (s) => s.status === "enrolled" || s.status === "paid"
   ).length;
   const conversionRate =
     totalStudents > 0 ? (enrolledOrPaid / totalStudents) * 100 : 0;
 
-  const now = new Date();
-  const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+  // Monthly revenue for the target progress widget — same scope (current month)
   const monthlyRevenue = students.reduce((sum, s) => {
-    try {
-      if (s.createdAt && s.createdAt.toDate() >= monthStart) {
-        return sum + (s.paymentSummary?.amountPaid ?? 0);
-      }
-    } catch { /* ignore */ }
+    if (inCurrentMonth(s.createdAt)) {
+      return sum + (s.paymentSummary?.amountPaid ?? 0);
+    }
     return sum;
   }, 0);
 
@@ -337,7 +365,8 @@ export default function DashboardPage() {
     );
   }
 
-  // ── Admin / Sales view ───────────────────────────────────────────────────────
+  // ── Admin / Sales / Accountant view ──────────────────────────────────────────
+  const monthLabel = now.toLocaleDateString("ar-EG", { month: "long", year: "numeric" });
   return (
     <div className="space-y-6">
       <PageHeader
@@ -345,7 +374,7 @@ export default function DashboardPage() {
         description={
           role === "admin"
             ? "Overview of all sales and student activities"
-            : "Your personal performance dashboard"
+            : `لوحة الأداء — إحصائيات شهر ${monthLabel} (المتابعات والمتأخرات تظهر كاملة)`
         }
       />
 
@@ -367,19 +396,20 @@ export default function DashboardPage() {
         <FollowUpRemindersWidget items={followUps} />
       </div>
 
-      {/* Charts section */}
+      {/* Charts section — pipeline + lead source scoped to monthly view; revenue trend stays full history */}
       <div className="grid gap-6 lg:grid-cols-2">
-        <PipelineFunnel students={students} />
+        <PipelineFunnel students={statsStudents} />
         <RevenueTrendChart students={students} />
       </div>
 
       <div className="grid gap-6 lg:grid-cols-2">
-        <LeadSourceChart students={students} />
+        <LeadSourceChart students={statsStudents} />
         {(role === "admin") && (
           <CourseEnrollmentChart students={students} courses={allCourses} />
         )}
       </div>
 
+      {/* Overdue widget always uses full students set — collection chasing must not reset monthly */}
       <div className={`grid gap-6 ${role === "admin" ? "lg:grid-cols-2" : ""}`}>
         <OverduePaymentsWidget students={students} />
         {role === "admin" && salesUsers.length > 0 && (

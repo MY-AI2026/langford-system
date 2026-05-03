@@ -314,6 +314,47 @@ export async function fetchDoc(path: string): Promise<any | null> {
   return { id: json.name.split("/").pop(), ...parseFields(json.fields) };
 }
 
+// Batch-fetch multiple documents in a single request (replaces N parallel fetchDoc calls)
+// Firestore caps batchGet at 500 documents per call; we chunk to be safe.
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export async function batchGetDocs(paths: string[]): Promise<any[]> {
+  if (paths.length === 0) return [];
+  const token = await getToken();
+  const url = `https://firestore.googleapis.com/v1/projects/${PROJECT_ID}/databases/(default)/documents:batchGet`;
+  const docPrefix = `projects/${PROJECT_ID}/databases/(default)/documents/`;
+  const CHUNK = 100;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const out: any[] = [];
+
+  for (let i = 0; i < paths.length; i += CHUNK) {
+    const slice = paths.slice(i, i + CHUNK).map((p) => `${docPrefix}${p}`);
+    const res = await fetch(url, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ documents: slice }),
+      cache: "no-store",
+    });
+    if (!res.ok) {
+      console.error(`[REST] batchGetDocs failed:`, res.status);
+      continue;
+    }
+    const results = await res.json();
+    if (!Array.isArray(results)) continue;
+    for (const r of results) {
+      if (r?.found?.fields) {
+        out.push({
+          id: (r.found.name as string).split("/").pop(),
+          ...parseFields(r.found.fields),
+        });
+      }
+    }
+  }
+  return out;
+}
+
 // Create a polling subscription (replaces onSnapshot)
 export function createSubscription<T>(
   fetchFn: () => Promise<T[]>,

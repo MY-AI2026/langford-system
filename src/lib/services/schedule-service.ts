@@ -6,7 +6,7 @@ import {
   restCreate,
   restUpdate,
   restDelete,
-  fetchDoc,
+  batchGetDocs,
 } from "@/lib/firebase/rest-helpers";
 
 export type ScheduleEntryInput = Omit<ScheduleEntry, "id" | "createdAt" | "updatedAt">;
@@ -171,31 +171,13 @@ export async function fetchStudentsForCourse(courseId: string): Promise<Schedule
       activeEnrollments.map((e: Record<string, unknown>) => e.studentId as string).filter(Boolean)
     )];
 
-    // Fetch student details in parallel
-    const students: ScheduleStudent[] = [];
-    const results = await Promise.all(
-      studentIds.map(async (sid) => {
-        try {
-          const student = await fetchDoc(`students/${sid}`) as Student | null;
-          if (student) {
-            return {
-              studentId: sid,
-              studentName: student.fullName || "Unknown Student",
-              level: student.evaluation?.finalLevel || null,
-            };
-          }
-        } catch (err) {
-          console.error(`[schedule] Error fetching student ${sid}:`, err);
-        }
-        return null;
-      })
-    );
-
-    for (const r of results) {
-      if (r) students.push(r);
-    }
-
-    return students;
+    // Single batched request instead of N parallel fetches
+    const docs = await batchGetDocs(studentIds.map((sid) => `students/${sid}`));
+    return (docs as Student[]).map((student) => ({
+      studentId: student.id,
+      studentName: student.fullName || "Unknown Student",
+      level: student.evaluation?.finalLevel || null,
+    }));
   } catch (err) {
     console.error("[schedule] fetchStudentsForCourse error:", err);
     return [];

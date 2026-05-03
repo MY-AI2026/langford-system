@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useAuth } from "@/contexts/auth-context";
 import { PageHeader } from "@/components/layout/page-header";
+import { RoleGate } from "@/components/auth/role-gate";
 import { subscribeToStudents } from "@/lib/services/student-service";
 import { Student } from "@/lib/types";
 import { formatCurrency, formatDate, formatPhone } from "@/lib/utils/format";
@@ -40,6 +41,14 @@ function ps(student: Student) {
 }
 
 export default function PaymentsPage() {
+  return (
+    <RoleGate allowedRoles={["admin", "sales", "accountant"]}>
+      <PaymentsPageContent />
+    </RoleGate>
+  );
+}
+
+function PaymentsPageContent() {
   const { role, firebaseUser } = useAuth();
   const [students, setStudents] = useState<Student[]>([]);
   const [filter, setFilter] = useState<"all" | "pending" | "partial" | "paid">("all");
@@ -62,15 +71,31 @@ export default function PaymentsPage() {
       ? students
       : students.filter((s) => ps(s).paymentStatus === filter);
 
-  const totalFees = students.reduce((sum, s) => sum + (ps(s).totalFees || 0), 0);
-  const totalPaid = students.reduce((sum, s) => sum + (ps(s).amountPaid || 0), 0);
-  const totalPending = students.reduce((sum, s) => sum + (ps(s).remainingBalance || 0), 0);
+  // Monthly reset for sales/accountant — summary cards scoped to students
+  // created this month; the table below stays full so chasers see all open dues.
+  const isMonthlyView = role === "sales" || role === "accountant";
+  const now = new Date();
+  const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+  const summaryStudents = isMonthlyView
+    ? students.filter((s) => {
+        try { return s.createdAt?.toDate?.() >= monthStart; } catch { return false; }
+      })
+    : students;
+
+  const totalFees = summaryStudents.reduce((sum, s) => sum + (ps(s).totalFees || 0), 0);
+  const totalPaid = summaryStudents.reduce((sum, s) => sum + (ps(s).amountPaid || 0), 0);
+  const totalPending = summaryStudents.reduce((sum, s) => sum + (ps(s).remainingBalance || 0), 0);
+  const monthLabel = now.toLocaleDateString("ar-EG", { month: "long", year: "numeric" });
 
   return (
     <div className="space-y-6">
       <PageHeader
         title="Payments"
-        description="Track all student payments and balances"
+        description={
+          isMonthlyView
+            ? `ملخص شهر ${monthLabel} — جدول المتأخرات بالأسفل يعرض كل الفترات للمتابعة`
+            : "Track all student payments and balances"
+        }
       />
 
       {/* Summary Cards */}

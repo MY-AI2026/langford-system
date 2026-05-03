@@ -5,6 +5,7 @@ import { useAuth } from "@/contexts/auth-context";
 import { PageHeader } from "@/components/layout/page-header";
 import { StudentListTable } from "@/components/students/student-list-table";
 import { StudentSearchBar } from "@/components/students/student-search-bar";
+import { RoleGate } from "@/components/auth/role-gate";
 import { subscribeToStudents } from "@/lib/services/student-service";
 import { Student, StudentStatus } from "@/lib/types";
 import { Button } from "@/components/ui/button";
@@ -58,6 +59,14 @@ function exportToCSV(students: Student[]) {
 }
 
 export default function StudentsPage() {
+  return (
+    <RoleGate allowedRoles={["admin", "sales", "coordinator", "accountant"]}>
+      <StudentsPageContent />
+    </RoleGate>
+  );
+}
+
+function StudentsPageContent() {
   const { role, firebaseUser } = useAuth();
   const [students, setStudents] = useState<Student[]>([]);
   const [search, setSearch] = useState("");
