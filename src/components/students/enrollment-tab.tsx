@@ -214,7 +214,7 @@ export function EnrollmentTab({ studentId, studentName, studentCivilId, readOnly
                         Certificate
                       </Button>
                     )}
-                    {!readOnly && role === "admin" && (
+                    {!readOnly && (role === "admin" || role === "coordinator") && (
                       <Button
                         size="sm"
                         variant="outline"
