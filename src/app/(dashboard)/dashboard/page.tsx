@@ -23,8 +23,25 @@ import { subscribeToEmbassyPayments } from "@/lib/services/embassy-payment-servi
 import { Student, ActivityLogEntry, User, Course, EmbassyPayment } from "@/lib/types";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { BookOpen, Users, ClipboardCheck, CalendarDays, GraduationCap } from "lucide-react";
 import Link from "next/link";
+
+function currentMonthValue(): string {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+}
+
+function formatMonthLabel(value: string): string {
+  const [year, month] = value.split("-").map(Number);
+  if (!year || !month) return value;
+  return new Date(year, month - 1, 1).toLocaleDateString("en-US", {
+    month: "long",
+    year: "numeric",
+  });
+}
 
 export default function DashboardPage() {
   const { userData, role, firebaseUser } = useAuth();
@@ -34,6 +51,11 @@ export default function DashboardPage() {
   const [courses, setCourses] = useState<Course[]>([]);
   const [allCourses, setAllCourses] = useState<Course[]>([]);
   const [embassyPayments, setEmbassyPayments] = useState<EmbassyPayment[]>([]);
+  const [selectedMonth, setSelectedMonth] = useState<string>(currentMonthValue);
+
+  // Month filter only applies to sales + accountant; admin sees all-time as before.
+  const useMonthFilter = role === "sales" || role === "accountant";
+  const isCurrentMonth = selectedMonth === currentMonthValue();
 
   useEffect(() => {
     if (!firebaseUser || !role) return;
@@ -86,6 +108,41 @@ export default function DashboardPage() {
     };
   }, [firebaseUser, role]);
 
+  // ── Month-filtered students for sales/accountant scoped metrics ────────
+  const monthStudents = useMemo<Student[]>(() => {
+    if (!useMonthFilter) return students;
+    const [year, month] = selectedMonth.split("-").map(Number);
+    if (!year || !month) return students;
+    const monthStart = new Date(year, month - 1, 1);
+    const monthEnd = new Date(year, month, 1);
+    return students.filter((s) => {
+      try {
+        const created = s.createdAt?.toDate?.();
+        if (!created) return false;
+        return created >= monthStart && created < monthEnd;
+      } catch {
+        return false;
+      }
+    });
+  }, [students, selectedMonth, useMonthFilter]);
+
+  const monthEmbassyPayments = useMemo<EmbassyPayment[]>(() => {
+    if (!useMonthFilter) return embassyPayments;
+    const [year, month] = selectedMonth.split("-").map(Number);
+    if (!year || !month) return embassyPayments;
+    const monthStart = new Date(year, month - 1, 1);
+    const monthEnd = new Date(year, month, 1);
+    return embassyPayments.filter((p) => {
+      try {
+        const created = p.createdAt?.toDate?.();
+        if (!created) return false;
+        return created >= monthStart && created < monthEnd;
+      } catch {
+        return false;
+      }
+    });
+  }, [embassyPayments, selectedMonth, useMonthFilter]);
+
   // ── Follow-up reminders — derived from stale students (client-side) ─────
   const followUps = useMemo<FollowUpItem[]>(() => {
     const now = new Date();
@@ -133,42 +190,53 @@ export default function DashboardPage() {
   }, [students]);
 
   // ── Stats ────────────────────────────────────────────────────────────────────
-  const totalStudents = students.filter((s) => s.status !== "lost").length;
-  const ieltsRevenue = students.reduce(
+  // monthStudents is scoped to the selected month for sales/accountant; for admin
+  // (or when filter is off) it falls back to the full students list.
+  const totalStudents = monthStudents.filter((s) => s.status !== "lost").length;
+  const ieltsRevenue = monthStudents.reduce(
     (sum, s) => sum + (s.ieltsSummary?.totalPaid ?? 0),
     0
   );
-  const ieltsBookingsCount = students.filter(
+  const ieltsBookingsCount = monthStudents.filter(
     (s) => (s.ieltsSummary?.paymentsCount ?? 0) > 0
   ).length;
-  const embassyPaid = embassyPayments.reduce(
+  const embassyPaid = monthEmbassyPayments.reduce(
     (sum, p) => sum + (p.amount ?? 0),
     0
   );
-  const totalRevenue = students.reduce(
+  const totalRevenue = monthStudents.reduce(
     (sum, s) => sum + (s.paymentSummary?.amountPaid ?? 0),
     0
   );
+  // Pending balance is intentionally NOT month-filtered — sales must still see
+  // outstanding amounts from prior months so they can collect them.
   const pendingPayments = students.reduce(
     (sum, s) => sum + (s.paymentSummary?.remainingBalance ?? 0),
     0
   );
-  const enrolledOrPaid = students.filter(
+  const enrolledOrPaid = monthStudents.filter(
     (s) => s.status === "enrolled" || s.status === "paid"
   ).length;
   const conversionRate =
     totalStudents > 0 ? (enrolledOrPaid / totalStudents) * 100 : 0;
 
-  const now = new Date();
-  const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
-  const monthlyRevenue = students.reduce((sum, s) => {
-    try {
-      if (s.createdAt && s.createdAt.toDate() >= monthStart) {
-        return sum + (s.paymentSummary?.amountPaid ?? 0);
-      }
-    } catch { /* ignore */ }
-    return sum;
-  }, 0);
+  // Monthly revenue progress: when a month filter is active, the month's
+  // totalRevenue already represents the month-scoped figure; for admin
+  // (no filter) we keep the legacy current-calendar-month calculation.
+  const monthlyRevenue = useMonthFilter
+    ? totalRevenue
+    : (() => {
+        const now = new Date();
+        const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+        return students.reduce((sum, s) => {
+          try {
+            if (s.createdAt && s.createdAt.toDate() >= monthStart) {
+              return sum + (s.paymentSummary?.amountPaid ?? 0);
+            }
+          } catch { /* ignore */ }
+          return sum;
+        }, 0);
+      })();
 
   // ── Instructor view ──────────────────────────────────────────────────────────
   if (role === "instructor") {
@@ -337,7 +405,7 @@ export default function DashboardPage() {
     );
   }
 
-  // ── Admin / Sales view ───────────────────────────────────────────────────────
+  // ── Admin / Sales / Accountant view ──────────────────────────────────────────
   return (
     <div className="space-y-6">
       <PageHeader
@@ -348,6 +416,39 @@ export default function DashboardPage() {
             : "Your personal performance dashboard"
         }
       />
+
+      {useMonthFilter && (
+        <Card>
+          <CardContent className="flex flex-wrap items-center gap-3 pt-6">
+            <Label htmlFor="dashboard-month" className="text-sm">
+              Show data for:
+            </Label>
+            <Input
+              id="dashboard-month"
+              type="month"
+              value={selectedMonth}
+              max={currentMonthValue()}
+              onChange={(e) => setSelectedMonth(e.target.value || currentMonthValue())}
+              className="w-auto"
+            />
+            <Badge variant={isCurrentMonth ? "secondary" : "default"}>
+              {isCurrentMonth ? "Current month" : formatMonthLabel(selectedMonth)}
+            </Badge>
+            {!isCurrentMonth && (
+              <Button
+                size="sm"
+                variant="ghost"
+                onClick={() => setSelectedMonth(currentMonthValue())}
+              >
+                Reset to current month
+              </Button>
+            )}
+            <p className="text-xs text-muted-foreground w-full sm:w-auto sm:ml-auto">
+              Outstanding balances are always shown across all months.
+            </p>
+          </CardContent>
+        </Card>
+      )}
 
       <StatsCards
         totalStudents={totalStudents}
@@ -369,18 +470,19 @@ export default function DashboardPage() {
 
       {/* Charts section */}
       <div className="grid gap-6 lg:grid-cols-2">
-        <PipelineFunnel students={students} />
-        <RevenueTrendChart students={students} />
+        <PipelineFunnel students={monthStudents} />
+        <RevenueTrendChart students={monthStudents} />
       </div>
 
       <div className="grid gap-6 lg:grid-cols-2">
-        <LeadSourceChart students={students} />
+        <LeadSourceChart students={monthStudents} />
         {(role === "admin") && (
-          <CourseEnrollmentChart students={students} courses={allCourses} />
+          <CourseEnrollmentChart students={monthStudents} courses={allCourses} />
         )}
       </div>
 
       <div className={`grid gap-6 ${role === "admin" ? "lg:grid-cols-2" : ""}`}>
+        {/* Overdue widget intentionally uses the full list — must show all unpaid */}
         <OverduePaymentsWidget students={students} />
         {role === "admin" && salesUsers.length > 0 && (
           <SalesLeaderboard students={students} salesUsers={salesUsers} />
