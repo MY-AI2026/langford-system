@@ -193,7 +193,7 @@ export function EnrollmentTab({ studentId, studentName, studentCivilId, readOnly
                     )}
                   </div>
                   <div className="flex gap-1 shrink-0">
-                    {!readOnly && enrollment.status === "active" && role === "admin" && (
+                    {!readOnly && enrollment.status === "active" && (role === "admin" || role === "coordinator") && (
                       <Button
                         size="sm"
                         variant="outline"
@@ -214,7 +214,7 @@ export function EnrollmentTab({ studentId, studentName, studentCivilId, readOnly
                         Certificate
                       </Button>
                     )}
-                    {!readOnly && role === "admin" && (
+                    {!readOnly && (role === "admin" || role === "coordinator") && (
                       <Button
                         size="sm"
                         variant="outline"
