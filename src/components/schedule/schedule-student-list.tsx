@@ -36,7 +36,7 @@ export function ScheduleStudentList({ courseId, courseName }: ScheduleStudentLis
   }, [courseId]);
 
   async function handleRemove(s: ScheduleStudent) {
-    if (!firebaseUser || !userData) return;
+    if (!firebaseUser || !userData || !courseId) return;
     if (!confirm(`Remove "${s.studentName}" from ${courseName || "this course"}?`)) return;
     setRemoving(s.studentId);
     try {
@@ -47,7 +47,10 @@ export function ScheduleStudentList({ courseId, courseName }: ScheduleStudentLis
         firebaseUser.uid,
         userData.displayName
       );
-      setStudents((prev) => prev.filter((x) => x.studentId !== s.studentId));
+      // Re-fetch from the server: a student with several active enrollments
+      // in the same course should still appear after deleting just one of them.
+      const fresh = await fetchStudentsForCourse(courseId);
+      setStudents(fresh);
       toast.success(`${s.studentName} removed`);
     } catch {
       toast.error("Failed to remove student");
