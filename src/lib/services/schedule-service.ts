@@ -159,17 +159,26 @@ export async function fetchStudentsForCourse(courseId: string): Promise<Schedule
       },
     });
 
-    // Filter active enrollments and extract studentId from document path
+    // Filter active enrollments
     const activeEnrollments = enrollments.filter(
       (e: Record<string, unknown>) => e.status === "active"
     );
 
     if (activeEnrollments.length === 0) return [];
 
-    // Get unique student IDs from enrollments
-    const studentIds = [...new Set(
-      activeEnrollments.map((e: Record<string, unknown>) => e.studentId as string).filter(Boolean)
-    )];
+    // Pick one enrollment per student (de-duplicate). Keep the enrollment id
+    // so the caller can later delete that exact enrollment record.
+    const enrollmentByStudentId = new Map<string, { enrollmentId: string }>();
+    for (const e of activeEnrollments as Array<Record<string, unknown>>) {
+      const sid = e.studentId as string | undefined;
+      const eid = e.id as string | undefined;
+      if (!sid || !eid) continue;
+      if (!enrollmentByStudentId.has(sid)) {
+        enrollmentByStudentId.set(sid, { enrollmentId: eid });
+      }
+    }
+
+    const studentIds = [...enrollmentByStudentId.keys()];
 
     // Fetch student details in parallel
     const students: ScheduleStudent[] = [];
@@ -182,6 +191,7 @@ export async function fetchStudentsForCourse(courseId: string): Promise<Schedule
               studentId: sid,
               studentName: student.fullName || "Unknown Student",
               level: student.evaluation?.finalLevel || null,
+              enrollmentId: enrollmentByStudentId.get(sid)!.enrollmentId,
             };
           }
         } catch (err) {
