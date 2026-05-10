@@ -156,6 +156,7 @@ function AttendanceContent() {
         };
 
         const activeEnrollments: Array<Enrollment & { _studentId: string }> = [];
+        const seenStudentIds = new Set<string>();
         for (const r of rawResults as RawDoc[]) {
           if (!r.document) continue;
           const pathParts = r.document.name.split("/");
@@ -169,6 +170,11 @@ function AttendanceContent() {
 
           // Client-side filter for active status
           if (parsed.status !== "active") continue;
+
+          // De-duplicate: a student with several active enrollments in the
+          // same course (data anomaly) must appear only once on the roster.
+          if (!studentId || seenStudentIds.has(studentId)) continue;
+          seenStudentIds.add(studentId);
 
           activeEnrollments.push({ ...(parsed as unknown as Enrollment), _studentId: studentId });
         }
