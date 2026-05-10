@@ -75,6 +75,7 @@ export interface ScheduleStudent {
   studentId: string;
   studentName: string;
   level: string | null;
+  enrollmentId: string;
 }
 
 export type InstallmentStatus = "pending" | "paid" | "overdue";
