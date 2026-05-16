@@ -20,6 +20,7 @@ import {
   CalendarDays,
   FileCheck,
   Wallet,
+  Sun,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useFollowupCount } from "@/hooks/use-followup-count";
@@ -42,6 +43,8 @@ export function Sidebar({ open, onClose }: SidebarProps) {
     { href: "/pipeline", label: t("pipeline"), icon: Kanban },
     { href: "/payments", label: t("payments"), icon: CreditCard },
     { href: "/payments/embassy", label: "Embassy Transfers", icon: FileCheck },
+    { href: "/summer-club", label: "النادي الصيفي", icon: Sun },
+    { href: "/reports/summer-club", label: "تقرير النادي الصيفي", icon: Sun },
     { href: "/reports", label: t("reports"), icon: BarChart3 },
     { href: "/reports/outstanding-balances", label: "Outstanding Balances", icon: Wallet },
     { href: "/reports/student-notes", label: "Student Notes", icon: MessageSquare },
@@ -57,6 +60,8 @@ export function Sidebar({ open, onClose }: SidebarProps) {
     { href: "/students", label: t("students"), icon: GraduationCap, showFollowupBadge: true },
     { href: "/pipeline", label: t("pipeline"), icon: Kanban },
     { href: "/payments", label: t("payments"), icon: CreditCard },
+    { href: "/summer-club", label: "النادي الصيفي", icon: Sun },
+    { href: "/reports/summer-club", label: "تقرير النادي الصيفي", icon: Sun },
   ];
 
   const instructorNavItems = [
@@ -70,6 +75,8 @@ export function Sidebar({ open, onClose }: SidebarProps) {
     { href: "/students", label: t("students"), icon: GraduationCap },
     { href: "/settings/courses", label: t("courses"), icon: BookOpen },
     { href: "/schedule", label: t("schedule"), icon: CalendarDays },
+    { href: "/summer-club", label: "النادي الصيفي", icon: Sun },
+    { href: "/reports/summer-club", label: "تقرير النادي الصيفي", icon: Sun },
   ];
 
   const accountantNavItems = [
@@ -78,6 +85,8 @@ export function Sidebar({ open, onClose }: SidebarProps) {
     { href: "/payments", label: t("payments"), icon: CreditCard },
     { href: "/payments/embassy", label: "Embassy Transfers", icon: FileCheck },
     { href: "/settings/courses", label: t("courses"), icon: BookOpen },
+    { href: "/summer-club", label: "النادي الصيفي", icon: Sun },
+    { href: "/reports/summer-club", label: "تقرير النادي الصيفي", icon: Sun },
     { href: "/reports/outstanding-balances", label: "Outstanding Balances", icon: Wallet },
     { href: "/reports/student-notes", label: "Student Notes", icon: MessageSquare },
   ];
