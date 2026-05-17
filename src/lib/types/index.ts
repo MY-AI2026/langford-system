@@ -239,6 +239,48 @@ export interface Course {
   updatedAt: Timestamp;
 }
 
+// ─── Summer Club ─────────────────────────────────────────────────────────────
+
+export type Gender = "male" | "female";
+
+export interface SummerClubPaymentSummary {
+  totalFees: number;
+  amountPaid: number;
+  remainingBalance: number;
+  paymentStatus: PaymentStatus;
+}
+
+export interface SummerClubStudent {
+  id: string;
+  fullName: string;
+  phone: string;
+  gender: Gender;
+  age?: number | null;
+  guardianName?: string;
+  guardianPhone?: string;
+  notes?: string;
+  isRegistered: boolean;
+  registrationDate: Timestamp;
+  assignedSalesRepId: string;
+  assignedSalesRepName: string;
+  paymentSummary: SummerClubPaymentSummary;
+  createdBy: string;
+  createdAt: Timestamp;
+  updatedAt: Timestamp;
+}
+
+export interface SummerClubPayment {
+  id: string;
+  amount: number;
+  paymentDate: Timestamp;
+  method: PaymentMethod;
+  receiptNumber: string;
+  notes?: string;
+  createdBy: string;
+  createdByName: string;
+  createdAt: Timestamp;
+}
+
 export interface Enrollment {
   id: string;
   studentId: string;
