@@ -43,7 +43,9 @@ export type EntityType =
   | "user"
   | "installmentPlan"
   | "enrollment"
-  | "schedule";
+  | "schedule"
+  | "summerClubStudent"
+  | "summerClubPayment";
 
 // ─── Schedule Types ───────────────────────────────────────────────────────────
 

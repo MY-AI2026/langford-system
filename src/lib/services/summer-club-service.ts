@@ -17,6 +17,7 @@ import {
   restCreate,
   restUpdate,
   restDelete,
+  parseFields,
 } from "@/lib/firebase/rest-helpers";
 
 const COLLECTION = "summerClubStudents";
@@ -24,10 +25,67 @@ const COLLECTION = "summerClubStudents";
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
 function computePaymentStatus(totalFees: number, amountPaid: number): PaymentStatus {
-  if (totalFees <= 0 && amountPaid === 0) return "pending";
   if (amountPaid <= 0) return "pending";
-  if (amountPaid >= totalFees) return "paid";
+  if (totalFees > 0 && amountPaid >= totalFees) return "paid";
   return "partial";
+}
+
+function computeSummary(totalFees: number, amountPaid: number) {
+  const fees = Math.max(0, totalFees);
+  const paid = Math.max(0, amountPaid);
+  return {
+    totalFees: fees,
+    amountPaid: paid,
+    remainingBalance: Math.max(0, fees - paid),
+    paymentStatus: computePaymentStatus(fees, paid),
+  };
+}
+
+/**
+ * Strict phone lookup — throws on transport/permission failure instead of
+ * silently returning [] like runQuery does. Used by uniqueness checks where a
+ * false "not found" would create duplicates.
+ */
+async function queryByPhoneStrict(phone: string): Promise<SummerClubStudent[]> {
+  const token = await restGetToken();
+  const body = {
+    structuredQuery: {
+      from: [{ collectionId: COLLECTION }],
+      where: {
+        fieldFilter: {
+          field: { fieldPath: "phone" },
+          op: "EQUAL",
+          value: { stringValue: phone },
+        },
+      },
+      limit: 10,
+    },
+  };
+  const res = await fetch(`${BASE}:runQuery`, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${token}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(body),
+    cache: "no-store",
+  });
+  if (!res.ok) {
+    const text = await res.text().catch(() => "");
+    throw new Error(`PHONE_LOOKUP_FAILED: ${res.status} ${text}`);
+  }
+  const json = await res.json();
+  if (!Array.isArray(json)) {
+    throw new Error("PHONE_LOOKUP_FAILED: unexpected response");
+  }
+  return json
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    .filter((r: any) => r?.document)
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    .map((r: any) => ({
+      id: r.document.name.split("/").pop(),
+      ...parseFields(r.document.fields || {}),
+    })) as SummerClubStudent[];
 }
 
 // ─── Students CRUD ───────────────────────────────────────────────────────────
@@ -98,24 +156,17 @@ export async function getSummerClubStudent(id: string): Promise<SummerClubStuden
   return result as SummerClubStudent | null;
 }
 
-/** Check if a phone already exists in summer club (separate from main students). */
+/**
+ * Check if a phone already exists in summer club (separate from main students).
+ * Throws PHONE_LOOKUP_FAILED on network/permission errors instead of silently
+ * returning null — which would let duplicates slip through.
+ */
 export async function findSummerClubByPhone(
   phone: string,
   excludeId?: string
 ): Promise<SummerClubStudent | null> {
   const normalized = phone.trim().replace(/\s+/g, "");
-  const query = {
-    from: [{ collectionId: COLLECTION }],
-    where: {
-      fieldFilter: {
-        field: { fieldPath: "phone" },
-        op: "EQUAL",
-        value: { stringValue: normalized },
-      },
-    },
-    limit: 5,
-  };
-  const results = (await runQuery(query)) as SummerClubStudent[];
+  const results = await queryByPhoneStrict(normalized);
   const others = excludeId ? results.filter((s) => s.id !== excludeId) : results;
   return others.length > 0 ? others[0] : null;
 }
@@ -137,13 +188,14 @@ export async function createSummerClubStudent(
   userId: string,
   userName: string
 ): Promise<string> {
-  const dup = await findSummerClubByPhone(data.phone);
+  const normalizedPhone = data.phone.trim().replace(/\s+/g, "");
+  const dup = await findSummerClubByPhone(normalizedPhone);
   if (dup) throw new Error(`PHONE_DUPLICATE:${dup.fullName}`);
 
   const now = new Date();
   const docData: Record<string, unknown> = {
     fullName: data.fullName,
-    phone: data.phone.trim().replace(/\s+/g, ""),
+    phone: normalizedPhone,
     gender: data.gender,
     age: data.age ?? null,
     guardianName: data.guardianName || "",
@@ -154,10 +206,7 @@ export async function createSummerClubStudent(
     assignedSalesRepId: data.assignedSalesRepId,
     assignedSalesRepName: data.assignedSalesRepName,
     paymentSummary: {
-      totalFees: data.totalFees || 0,
-      amountPaid: 0,
-      remainingBalance: data.totalFees || 0,
-      paymentStatus: computePaymentStatus(data.totalFees || 0, 0),
+      ...computeSummary(data.totalFees || 0, 0),
     },
     createdBy: userId,
     createdAt: now,
@@ -166,11 +215,32 @@ export async function createSummerClubStudent(
 
   const newId = await restCreate(COLLECTION, docData);
 
+  // Post-create race-condition guard: if two requests slipped through the
+  // pre-check at the same time, the newer record self-destructs so only the
+  // earliest survives.
+  try {
+    const all = await queryByPhoneStrict(normalizedPhone);
+    if (all.length > 1) {
+      const winner = all.reduce((a, b) => {
+        const at = (a.createdAt as unknown as { toDate?: () => Date })?.toDate?.()?.getTime() ?? 0;
+        const bt = (b.createdAt as unknown as { toDate?: () => Date })?.toDate?.()?.getTime() ?? 0;
+        return at <= bt ? a : b;
+      });
+      if (winner.id !== newId) {
+        await restDelete(`${COLLECTION}/${newId}`);
+        throw new Error(`PHONE_DUPLICATE:${winner.fullName}`);
+      }
+    }
+  } catch (e) {
+    if (e instanceof Error && e.message.startsWith("PHONE_DUPLICATE:")) throw e;
+    console.warn("[summer-club] post-create dup check failed:", e);
+  }
+
   try {
     await writeAuditLog({
       action: "create",
-      entityType: "student",
-      entityId: `summer:${newId}`,
+      entityType: "summerClubStudent",
+      entityId: newId,
       userId,
       userName,
     });
@@ -210,13 +280,7 @@ export async function updateSummerClubStudent(
   if (typeof data.totalFees === "number") {
     const current = await getSummerClubStudent(id);
     const amountPaid = current?.paymentSummary?.amountPaid ?? 0;
-    const totalFees = data.totalFees;
-    updates.paymentSummary = {
-      totalFees,
-      amountPaid,
-      remainingBalance: Math.max(0, totalFees - amountPaid),
-      paymentStatus: computePaymentStatus(totalFees, amountPaid),
-    };
+    updates.paymentSummary = computeSummary(data.totalFees, amountPaid);
     delete (updates as Record<string, unknown>).totalFees;
   }
 
@@ -229,8 +293,8 @@ export async function updateSummerClubStudent(
   try {
     await writeAuditLog({
       action: "update",
-      entityType: "student",
-      entityId: `summer:${id}`,
+      entityType: "summerClubStudent",
+      entityId: id,
       userId,
       userName,
     });
@@ -270,8 +334,8 @@ export async function deleteSummerClubStudent(
   try {
     await writeAuditLog({
       action: "delete",
-      entityType: "student",
-      entityId: `summer:${id}`,
+      entityType: "summerClubStudent",
+      entityId: id,
       userId,
       userName,
     });
@@ -318,16 +382,9 @@ export async function addSummerClubPayment(
   const student = await getSummerClubStudent(studentId);
   if (!student) throw new Error("Summer club student not found");
 
-  const summary = student.paymentSummary || {
-    totalFees: 0,
-    amountPaid: 0,
-    remainingBalance: 0,
-    paymentStatus: "pending" as PaymentStatus,
-  };
-
-  const newAmountPaid = (summary.amountPaid || 0) + data.amount;
-  const totalFees = summary.totalFees || 0;
-  const newRemaining = Math.max(0, totalFees - newAmountPaid);
+  const summary = student.paymentSummary;
+  const totalFees = summary?.totalFees ?? 0;
+  const newAmountPaid = (summary?.amountPaid ?? 0) + data.amount;
 
   const paymentData: Record<string, unknown> = {
     amount: data.amount,
@@ -346,20 +403,15 @@ export async function addSummerClubPayment(
   );
 
   await restUpdate(`${COLLECTION}/${studentId}`, {
-    paymentSummary: {
-      totalFees,
-      amountPaid: newAmountPaid,
-      remainingBalance: newRemaining,
-      paymentStatus: computePaymentStatus(totalFees, newAmountPaid),
-    },
+    paymentSummary: computeSummary(totalFees, newAmountPaid),
     updatedAt: new Date(),
   });
 
   try {
     await writeAuditLog({
       action: "payment",
-      entityType: "payment",
-      entityId: `summer:${paymentId}`,
+      entityType: "summerClubPayment",
+      entityId: paymentId,
       userId,
       userName,
       changes: { amount: { from: 0, to: data.amount } },
@@ -382,32 +434,22 @@ export async function deleteSummerClubPayment(
   const student = await getSummerClubStudent(studentId);
   if (!student) return;
 
-  const summary = student.paymentSummary || {
-    totalFees: 0,
-    amountPaid: 0,
-    remainingBalance: 0,
-    paymentStatus: "pending" as PaymentStatus,
-  };
-
-  const newAmountPaid = Math.max(0, (summary.amountPaid || 0) - payment.amount);
-  const totalFees = summary.totalFees || 0;
-  const newRemaining = Math.max(0, totalFees - newAmountPaid);
+  const totalFees = student.paymentSummary?.totalFees ?? 0;
+  const newAmountPaid = Math.max(
+    0,
+    (student.paymentSummary?.amountPaid ?? 0) - payment.amount
+  );
 
   await restUpdate(`${COLLECTION}/${studentId}`, {
-    paymentSummary: {
-      totalFees,
-      amountPaid: newAmountPaid,
-      remainingBalance: newRemaining,
-      paymentStatus: computePaymentStatus(totalFees, newAmountPaid),
-    },
+    paymentSummary: computeSummary(totalFees, newAmountPaid),
     updatedAt: new Date(),
   });
 
   try {
     await writeAuditLog({
       action: "delete",
-      entityType: "payment",
-      entityId: `summer:${payment.id}`,
+      entityType: "summerClubPayment",
+      entityId: payment.id,
       userId,
       userName,
       changes: { amount: { from: payment.amount, to: 0 } },
