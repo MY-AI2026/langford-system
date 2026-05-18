@@ -89,12 +89,19 @@ export default function SummerClubStudentDetailPage() {
       toast.success("تم التحديث");
       await load();
     } catch (err) {
-      if (err instanceof Error && err.message.startsWith("PHONE_DUPLICATE:")) {
-        const name = err.message.substring("PHONE_DUPLICATE:".length);
+      console.error("[summer-club/edit] update failed:", err);
+      const msg = err instanceof Error ? err.message : String(err);
+      if (msg.startsWith("PHONE_DUPLICATE:")) {
+        const name = msg.substring("PHONE_DUPLICATE:".length);
         toast.error(`رقم التلفون مسجل مسبقاً للطالب: ${name}`);
+      } else if (msg === "PHONE_INVALID") {
+        toast.error("رقم التلفون مش صحيح — لازم 6 أرقام على الأقل");
+      } else if (msg === "Not authenticated" || msg.includes("UNAUTHENTICATED")) {
+        toast.error("الجلسة انتهت — اعمل تسجيل دخول تاني");
+      } else if (msg.includes("PERMISSION_DENIED")) {
+        toast.error("مفيش صلاحية لتعديل الطالب — كلّم الأدمن");
       } else {
-        toast.error("فشل التحديث");
-        console.error(err);
+        toast.error(`فشل التحديث: ${msg}`);
       }
     }
   }

@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { normalizePhone } from "./phone";
 
 export const loginSchema = z.object({
   email: z.string().email("Please enter a valid email"),
@@ -11,7 +12,12 @@ export const forgotPasswordSchema = z.object({
 
 export const studentSchema = z.object({
   fullName: z.string().min(2, "Name must be at least 2 characters"),
-  phone: z.string().min(8, "Please enter a valid phone number"),
+  phone: z
+    .string()
+    .refine(
+      (val) => normalizePhone(val).length >= 7,
+      "رقم التليفون مش صحيح — لازم يكون 7 أرقام على الأقل"
+    ),
   email: z.string().email("Please enter a valid email").optional().or(z.literal("")),
   civilId: z.string().optional(),
   leadSource: z.string().min(1, "Please select a lead source"),

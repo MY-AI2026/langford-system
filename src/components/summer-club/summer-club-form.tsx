@@ -68,19 +68,51 @@ export function SummerClubForm({
     async function load() {
       const users = await getSalesUsers();
       setSalesUsers(users);
-      if (role === "sales" && firebaseUser && !defaultValues?.assignedSalesRepId) {
-        setForm((f) => ({ ...f, assignedSalesRepId: firebaseUser.uid }));
-      }
     }
     load();
-  }, [role, firebaseUser, defaultValues]);
+  }, []);
+
+  // Keep assignedSalesRepId in sync with the logged-in sales user.
+  // Runs whenever firebaseUser becomes available (which can be AFTER the initial
+  // render if useAuth resolves async) — without this, a sales rep clicking save
+  // too fast would submit with empty assignedSalesRepId and hit a silent
+  // "السيلز مطلوب" field error.
+  useEffect(() => {
+    if (role === "sales" && firebaseUser?.uid && !defaultValues?.assignedSalesRepId) {
+      setForm((f) =>
+        f.assignedSalesRepId === firebaseUser.uid
+          ? f
+          : { ...f, assignedSalesRepId: firebaseUser.uid }
+      );
+    }
+  }, [role, firebaseUser, defaultValues?.assignedSalesRepId]);
 
   function validate(): boolean {
     const e: Record<string, string> = {};
     if (!form.fullName.trim()) e.fullName = "الاسم مطلوب";
-    if (!form.phone.trim()) e.phone = "رقم التلفون مطلوب";
-    else if (!/^\d{6,}$/.test(form.phone.replace(/\s+/g, ""))) e.phone = "رقم التلفون غير صحيح";
-    if (!form.assignedSalesRepId) e.assignedSalesRepId = "السيلز مطلوب";
+
+    if (!form.phone.trim()) {
+      e.phone = "رقم التلفون مطلوب";
+    } else {
+      // Strip all non-digit chars (handles +965, spaces, dashes, parens, Arabic digits)
+      const arabicToAscii: Record<string, string> = {
+        "٠": "0", "١": "1", "٢": "2", "٣": "3", "٤": "4",
+        "٥": "5", "٦": "6", "٧": "7", "٨": "8", "٩": "9",
+      };
+      const digits = form.phone
+        .split("")
+        .map((c) => arabicToAscii[c] ?? c)
+        .join("")
+        .replace(/\D/g, "");
+      if (digits.length < 6) e.phone = "رقم التلفون قصير — لازم 6 أرقام على الأقل";
+    }
+
+    if (!form.assignedSalesRepId) {
+      e.assignedSalesRepId =
+        role === "sales"
+          ? "بياناتك مش جاهزة لسه — استنى ثانية وحاول تاني"
+          : "السيلز مطلوب";
+    }
     if (form.totalFees < 0) e.totalFees = "غير صحيح";
     if (form.age !== null && form.age !== undefined && (form.age < 0 || form.age > 120))
       e.age = "غير صحيح";

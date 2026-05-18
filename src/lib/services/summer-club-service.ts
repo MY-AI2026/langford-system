@@ -8,6 +8,7 @@ import {
 } from "@/lib/types";
 import { writeAuditLog } from "./audit-service";
 import { generateReceiptNumber } from "@/lib/utils/format";
+import { normalizePhone, phonesMatch } from "@/lib/utils/phone";
 import {
   getToken as restGetToken,
   fetchDoc,
@@ -47,7 +48,16 @@ function computeSummary(totalFees: number, amountPaid: number) {
  * false "not found" would create duplicates.
  */
 async function queryByPhoneStrict(phone: string): Promise<SummerClubStudent[]> {
-  const token = await restGetToken();
+  // Resilient token fetch — if currentUser is briefly null (e.g. token refresh
+  // mid-flight), wait one tick and retry once before giving up.
+  let token: string;
+  try {
+    token = await restGetToken();
+  } catch {
+    await new Promise((r) => setTimeout(r, 300));
+    token = await restGetToken();
+  }
+
   const body = {
     structuredQuery: {
       from: [{ collectionId: COLLECTION }],
@@ -165,9 +175,22 @@ export async function findSummerClubByPhone(
   phone: string,
   excludeId?: string
 ): Promise<SummerClubStudent | null> {
-  const normalized = phone.trim().replace(/\s+/g, "");
+  const normalized = normalizePhone(phone);
+  if (!normalized || normalized.length < 6) return null;
+
+  // Fast path: EQUAL on canonical form (matches records saved after this code shipped)
   const results = await queryByPhoneStrict(normalized);
-  const others = excludeId ? results.filter((s) => s.id !== excludeId) : results;
+  const fastOthers = excludeId ? results.filter((s) => s.id !== excludeId) : results;
+  if (fastOthers.length > 0) return fastOthers[0];
+
+  // Fallback: legacy records stored with country code / spaces / Arabic digits
+  // won't match EQUAL. Pull all and compare client-side. Only runs when fast
+  // path missed (so cost is paid only when adding a genuinely new number).
+  const all = (await runQuery({
+    from: [{ collectionId: COLLECTION }],
+  })) as SummerClubStudent[];
+  const candidates = all.filter((s) => phonesMatch(s.phone, normalized));
+  const others = excludeId ? candidates.filter((s) => s.id !== excludeId) : candidates;
   return others.length > 0 ? others[0] : null;
 }
 
@@ -188,9 +211,23 @@ export async function createSummerClubStudent(
   userId: string,
   userName: string
 ): Promise<string> {
-  const normalizedPhone = data.phone.trim().replace(/\s+/g, "");
-  const dup = await findSummerClubByPhone(normalizedPhone);
-  if (dup) throw new Error(`PHONE_DUPLICATE:${dup.fullName}`);
+  const normalizedPhone = normalizePhone(data.phone);
+  if (!normalizedPhone || normalizedPhone.length < 6) {
+    throw new Error("PHONE_INVALID");
+  }
+
+  // Pre-create uniqueness check.
+  // If this fails with a network/auth error (PHONE_LOOKUP_FAILED), don't block
+  // the user — fall through to create + post-check, which is the real
+  // defense-in-depth layer. A genuine duplicate will still be caught after
+  // create runs the second query.
+  try {
+    const dup = await findSummerClubByPhone(normalizedPhone);
+    if (dup) throw new Error(`PHONE_DUPLICATE:${dup.fullName}`);
+  } catch (e) {
+    if (e instanceof Error && e.message.startsWith("PHONE_DUPLICATE:")) throw e;
+    console.warn("[summer-club] pre-create dup check failed (will rely on post-check):", e);
+  }
 
   const now = new Date();
   const docData: Record<string, unknown> = {
@@ -269,9 +306,20 @@ export async function updateSummerClubStudent(
   userId: string,
   userName: string
 ): Promise<void> {
+  // Normalize phone first so dup-check and stored value share the same canonical form
+  let normalizedPhone: string | undefined;
   if (data.phone) {
-    const dup = await findSummerClubByPhone(data.phone, id);
-    if (dup) throw new Error(`PHONE_DUPLICATE:${dup.fullName}`);
+    normalizedPhone = normalizePhone(data.phone);
+    if (!normalizedPhone || normalizedPhone.length < 6) {
+      throw new Error("PHONE_INVALID");
+    }
+    try {
+      const dup = await findSummerClubByPhone(normalizedPhone, id);
+      if (dup) throw new Error(`PHONE_DUPLICATE:${dup.fullName}`);
+    } catch (e) {
+      if (e instanceof Error && e.message.startsWith("PHONE_DUPLICATE:")) throw e;
+      console.warn("[summer-club] update dup check failed (proceeding):", e);
+    }
   }
 
   const updates: Record<string, unknown> = { ...data, updatedAt: new Date() };
@@ -284,8 +332,8 @@ export async function updateSummerClubStudent(
     delete (updates as Record<string, unknown>).totalFees;
   }
 
-  if (data.phone) {
-    updates.phone = data.phone.trim().replace(/\s+/g, "");
+  if (normalizedPhone) {
+    updates.phone = normalizedPhone;
   }
 
   await restUpdate(`${COLLECTION}/${id}`, updates);

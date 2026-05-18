@@ -48,12 +48,26 @@ export default function NewSummerClubStudentPage() {
       toast.success("تم إضافة الطالب بنجاح");
       router.push(`/summer-club/${id}`);
     } catch (err) {
-      if (err instanceof Error && err.message.startsWith("PHONE_DUPLICATE:")) {
-        const name = err.message.substring("PHONE_DUPLICATE:".length);
+      console.error("[summer-club/new] create failed:", err);
+      const msg = err instanceof Error ? err.message : String(err);
+
+      if (msg.startsWith("PHONE_DUPLICATE:")) {
+        const name = msg.substring("PHONE_DUPLICATE:".length);
         toast.error(`رقم التلفون مسجل مسبقاً للطالب: ${name}`);
+      } else if (msg === "PHONE_INVALID") {
+        toast.error("رقم التلفون مش صحيح — لازم 6 أرقام على الأقل");
+      } else if (msg.startsWith("PHONE_LOOKUP_FAILED")) {
+        // Permission / network / auth issue during phone uniqueness check
+        toast.error("مفيش اتصال بالسيرفر للتحقق من الرقم — حاول تاني");
+      } else if (msg === "Not authenticated" || msg.includes("UNAUTHENTICATED")) {
+        toast.error("الجلسة انتهت — اعمل تسجيل دخول تاني");
+      } else if (msg.includes("PERMISSION_DENIED")) {
+        toast.error("مفيش صلاحية لإضافة طالب — كلّم الأدمن");
+      } else if (!data.assignedSalesRepId) {
+        toast.error("لازم تختار السيلز المسؤول");
       } else {
-        toast.error("فشل في إضافة الطالب");
-        console.error(err);
+        // Show the real reason instead of the generic message
+        toast.error(`فشل في إضافة الطالب: ${msg}`);
       }
     }
   }
