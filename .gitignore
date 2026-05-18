@@ -39,4 +39,13 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# claude code
 .claude/worktrees/
+.claude/scheduled_tasks.lock
+
+# local-only / sales drafts (not for repo)
+*.pdf
+sarah_langford_voicehub.json
+/scripts/generate_*.py
+
