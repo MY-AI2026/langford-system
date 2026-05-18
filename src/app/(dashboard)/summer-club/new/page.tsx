@@ -54,6 +54,8 @@ export default function NewSummerClubStudentPage() {
       if (msg.startsWith("PHONE_DUPLICATE:")) {
         const name = msg.substring("PHONE_DUPLICATE:".length);
         toast.error(`رقم التلفون مسجل مسبقاً للطالب: ${name}`);
+      } else if (msg === "PHONE_INVALID") {
+        toast.error("رقم التلفون مش صحيح — لازم 6 أرقام على الأقل");
       } else if (msg.startsWith("PHONE_LOOKUP_FAILED")) {
         // Permission / network / auth issue during phone uniqueness check
         toast.error("مفيش اتصال بالسيرفر للتحقق من الرقم — حاول تاني");
