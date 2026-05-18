@@ -12,6 +12,7 @@ import {
   restDelete,
 } from "@/lib/firebase/rest-helpers";
 import { normalizePhone, phonesMatch } from "@/lib/utils/phone";
+import { fuzzyMatchAny } from "@/lib/utils/search";
 
 const PROJECT_ID = process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID!;
 
@@ -127,13 +128,15 @@ export function subscribeToStudents(
           students = students.filter((s) => s.status === filters.status);
         }
 
-        // Apply search filter client-side
+        // Apply fuzzy search filter client-side (handles Arabic digits,
+        // typos, alef variants, taa marbutah, multi-word in any order,
+        // and matches across name / phone / email / civilId)
         if (filters.searchQuery) {
-          const search = filters.searchQuery.toLowerCase();
-          students = students.filter(
-            (s) =>
-              s.fullName?.toLowerCase().includes(search) ||
-              s.phone?.includes(search)
+          students = students.filter((s) =>
+            fuzzyMatchAny(
+              [s.fullName, s.phone, s.email, s.civilId],
+              filters.searchQuery!
+            )
           );
         }
 

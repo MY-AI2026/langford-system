@@ -9,6 +9,7 @@ import {
 import { writeAuditLog } from "./audit-service";
 import { generateReceiptNumber } from "@/lib/utils/format";
 import { normalizePhone, phonesMatch } from "@/lib/utils/phone";
+import { fuzzyMatchAny } from "@/lib/utils/search";
 import {
   getToken as restGetToken,
   fetchDoc,
@@ -136,12 +137,11 @@ export function subscribeToSummerClubStudents(
         }
 
         if (filters.searchQuery) {
-          const q = filters.searchQuery.toLowerCase();
-          students = students.filter(
-            (s) =>
-              s.fullName?.toLowerCase().includes(q) ||
-              s.phone?.includes(q) ||
-              s.guardianPhone?.includes(q)
+          students = students.filter((s) =>
+            fuzzyMatchAny(
+              [s.fullName, s.phone, s.guardianPhone, s.guardianName],
+              filters.searchQuery!
+            )
           );
         }
 

@@ -32,8 +32,9 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Plus, Trash2 } from "lucide-react";
+import { Plus, Trash2, Printer } from "lucide-react";
 import { formatDate, formatCurrency } from "@/lib/utils/format";
+import { printReceipt } from "@/lib/utils/receipt";
 import { toast } from "sonner";
 
 interface Props {
@@ -211,13 +212,39 @@ export function SummerClubPayments({ student, canEdit, onChanged }: Props) {
                   </TableCell>
                   {canEdit && (
                     <TableCell>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => handleDelete(p)}
-                      >
-                        <Trash2 className="h-4 w-4 text-red-500" />
-                      </Button>
+                      <div className="flex items-center gap-1">
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          title="طباعة الإيصال"
+                          onClick={() =>
+                            printReceipt({
+                              payment: {
+                                receiptNumber: p.receiptNumber,
+                                amount: p.amount,
+                                paymentDate: p.paymentDate as unknown as Date,
+                                method: p.method,
+                                notes: p.notes,
+                                courseName: "النادي الصيفي",
+                              },
+                              student: {
+                                fullName: student.fullName,
+                                phone: student.phone,
+                              },
+                              cashierName: userData?.displayName,
+                            })
+                          }
+                        >
+                          <Printer className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => handleDelete(p)}
+                        >
+                          <Trash2 className="h-4 w-4 text-red-500" />
+                        </Button>
+                      </div>
                     </TableCell>
                   )}
                 </TableRow>
