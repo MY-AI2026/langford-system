@@ -12,6 +12,7 @@ import {
   restDelete,
 } from "@/lib/firebase/rest-helpers";
 import { normalizePhone, phonesMatch } from "@/lib/utils/phone";
+import { fuzzyMatchAny } from "@/lib/utils/search";
 
 const PROJECT_ID = process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID!;
 
@@ -83,19 +84,36 @@ export function subscribeToStudents(
   },
   callback: (students: Student[]) => void
 ): () => void {
-  // SIMPLIFIED QUERY - Avoid composite index requirement by doing filtering client-side
-  // Only query by isArchived to minimize index dependencies
-  const structuredQuery = {
-    from: [{ collectionId: "students" }],
-    where: {
+  // SECURITY: sales reps must filter by assignedSalesRepId on the SERVER side,
+  // not just in the client. Otherwise any sales user could read all students
+  // by hitting the Firestore REST API directly. Composite index covers
+  // (isArchived, assignedSalesRepId, createdAt) so this query is fast.
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const whereFilters: any[] = [
+    {
       fieldFilter: {
         field: { fieldPath: "isArchived" },
         op: "EQUAL",
         value: { booleanValue: filters.showArchived === true },
       },
     },
-    // Remove orderBy to avoid composite index requirement
-    // We'll sort client-side instead
+  ];
+  if (filters.role === "sales") {
+    whereFilters.push({
+      fieldFilter: {
+        field: { fieldPath: "assignedSalesRepId" },
+        op: "EQUAL",
+        value: { stringValue: filters.userId },
+      },
+    });
+  }
+
+  const structuredQuery = {
+    from: [{ collectionId: "students" }],
+    where:
+      whereFilters.length === 1
+        ? whereFilters[0]
+        : { compositeFilter: { op: "AND", filters: whereFilters } },
   };
 
   return createSubscription<Student>(
@@ -103,23 +121,22 @@ export function subscribeToStudents(
       try {
         let students = (await runQuery(structuredQuery)) as Student[];
 
-        // Apply role-based filtering client-side
-        if (filters.role === "sales") {
-          students = students.filter((s) => s.assignedSalesRepId === filters.userId);
-        }
+        // (Sales role filter is now applied at the Firestore layer above.)
 
         // Apply status filter client-side
         if (filters.status) {
           students = students.filter((s) => s.status === filters.status);
         }
 
-        // Apply search filter client-side
+        // Apply fuzzy search filter client-side (handles Arabic digits,
+        // typos, alef variants, taa marbutah, multi-word in any order,
+        // and matches across name / phone / email / civilId)
         if (filters.searchQuery) {
-          const search = filters.searchQuery.toLowerCase();
-          students = students.filter(
-            (s) =>
-              s.fullName?.toLowerCase().includes(search) ||
-              s.phone?.includes(search)
+          students = students.filter((s) =>
+            fuzzyMatchAny(
+              [s.fullName, s.phone, s.email, s.civilId],
+              filters.searchQuery!
+            )
           );
         }
 

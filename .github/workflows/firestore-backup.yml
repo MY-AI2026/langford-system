@@ -1,0 +1,37 @@
+name: Daily Firestore Backup
+
+# Runs every day at 02:00 UTC (05:00 Kuwait) and exports all Firestore
+# collections to a Google Cloud Storage bucket. Keeps a rolling history
+# (GCS lifecycle policy on the bucket controls retention).
+#
+# Required secrets:
+#   GCP_SA_KEY        — JSON key of a service account with:
+#                       - roles/datastore.importExportAdmin
+#                       - roles/storage.admin (on the backup bucket)
+#   BACKUP_BUCKET     — gs:// bucket URL (e.g. gs://langford-firestore-backups)
+
+on:
+  schedule:
+    - cron: '0 2 * * *' # 02:00 UTC daily = 05:00 Kuwait
+  workflow_dispatch:
+
+jobs:
+  backup:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Auth to Google Cloud
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.GCP_SA_KEY }}
+
+      - name: Setup gcloud
+        uses: google-github-actions/setup-gcloud@v2
+        with:
+          project_id: langford-system
+
+      - name: Export Firestore
+        run: |
+          STAMP=$(date -u +%Y-%m-%d_%H%M)
+          gcloud firestore export "${{ secrets.BACKUP_BUCKET }}/$STAMP" \
+            --project=langford-system
+          echo "Exported to ${{ secrets.BACKUP_BUCKET }}/$STAMP"

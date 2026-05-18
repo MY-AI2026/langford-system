@@ -11,6 +11,7 @@ import { Button } from "@/components/ui/button";
 import { Plus, Download } from "lucide-react";
 import Link from "next/link";
 import { formatDate } from "@/lib/utils/format";
+import { exportToExcel } from "@/lib/utils/excel";
 
 function toDate(val: unknown): Date | null {
   if (!val) return null;
@@ -21,40 +22,30 @@ function toDate(val: unknown): Date | null {
   return null;
 }
 
-function exportToCSV(students: Student[]) {
-  const headers = [
-    "Full Name", "Phone", "Email", "Status", "Lead Source",
-    "Sales Rep", "Payment Status", "Total Fees", "Amount Paid",
-    "Remaining Balance", "Registration Date",
-  ];
-
-  const rows = students.map((s) => [
-    s.fullName,
-    s.phone,
-    s.email || "",
-    s.status,
-    s.leadSource,
-    s.assignedSalesRepName,
-    s.paymentSummary?.paymentStatus ?? "",
-    s.paymentSummary?.totalFees ?? 0,
-    s.paymentSummary?.amountPaid ?? 0,
-    s.paymentSummary?.remainingBalance ?? 0,
-    formatDate(s.registrationDate ?? s.createdAt),
-  ]);
-
-  const csvContent = [headers, ...rows]
-    .map((row) =>
-      row.map((cell) => `"${String(cell).replace(/"/g, '""')}"`).join(",")
-    )
-    .join("\n");
-
-  const blob = new Blob(["\uFEFF" + csvContent], { type: "text/csv;charset=utf-8;" });
-  const url = URL.createObjectURL(blob);
-  const link = document.createElement("a");
-  link.href = url;
-  link.download = `students_${new Date().toISOString().slice(0, 10)}.csv`;
-  link.click();
-  URL.revokeObjectURL(url);
+function downloadStudents(students: Student[]) {
+  exportToExcel<Student>({
+    filename: "students",
+    sheetName: "Students",
+    columns: [
+      { label: "\u0627\u0644\u0627\u0633\u0645", get: (s) => s.fullName, width: 28 },
+      { label: "\u0627\u0644\u062A\u0644\u064A\u0641\u0648\u0646", get: (s) => s.phone, width: 14 },
+      { label: "Civil ID", get: (s) => s.civilId || "", width: 16 },
+      { label: "\u0627\u0644\u0628\u0631\u064A\u062F", get: (s) => s.email || "", width: 24 },
+      { label: "\u0627\u0644\u062D\u0627\u0644\u0629", get: (s) => s.status, width: 12 },
+      { label: "\u0627\u0644\u0645\u0635\u062F\u0631", get: (s) => s.leadSource, width: 16 },
+      { label: "\u0627\u0644\u0633\u064A\u0644\u0632", get: (s) => s.assignedSalesRepName, width: 18 },
+      { label: "\u062D\u0627\u0644\u0629 \u0627\u0644\u062F\u0641\u0639", get: (s) => s.paymentSummary?.paymentStatus ?? "", width: 12 },
+      { label: "\u0625\u062C\u0645\u0627\u0644\u064A \u0627\u0644\u0631\u0633\u0648\u0645", get: (s) => s.paymentSummary?.totalFees ?? 0, width: 14 },
+      { label: "\u0627\u0644\u0645\u062F\u0641\u0648\u0639", get: (s) => s.paymentSummary?.amountPaid ?? 0, width: 12 },
+      { label: "\u0627\u0644\u0645\u062A\u0628\u0642\u064A", get: (s) => s.paymentSummary?.remainingBalance ?? 0, width: 12 },
+      {
+        label: "\u062A\u0627\u0631\u064A\u062E \u0627\u0644\u062A\u0633\u062C\u064A\u0644",
+        get: (s) => formatDate(s.registrationDate ?? s.createdAt),
+        width: 14,
+      },
+    ],
+    rows: students,
+  });
 }
 
 export default function StudentsPage() {
@@ -124,12 +115,12 @@ export default function StudentsPage() {
           <div className="flex gap-2">
             <Button
               variant="outline"
-              onClick={() => exportToCSV(filtered)}
+              onClick={() => downloadStudents(filtered)}
               disabled={filtered.length === 0}
-              title="Export to CSV / Excel"
+              title="تنزيل ملف Excel"
             >
               <Download className="mr-2 h-4 w-4" />
-              Export
+              تنزيل Excel
             </Button>
             {role !== "accountant" && (
               <Link href="/students/new">

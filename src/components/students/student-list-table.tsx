@@ -17,6 +17,8 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Eye } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { WhatsAppButton } from "./whatsapp-button";
+import { QuickNoteButton } from "./quick-note-button";
 
 interface StudentListTableProps {
   students: Student[];
@@ -47,7 +49,7 @@ export function StudentListTable({
             {showSalesRep && <TableHead>Sales Rep</TableHead>}
             <TableHead>Payment</TableHead>
             <TableHead>Date</TableHead>
-            <TableHead className="w-12" />
+            <TableHead className="w-32 text-center">Actions</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -104,11 +106,23 @@ export function StudentListTable({
                   {formatDate(student.registrationDate || student.createdAt)}
                 </TableCell>
                 <TableCell>
-                  <Link href={`/students/${student.id}`}>
-                    <Button variant="ghost" size="icon">
-                      <Eye className="h-4 w-4" />
-                    </Button>
-                  </Link>
+                  <div className="flex items-center justify-end gap-1">
+                    <WhatsAppButton
+                      phone={student.phone || ""}
+                      fullName={student.fullName || ""}
+                      variant="icon"
+                    />
+                    <QuickNoteButton
+                      studentId={student.id}
+                      studentName={student.fullName || ""}
+                      variant="icon"
+                    />
+                    <Link href={`/students/${student.id}`}>
+                      <Button variant="ghost" size="icon" title="فتح الطالب">
+                        <Eye className="h-4 w-4" />
+                      </Button>
+                    </Link>
+                  </div>
                 </TableCell>
               </TableRow>
             );
