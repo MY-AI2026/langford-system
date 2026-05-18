@@ -1,0 +1,41 @@
+name: Deploy Firestore Rules + Indexes
+
+# Auto-deploys firestore.rules and firestore.indexes.json whenever they
+# change on main. Without this workflow, the rules sit in git but never
+# reach the live Firebase project — which is exactly what caused the
+# "Missing or insufficient permissions" issue for Summer Club.
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'firestore.rules'
+      - 'firestore.indexes.json'
+      - 'storage.rules'
+      - 'firebase.json'
+      - '.github/workflows/firebase-rules.yml'
+  workflow_dispatch: # allow manual trigger from GitHub UI
+
+jobs:
+  deploy-rules:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install Firebase CLI
+        run: npm install -g firebase-tools
+
+      - name: Deploy Firestore rules + indexes
+        env:
+          FIREBASE_TOKEN: ${{ secrets.FIREBASE_TOKEN }}
+        run: |
+          firebase deploy \
+            --only firestore:rules,firestore:indexes,storage:rules \
+            --project langford-system \
+            --token "$FIREBASE_TOKEN" \
+            --non-interactive
