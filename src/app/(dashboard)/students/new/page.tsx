@@ -49,9 +49,11 @@ export default function NewStudentPage() {
     } catch (error) {
       if (error instanceof Error && error.message.startsWith("PHONE_DUPLICATE:")) {
         const existingName = error.message.substring("PHONE_DUPLICATE:".length);
-        toast.error(`لا يمكن تسجيل الطالب — الطالب مسجل مسبقاً باسم: ${existingName}`);
+        toast.error(`رقم التليفون ده مسجل قبل كده باسم: ${existingName}`);
+      } else if (error instanceof Error && error.message === "PHONE_INVALID") {
+        toast.error("رقم التليفون مش صحيح — لازم يكون 7 أرقام على الأقل");
       } else {
-        toast.error("Failed to create student");
+        toast.error("فشل إضافة الطالب");
         console.error(error);
       }
     }

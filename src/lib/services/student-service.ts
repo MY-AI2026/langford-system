@@ -11,6 +11,7 @@ import {
   restUpdate,
   restDelete,
 } from "@/lib/firebase/rest-helpers";
+import { normalizePhone, phonesMatch } from "@/lib/utils/phone";
 
 const PROJECT_ID = process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID!;
 
@@ -202,22 +203,40 @@ export async function findStudentByPhone(
   phone: string,
   excludeStudentId?: string
 ): Promise<Student | null> {
-  const normalizedPhone = phone.trim().replace(/\s+/g, "");
-  const query = {
+  const target = normalizePhone(phone);
+  // Don't false-match incomplete inputs (< 6 digits)
+  if (target.length < 6) return null;
+
+  // ── Fast path: exact EQUAL match on normalized phone (works for new records
+  //    that were saved with normalizePhone applied). ─────────────────────────
+  const fastQuery = {
     from: [{ collectionId: "students" }],
     where: {
       fieldFilter: {
         field: { fieldPath: "phone" },
         op: "EQUAL",
-        value: { stringValue: normalizedPhone },
+        value: { stringValue: target },
       },
     },
     limit: 5,
   };
-  const results = (await runQuery(query)) as Student[];
+  const fast = (await runQuery(fastQuery)) as Student[];
+  const fastOthers = excludeStudentId
+    ? fast.filter((s) => s.id !== excludeStudentId)
+    : fast;
+  if (fastOthers.length > 0) return fastOthers[0];
+
+  // ── Fallback: legacy records stored with country codes / spaces / Arabic
+  //    digits won't match the EQUAL query above. Pull all students and compare
+  //    after normalization on both sides. Heavier, but only runs when the fast
+  //    path missed (i.e. no exact match exists). ─────────────────────────────
+  const all = (await runQuery({
+    from: [{ collectionId: "students" }],
+  })) as Student[];
+  const candidates = all.filter((s) => phonesMatch(s.phone, target));
   const others = excludeStudentId
-    ? results.filter((s) => s.id !== excludeStudentId)
-    : results;
+    ? candidates.filter((s) => s.id !== excludeStudentId)
+    : candidates;
   return others.length > 0 ? others[0] : null;
 }
 
@@ -234,7 +253,11 @@ export async function createStudent(
   userName: string
 ): Promise<string> {
   // ── Phone uniqueness check ──────────────────────────────────────────────────
-  const existingWithPhone = await findStudentByPhone(data.phone);
+  const normalizedPhone = normalizePhone(data.phone);
+  if (!normalizedPhone || normalizedPhone.length < 7) {
+    throw new Error("PHONE_INVALID");
+  }
+  const existingWithPhone = await findStudentByPhone(normalizedPhone);
   if (existingWithPhone) {
     throw new Error(`PHONE_DUPLICATE:${existingWithPhone.fullName}`);
   }
@@ -242,6 +265,7 @@ export async function createStudent(
   const now = new Date();
   const studentData: Record<string, unknown> = {
     ...data,
+    phone: normalizedPhone, // store canonical form so future EQUAL queries hit
     email: data.email || "",
     registrationDate: now,
     status: "lead" as StudentStatus,
@@ -298,10 +322,16 @@ export async function updateStudent(
 ) {
   // ── Phone uniqueness check (only when phone is being changed) ──────────────
   if (data.phone) {
-    const existingWithPhone = await findStudentByPhone(data.phone, studentId);
+    const normalizedPhone = normalizePhone(data.phone);
+    if (!normalizedPhone || normalizedPhone.length < 7) {
+      throw new Error("PHONE_INVALID");
+    }
+    const existingWithPhone = await findStudentByPhone(normalizedPhone, studentId);
     if (existingWithPhone) {
       throw new Error(`PHONE_DUPLICATE:${existingWithPhone.fullName}`);
     }
+    // store canonical form
+    data = { ...data, phone: normalizedPhone };
   }
 
   await restUpdate(`students/${studentId}`, { ...data, updatedAt: new Date() });
