@@ -47,7 +47,16 @@ function computeSummary(totalFees: number, amountPaid: number) {
  * false "not found" would create duplicates.
  */
 async function queryByPhoneStrict(phone: string): Promise<SummerClubStudent[]> {
-  const token = await restGetToken();
+  // Resilient token fetch — if currentUser is briefly null (e.g. token refresh
+  // mid-flight), wait one tick and retry once before giving up.
+  let token: string;
+  try {
+    token = await restGetToken();
+  } catch {
+    await new Promise((r) => setTimeout(r, 300));
+    token = await restGetToken();
+  }
+
   const body = {
     structuredQuery: {
       from: [{ collectionId: COLLECTION }],
@@ -189,8 +198,19 @@ export async function createSummerClubStudent(
   userName: string
 ): Promise<string> {
   const normalizedPhone = data.phone.trim().replace(/\s+/g, "");
-  const dup = await findSummerClubByPhone(normalizedPhone);
-  if (dup) throw new Error(`PHONE_DUPLICATE:${dup.fullName}`);
+
+  // Pre-create uniqueness check.
+  // If this fails with a network/auth error (PHONE_LOOKUP_FAILED), don't block
+  // the user — fall through to create + post-check, which is the real
+  // defense-in-depth layer. A genuine duplicate will still be caught after
+  // create runs the second query.
+  try {
+    const dup = await findSummerClubByPhone(normalizedPhone);
+    if (dup) throw new Error(`PHONE_DUPLICATE:${dup.fullName}`);
+  } catch (e) {
+    if (e instanceof Error && e.message.startsWith("PHONE_DUPLICATE:")) throw e;
+    console.warn("[summer-club] pre-create dup check failed (will rely on post-check):", e);
+  }
 
   const now = new Date();
   const docData: Record<string, unknown> = {
