@@ -99,12 +99,12 @@ export const regCourseSchema = z.object({
   name: z.string().min(2, "اسم الكورس لازم يكون حرفين على الأقل"),
   category: z.enum(REG_CATEGORIES),
   description: z.string().optional(),
-  fee: z.coerce
-    .number()
-    .nonnegative("الرسوم لازم تكون 0 أو أكتر")
-    .optional(),
+  // No `.coerce` — RHF's `valueAsNumber: true` does the conversion at the
+  // form layer, and chaining `.coerce` here makes Zod's input type widen
+  // to `unknown`, which breaks the @hookform/resolvers/zod handshake.
+  fee: z.number().nonnegative("الرسوم لازم تكون 0 أو أكتر").optional(),
   currency: z.string().min(2).optional(),
-  durationHours: z.coerce.number().int().nonnegative().nullable().optional(),
+  durationHours: z.number().int().nonnegative().nullable().optional(),
   durationLabel: z.string().optional(),
   isExclusiveAcceptix: z.boolean().optional(),
   isActive: z.boolean().optional(),

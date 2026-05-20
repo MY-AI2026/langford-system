@@ -16,6 +16,10 @@ import {
   Menu,
   UserPlus,
   ListChecks,
+  LayoutDashboard,
+  Users,
+  BookOpen,
+  FileBarChart,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 
@@ -37,9 +41,12 @@ function navLinksForRole(role: UserRole | null): NavLink[] {
   }
   if (role === "admin") {
     return [
-      // Admin sees the agent surfaces too (useful for QA / fallback create).
-      // Admin-only routes (dashboard, all-students, agents, courses, reports)
-      // land in PR #3 and will be added here then.
+      { href: REG_ROUTES.adminDashboard, label: "لوحة الإدارة", icon: LayoutDashboard },
+      { href: REG_ROUTES.adminStudents, label: "كل الطلبة", icon: Users },
+      { href: REG_ROUTES.adminAgents, label: "موظفو Acceptix", icon: UserPlus },
+      { href: REG_ROUTES.adminCourses, label: "إدارة الكورسات", icon: BookOpen },
+      { href: REG_ROUTES.adminReports, label: "التقارير", icon: FileBarChart },
+      // Admin can also use the agent surfaces for QA / fallback create.
       { href: REG_ROUTES.registerStudent, label: "تسجيل طالب", icon: UserPlus },
       { href: REG_ROUTES.myStudents, label: "طلبتي", icon: ListChecks },
     ];
@@ -56,7 +63,7 @@ export function RegistrationShell({ children }: { children: React.ReactNode }) {
   const links = navLinksForRole(role);
   const homeHref =
     role === "admin"
-      ? REG_ROUTES.registerStudent
+      ? REG_ROUTES.adminDashboard
       : role === "acceptix_agent"
         ? REG_ROUTES.registerStudent
         : "/";
