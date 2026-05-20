@@ -23,6 +23,9 @@ import {
   TrendingUp,
   CalendarDays,
   ArrowRight,
+  UserPlus,
+  BookOpen,
+  FileBarChart,
 } from "lucide-react";
 
 function AcceptixAdminDashboardContent() {
@@ -110,6 +113,35 @@ function AcceptixAdminDashboardContent() {
           <Image src="/logo.png" alt="Langford" width={28} height={28} />
           <span className="font-medium">Langford</span>
         </div>
+      </div>
+
+      {/* Quick actions — the primary entry points for the Acceptix admin */}
+      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+        <QuickAction
+          href={REG_ROUTES.adminAgentNew}
+          icon={UserPlus}
+          label="Add New Agent"
+          description="Create a login for an Acceptix employee"
+          tone="primary"
+        />
+        <QuickAction
+          href={REG_ROUTES.adminAgents}
+          icon={Users}
+          label="Manage Agents"
+          description="View, disable, or reset passwords"
+        />
+        <QuickAction
+          href={REG_ROUTES.adminCourses}
+          icon={BookOpen}
+          label="Manage Courses"
+          description="Catalogue, prices, and seed defaults"
+        />
+        <QuickAction
+          href={REG_ROUTES.adminReports}
+          icon={FileBarChart}
+          label="Reports"
+          description="Monthly commissions, Excel + PDF"
+        />
       </div>
 
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
@@ -271,6 +303,53 @@ function StatCard({
         {loading ? <Skeleton className="h-8 w-2/3" /> : <p className="text-2xl font-bold">{value}</p>}
       </CardContent>
     </Card>
+  );
+}
+
+function QuickAction({
+  href,
+  icon: Icon,
+  label,
+  description,
+  tone = "default",
+}: {
+  href: string;
+  icon: React.ComponentType<{ className?: string }>;
+  label: string;
+  description: string;
+  tone?: "default" | "primary";
+}) {
+  const isPrimary = tone === "primary";
+  return (
+    <Link
+      href={href}
+      className={[
+        "group flex flex-col gap-2 rounded-lg border p-4 transition-colors",
+        isPrimary
+          ? "border-primary/30 bg-primary/5 hover:bg-primary/10"
+          : "hover:bg-muted/50",
+      ].join(" ")}
+    >
+      <div className="flex items-center gap-2">
+        <div
+          className={[
+            "rounded-md p-1.5",
+            isPrimary ? "bg-primary text-primary-foreground" : "bg-muted",
+          ].join(" ")}
+        >
+          <Icon className="h-4 w-4" />
+        </div>
+        <span
+          className={[
+            "text-sm font-semibold",
+            isPrimary ? "text-primary" : "",
+          ].join(" ")}
+        >
+          {label}
+        </span>
+      </div>
+      <p className="text-xs text-muted-foreground">{description}</p>
+    </Link>
   );
 }
 

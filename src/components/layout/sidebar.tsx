@@ -22,6 +22,8 @@ import {
   Wallet,
   Sun,
   Handshake,
+  UserPlus,
+  FileBarChart,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useFollowupCount } from "@/hooks/use-followup-count";
@@ -47,6 +49,11 @@ export function Sidebar({ open, onClose }: SidebarProps) {
     { href: "/summer-club", label: "النادي الصيفي", icon: Sun },
     { href: "/reports/summer-club", label: "تقرير النادي الصيفي", icon: Sun },
     { href: "/acceptix", label: "Acceptix", icon: Handshake },
+    { href: "/acceptix/students", label: "Acceptix Students", icon: GraduationCap },
+    { href: "/acceptix/agents", label: "Acceptix Agents", icon: UserPlus },
+    { href: "/acceptix/courses", label: "Acceptix Courses", icon: BookOpen },
+    { href: "/acceptix/reports", label: "Acceptix Reports", icon: FileBarChart },
+    { href: "/acceptix/settings", label: "Acceptix Settings", icon: Settings },
     { href: "/reports", label: t("reports"), icon: BarChart3 },
     { href: "/reports/outstanding-balances", label: "Outstanding Balances", icon: Wallet },
     { href: "/reports/student-notes", label: "Student Notes", icon: MessageSquare },
