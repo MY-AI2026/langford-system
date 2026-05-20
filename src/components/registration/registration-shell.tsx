@@ -10,18 +10,12 @@ import { REG_ROUTES } from "@/lib/registration/constants";
 import { UserRole } from "@/lib/types";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet";
-import { NotificationBell } from "./notification-bell";
 import {
   GraduationCap,
   LogOut,
   Menu,
   UserPlus,
   ListChecks,
-  LayoutDashboard,
-  Users,
-  BookOpen,
-  FileBarChart,
-  Settings,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 
@@ -31,25 +25,13 @@ interface NavLink {
   icon: LucideIcon;
 }
 
-/** Per-role navigation. Only links with a working page are shown — admin
- * links resolve in PR #3 and are gated behind a feature flag here so they
- * don't 404 before then. */
+/** Agent navigation only — the registration shell is dedicated to the
+ * agent surface. Admin lives in the main Langford dashboard at
+ * `/acceptix/*` (mirroring the Summer Club pattern) and never sees this
+ * shell. */
 function navLinksForRole(role: UserRole | null): NavLink[] {
-  if (role === "acceptix_agent") {
+  if (role === "acceptix_agent" || role === "admin") {
     return [
-      { href: REG_ROUTES.registerStudent, label: "تسجيل طالب", icon: UserPlus },
-      { href: REG_ROUTES.myStudents, label: "طلبتي", icon: ListChecks },
-    ];
-  }
-  if (role === "admin") {
-    return [
-      { href: REG_ROUTES.adminDashboard, label: "لوحة الإدارة", icon: LayoutDashboard },
-      { href: REG_ROUTES.adminStudents, label: "كل الطلبة", icon: Users },
-      { href: REG_ROUTES.adminAgents, label: "موظفو Acceptix", icon: UserPlus },
-      { href: REG_ROUTES.adminCourses, label: "إدارة الكورسات", icon: BookOpen },
-      { href: REG_ROUTES.adminReports, label: "التقارير", icon: FileBarChart },
-      { href: REG_ROUTES.adminSettings, label: "الإعدادات", icon: Settings },
-      // Admin can also use the agent surfaces for QA / fallback create.
       { href: REG_ROUTES.registerStudent, label: "تسجيل طالب", icon: UserPlus },
       { href: REG_ROUTES.myStudents, label: "طلبتي", icon: ListChecks },
     ];
@@ -66,7 +48,7 @@ export function RegistrationShell({ children }: { children: React.ReactNode }) {
   const links = navLinksForRole(role);
   const homeHref =
     role === "admin"
-      ? REG_ROUTES.adminDashboard
+      ? "/dashboard"
       : role === "acceptix_agent"
         ? REG_ROUTES.registerStudent
         : "/";
@@ -122,7 +104,6 @@ export function RegistrationShell({ children }: { children: React.ReactNode }) {
           </div>
 
           <div className="flex items-center gap-2">
-            {role === "admin" && <NotificationBell />}
             {userData?.displayName && (
               <span className="hidden text-sm text-muted-foreground sm:inline">
                 {userData.displayName}

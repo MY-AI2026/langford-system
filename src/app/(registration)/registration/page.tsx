@@ -18,13 +18,11 @@ export default function RegistrationEntryPage() {
   useEffect(() => {
     if (loading) return;
 
-    if (role === "admin") {
-      router.replace(REG_ROUTES.adminDashboard);
-    } else if (role === "acceptix_agent") {
+    if (role === "acceptix_agent") {
       router.replace(REG_ROUTES.registerStudent);
     } else {
-      // Any other Langford role lands here by mistake — send them back to the
-      // main dashboard rather than show a hostile "no permission" wall.
+      // Anyone else (including admin) belongs in the main Langford
+      // dashboard. The Acceptix admin surface lives at /acceptix/*.
       router.replace("/dashboard");
     }
   }, [role, loading, router]);

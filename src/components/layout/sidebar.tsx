@@ -21,6 +21,7 @@ import {
   FileCheck,
   Wallet,
   Sun,
+  Handshake,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useFollowupCount } from "@/hooks/use-followup-count";
@@ -45,6 +46,7 @@ export function Sidebar({ open, onClose }: SidebarProps) {
     { href: "/payments/embassy", label: "Embassy Transfers", icon: FileCheck },
     { href: "/summer-club", label: "النادي الصيفي", icon: Sun },
     { href: "/reports/summer-club", label: "تقرير النادي الصيفي", icon: Sun },
+    { href: "/acceptix", label: "Acceptix", icon: Handshake },
     { href: "/reports", label: t("reports"), icon: BarChart3 },
     { href: "/reports/outstanding-balances", label: "Outstanding Balances", icon: Wallet },
     { href: "/reports/student-notes", label: "Student Notes", icon: MessageSquare },

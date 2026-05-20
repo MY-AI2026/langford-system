@@ -82,17 +82,18 @@ export const REG_STATUS_ORDER: RegStudentStatus[] = ["new", "enrolled", "cancell
 // ─── Route constants — single source of truth for navigation ─────────────────
 
 export const REG_ROUTES = {
-  // Agent
+  // Agent — standalone portal (no Langford dashboard chrome)
   registerStudent: "/registration/register-student",
   myStudents: "/registration/my-students",
-  // Admin
-  adminDashboard: "/registration/admin",
-  adminStudents: "/registration/admin/students",
-  adminAgents: "/registration/admin/agents",
-  adminAgentNew: "/registration/admin/agents/new",
-  adminCourses: "/registration/admin/courses",
-  adminReports: "/registration/admin/reports",
-  adminSettings: "/registration/admin/settings",
+  // Admin — lives inside the main Langford dashboard at /acceptix/*,
+  // mirroring the Summer Club pattern.
+  adminDashboard: "/acceptix",
+  adminStudents: "/acceptix/students",
+  adminAgents: "/acceptix/agents",
+  adminAgentNew: "/acceptix/agents/new",
+  adminCourses: "/acceptix/courses",
+  adminReports: "/acceptix/reports",
+  adminSettings: "/acceptix/settings",
 } as const;
 
 /**
