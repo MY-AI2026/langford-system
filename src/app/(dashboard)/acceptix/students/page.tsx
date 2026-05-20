@@ -121,11 +121,11 @@ function AdminStudentsContent() {
           notes: { from: editing.notes, to: editNotes },
         }
       );
-      toast.success("تم تحديث الطالب");
+      toast.success("Student updated.");
       setEditing(null);
     } catch (e) {
       console.error("[admin-students] update failed:", e);
-      toast.error("فشل التحديث");
+      toast.error("Update failed.");
     }
   }
 
@@ -137,73 +137,71 @@ function AdminStudentsContent() {
         displayName: userData.displayName,
         role: "admin",
       });
-      toast.success("تم حذف الطالب (soft delete — قابل للاستعادة من السجل)");
+      toast.success("Student deleted (soft delete — recoverable from audit log).");
       setDeletingId(null);
     } catch (e) {
       console.error("[admin-students] delete failed:", e);
-      toast.error("فشل الحذف");
+      toast.error("Delete failed.");
     }
   }
 
   return (
-    <div className="space-y-6" dir="rtl">
+    <div className="space-y-6" dir="ltr">
       <div>
         <h1 className="flex items-center gap-2 text-2xl font-semibold">
           <Users className="h-6 w-6 text-primary" />
-          كل الطلبة
+          All Students
         </h1>
         <p className="mt-1 text-sm text-muted-foreground">
-          كل تسجيلات الـ Acceptix من كل الموظفين — مع فلاتر وتعديل وحذف.
+          All Acceptix registrations from every agent — with filters, edit, and delete.
         </p>
       </div>
 
-      {/* Totals strip */}
       <div className="grid gap-3 sm:grid-cols-3">
         <Card>
           <CardContent className="p-4">
-            <p className="text-xs text-muted-foreground">عدد الطلبة (بالفلاتر)</p>
+            <p className="text-xs text-muted-foreground">Students (filtered)</p>
             <p className="text-2xl font-bold">{totals.count.toLocaleString("en-US")}</p>
           </CardContent>
         </Card>
         <Card>
           <CardContent className="p-4">
-            <p className="text-xs text-muted-foreground">إجمالي الرسوم</p>
-            <p className="text-2xl font-bold" dir="ltr">
+            <p className="text-xs text-muted-foreground">Total Fees</p>
+            <p className="text-2xl font-bold">
               {totals.totalFees.toLocaleString("en-US")} {REG_DEFAULT_CURRENCY}
             </p>
           </CardContent>
         </Card>
         <Card className="border-primary/30 bg-primary/5">
           <CardContent className="p-4">
-            <p className="text-xs text-muted-foreground">إجمالي العمولات (10%)</p>
-            <p className="text-2xl font-bold text-primary" dir="ltr">
+            <p className="text-xs text-muted-foreground">Total Commission (10%)</p>
+            <p className="text-2xl font-bold text-primary">
               {totals.totalCommission.toLocaleString("en-US")} {REG_DEFAULT_CURRENCY}
             </p>
           </CardContent>
         </Card>
       </div>
 
-      {/* Filters */}
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
         <div className="relative">
-          <Search className="absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <Input
-            placeholder="بحث بالاسم / تليفون / إيميل"
+            placeholder="Search by name, phone, or email"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="pr-9"
-            aria-label="بحث"
+            className="pl-9"
+            aria-label="Search"
           />
         </div>
         <Select value={statusFilter} onValueChange={(v) => setStatusFilter(v as RegStudentStatus | "all")}>
           <SelectTrigger>
-            <SelectValue placeholder="الحالة" />
+            <SelectValue placeholder="Status" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">كل الحالات</SelectItem>
+            <SelectItem value="all">All statuses</SelectItem>
             {REG_STATUS_ORDER.map((s) => (
               <SelectItem key={s} value={s}>
-                {REG_STUDENT_STATUS_LABELS[s].ar}
+                {REG_STUDENT_STATUS_LABELS[s].en}
               </SelectItem>
             ))}
           </SelectContent>
@@ -213,10 +211,10 @@ function AdminStudentsContent() {
           onValueChange={(v) => setCourseFilter(v ?? "all")}
         >
           <SelectTrigger>
-            <SelectValue placeholder="الكورس" />
+            <SelectValue placeholder="Course" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">كل الكورسات</SelectItem>
+            <SelectItem value="all">All courses</SelectItem>
             {courses.map((c) => (
               <SelectItem key={c.id} value={c.id}>
                 {c.name}
@@ -229,10 +227,10 @@ function AdminStudentsContent() {
           onValueChange={(v) => setAgentFilter(v ?? "all")}
         >
           <SelectTrigger>
-            <SelectValue placeholder="الموظف" />
+            <SelectValue placeholder="Agent" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">كل الموظفين</SelectItem>
+            <SelectItem value="all">All agents</SelectItem>
             {agents.map((a) => (
               <SelectItem key={a.uid} value={a.uid}>
                 {a.displayName}
@@ -252,7 +250,7 @@ function AdminStudentsContent() {
       ) : students.length === 0 ? (
         <Card>
           <CardContent className="py-12 text-center text-sm text-muted-foreground">
-            مفيش طلبة بالفلاتر دي.
+            No students match these filters.
           </CardContent>
         </Card>
       ) : (
@@ -260,12 +258,12 @@ function AdminStudentsContent() {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>الطالب</TableHead>
-                <TableHead>الكورس</TableHead>
-                <TableHead>الموظف</TableHead>
-                <TableHead>العمولة</TableHead>
-                <TableHead>الحالة</TableHead>
-                <TableHead>التاريخ</TableHead>
+                <TableHead>Student</TableHead>
+                <TableHead>Course</TableHead>
+                <TableHead>Agent</TableHead>
+                <TableHead>Commission</TableHead>
+                <TableHead>Status</TableHead>
+                <TableHead>Date</TableHead>
                 <TableHead className="w-24"></TableHead>
               </TableRow>
             </TableHeader>
@@ -295,7 +293,7 @@ function AdminStudentsContent() {
                       variant="secondary"
                       className={`border-0 ${REG_STUDENT_STATUS_LABELS[s.status].color}`}
                     >
-                      {REG_STUDENT_STATUS_LABELS[s.status].ar}
+                      {REG_STUDENT_STATUS_LABELS[s.status].en}
                     </Badge>
                   </TableCell>
                   <TableCell dir="ltr">{formatDate(s.createdAt)}</TableCell>
@@ -305,7 +303,7 @@ function AdminStudentsContent() {
                         variant="ghost"
                         size="icon"
                         onClick={() => openEdit(s)}
-                        aria-label="تعديل"
+                        aria-label="Edit"
                       >
                         <Pencil className="h-4 w-4" />
                       </Button>
@@ -313,7 +311,7 @@ function AdminStudentsContent() {
                         variant="ghost"
                         size="icon"
                         onClick={() => setDeletingId(s.id)}
-                        aria-label="حذف"
+                        aria-label="Delete"
                       >
                         <Trash2 className="h-4 w-4 text-destructive" />
                       </Button>
@@ -328,21 +326,21 @@ function AdminStudentsContent() {
 
       {/* Edit dialog */}
       <Dialog open={!!editing} onOpenChange={(open) => !open && setEditing(null)}>
-        <DialogContent dir="rtl">
+        <DialogContent dir="ltr">
           <DialogHeader>
-            <DialogTitle>تعديل بيانات الطالب</DialogTitle>
+            <DialogTitle>Edit Student</DialogTitle>
           </DialogHeader>
           {editing && (
             <div className="space-y-4">
               <div className="rounded-md bg-muted/50 p-3 text-sm">
                 <p className="font-medium">{editing.fullName}</p>
                 <p className="text-xs text-muted-foreground">
-                  {editing.courseName} · سجّله {editing.createdByName}
+                  {editing.courseName} · registered by {editing.createdByName}
                 </p>
               </div>
 
               <div className="space-y-2">
-                <label className="text-sm font-medium">الحالة</label>
+                <label className="text-sm font-medium">Status</label>
                 <Select
                   value={editStatus}
                   onValueChange={(v) => setEditStatus(v as RegStudentStatus)}
@@ -353,7 +351,7 @@ function AdminStudentsContent() {
                   <SelectContent>
                     {REG_STATUS_ORDER.map((s) => (
                       <SelectItem key={s} value={s}>
-                        {REG_STUDENT_STATUS_LABELS[s].ar}
+                        {REG_STUDENT_STATUS_LABELS[s].en}
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -361,7 +359,7 @@ function AdminStudentsContent() {
               </div>
 
               <div className="space-y-2">
-                <label className="text-sm font-medium">ملاحظات</label>
+                <label className="text-sm font-medium">Notes</label>
                 <Textarea
                   value={editNotes}
                   onChange={(e) => setEditNotes(e.target.value)}
@@ -372,32 +370,32 @@ function AdminStudentsContent() {
           )}
           <DialogFooter>
             <Button variant="outline" onClick={() => setEditing(null)}>
-              إلغاء
+              Cancel
             </Button>
-            <Button onClick={handleEditSave}>حفظ</Button>
+            <Button onClick={handleEditSave}>Save</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
 
       {/* Delete confirmation */}
       <Dialog open={!!deletingId} onOpenChange={(open) => !open && setDeletingId(null)}>
-        <DialogContent dir="rtl">
+        <DialogContent dir="ltr">
           <DialogHeader>
-            <DialogTitle>حذف الطالب؟</DialogTitle>
+            <DialogTitle>Delete Student?</DialogTitle>
           </DialogHeader>
           <p className="text-sm text-muted-foreground">
-            هيتم حذف السجل (soft delete) — يقدر يترجّع تاني لو احتجت. مفيش delete نهائي
-            على الـ registration records للحماية والـ audit.
+            This is a soft delete — the record can be restored later. Hard
+            delete is disabled on registration records for safety and audit.
           </p>
           <DialogFooter>
             <Button variant="outline" onClick={() => setDeletingId(null)}>
-              إلغاء
+              Cancel
             </Button>
             <Button
               variant="destructive"
               onClick={() => deletingId && handleDelete(deletingId)}
             >
-              تأكيد الحذف
+              Confirm Delete
             </Button>
           </DialogFooter>
         </DialogContent>

@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
+import Image from "next/image";
 import Link from "next/link";
 import { RoleGate } from "@/components/auth/role-gate";
 import { subscribeToAllStudents, commissionFor } from "@/lib/services/reg-student-service";
@@ -21,10 +22,10 @@ import {
   GraduationCap,
   TrendingUp,
   CalendarDays,
-  ArrowLeft,
+  ArrowRight,
 } from "lucide-react";
 
-function AdminDashboardContent() {
+function AcceptixAdminDashboardContent() {
   const router = useRouter();
   const [students, setStudents] = useState<RegStudent[]>([]);
   const [courses, setCourses] = useState<RegCourse[]>([]);
@@ -57,7 +58,6 @@ function AdminDashboardContent() {
     return () => unsub();
   }, []);
 
-  // Derived stats ──────────────────────────────────────────────────────────
   const stats = useMemo(() => {
     const total = students.length;
     const monthStart = startOfMonth(new Date());
@@ -70,12 +70,10 @@ function AdminDashboardContent() {
       totalCommission += commissionFor(s);
       perCourse.set(s.courseName, (perCourse.get(s.courseName) ?? 0) + 1);
     }
-
     let topCourse: { name: string; count: number } | null = null;
     for (const [name, count] of perCourse) {
       if (!topCourse || count > topCourse.count) topCourse = { name, count };
     }
-
     return {
       total,
       thisMonth,
@@ -88,51 +86,65 @@ function AdminDashboardContent() {
   const recent = useMemo(() => students.slice(0, 10), [students]);
 
   return (
-    <div className="space-y-6" dir="rtl">
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <h1 className="text-2xl font-semibold">لوحة الإدارة — Acceptix</h1>
-          <p className="mt-1 text-sm text-muted-foreground">
-            نظرة عامة على التسجيلات والموظفين والكورسات.
-          </p>
+    <div className="space-y-6" dir="ltr">
+      {/* Branded header — dual logo */}
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex items-center gap-4">
+          <Image
+            src="/acceptix-logo.png"
+            alt="Acceptix"
+            width={56}
+            height={56}
+            className="rounded-md"
+            priority
+          />
+          <div>
+            <h1 className="text-2xl font-semibold">Acceptix Admin</h1>
+            <p className="mt-1 text-sm text-muted-foreground">
+              Registrations, agents, courses, and reports — all in one place.
+            </p>
+          </div>
+        </div>
+        <div className="flex items-center gap-2 text-xs text-muted-foreground">
+          <span>Powered by</span>
+          <Image src="/logo.png" alt="Langford" width={28} height={28} />
+          <span className="font-medium">Langford</span>
         </div>
       </div>
 
-      {/* Stat cards */}
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
         <StatCard
           loading={loadingStudents}
           icon={Users}
-          label="إجمالي التسجيلات"
+          label="Total Registrations"
           value={stats.total.toLocaleString("en-US")}
         />
         <StatCard
           loading={loadingStudents}
           icon={CalendarDays}
-          label="تسجيلات هذا الشهر"
+          label="This Month"
           value={stats.thisMonth.toLocaleString("en-US")}
         />
         <StatCard
           loading={loadingAgents}
           icon={Users}
-          label="موظفين نشطين"
+          label="Active Agents"
           value={stats.activeAgents.toLocaleString("en-US")}
         />
         <StatCard
           loading={loadingStudents}
           icon={TrendingUp}
-          label="إجمالي العمولات"
+          label="Total Commission"
           value={`${stats.totalCommission.toLocaleString("en-US")} ${REG_DEFAULT_CURRENCY}`}
         />
       </div>
 
-      {/* Top course + courses count */}
       <div className="grid gap-4 lg:grid-cols-2">
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="flex items-center gap-2 text-sm text-muted-foreground">
               <GraduationCap className="h-4 w-4" />
-              أكتر كورس مطلوب
+              Top Course
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -142,11 +154,11 @@ function AdminDashboardContent() {
               <>
                 <p className="text-lg font-semibold">{stats.topCourse.name}</p>
                 <p className="text-sm text-muted-foreground">
-                  {stats.topCourse.count.toLocaleString("en-US")} طالب
+                  {stats.topCourse.count.toLocaleString("en-US")} students
                 </p>
               </>
             ) : (
-              <p className="text-sm text-muted-foreground">لسه مفيش تسجيلات</p>
+              <p className="text-sm text-muted-foreground">No registrations yet</p>
             )}
           </CardContent>
         </Card>
@@ -155,7 +167,7 @@ function AdminDashboardContent() {
           <CardHeader className="pb-2">
             <CardTitle className="flex items-center gap-2 text-sm text-muted-foreground">
               <GraduationCap className="h-4 w-4" />
-              الكورسات المتاحة
+              Available Courses
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -164,14 +176,14 @@ function AdminDashboardContent() {
             ) : (
               <>
                 <p className="text-lg font-semibold">
-                  {courses.length.toLocaleString("en-US")} كورس
+                  {courses.length.toLocaleString("en-US")} courses
                 </p>
                 <Link
                   href={REG_ROUTES.adminCourses}
                   className="text-sm text-primary hover:underline"
                 >
-                  إدارة الكورسات
-                  <ArrowLeft className="mr-1 inline h-3 w-3" />
+                  Manage courses
+                  <ArrowRight className="ml-1 inline h-3 w-3" />
                 </Link>
               </>
             )}
@@ -179,17 +191,16 @@ function AdminDashboardContent() {
         </Card>
       </div>
 
-      {/* Recent registrations */}
       <Card>
         <CardHeader>
           <div className="flex items-center justify-between">
-            <CardTitle className="text-base">آخر التسجيلات</CardTitle>
+            <CardTitle className="text-base">Recent Registrations</CardTitle>
             <Link
               href={REG_ROUTES.adminStudents}
               className="text-sm text-primary hover:underline"
             >
-              عرض الكل
-              <ArrowLeft className="mr-1 inline h-3 w-3" />
+              View all
+              <ArrowRight className="ml-1 inline h-3 w-3" />
             </Link>
           </div>
         </CardHeader>
@@ -202,7 +213,7 @@ function AdminDashboardContent() {
             </div>
           ) : recent.length === 0 ? (
             <p className="py-6 text-center text-sm text-muted-foreground">
-              لسه مفيش تسجيلات.
+              No registrations yet.
             </p>
           ) : (
             <div className="divide-y">
@@ -210,7 +221,7 @@ function AdminDashboardContent() {
                 <button
                   key={s.id}
                   onClick={() => router.push(REG_ROUTES.adminStudents)}
-                  className="flex w-full items-center justify-between gap-3 py-3 text-right hover:bg-muted/50"
+                  className="flex w-full items-center justify-between gap-3 py-3 text-left hover:bg-muted/50"
                 >
                   <div className="min-w-0">
                     <p className="truncate font-medium">{s.fullName}</p>
@@ -223,9 +234,9 @@ function AdminDashboardContent() {
                       variant="secondary"
                       className={`border-0 ${REG_STUDENT_STATUS_LABELS[s.status].color}`}
                     >
-                      {REG_STUDENT_STATUS_LABELS[s.status].ar}
+                      {REG_STUDENT_STATUS_LABELS[s.status].en}
                     </Badge>
-                    <span dir="ltr" className="text-xs text-muted-foreground">
+                    <span className="text-xs text-muted-foreground">
                       {formatDate(s.createdAt)}
                     </span>
                   </div>
@@ -238,8 +249,6 @@ function AdminDashboardContent() {
     </div>
   );
 }
-
-// ─── Helpers ─────────────────────────────────────────────────────────────────
 
 function StatCard({
   icon: Icon,
@@ -297,10 +306,10 @@ function formatDate(value: unknown): string {
   });
 }
 
-export default function AdminDashboardPage() {
+export default function AcceptixAdminDashboardPage() {
   return (
     <RoleGate allowedRoles={["admin"]}>
-      <AdminDashboardContent />
+      <AcceptixAdminDashboardContent />
     </RoleGate>
   );
 }

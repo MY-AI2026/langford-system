@@ -79,11 +79,11 @@ function ReportsContent() {
     const fromDate = fromInputDate(from, "start");
     const toDate = fromInputDate(to, "end");
     if (!fromDate || !toDate) {
-      toast.error("اختار تاريخ بداية ونهاية");
+      toast.error("Pick a start and end date");
       return;
     }
     if (fromDate > toDate) {
-      toast.error("تاريخ البداية لازم يكون قبل النهاية");
+      toast.error("Start date must be before end date");
       return;
     }
 
@@ -98,7 +98,7 @@ function ReportsContent() {
       setReport(r);
     } catch (e) {
       console.error("[reports] runReport failed:", e);
-      toast.error("فشل تحميل التقرير");
+      toast.error("Failed to load report");
     } finally {
       setLoading(false);
     }
@@ -113,30 +113,30 @@ function ReportsContent() {
 
   function handleExcel() {
     if (!report) {
-      toast.error("شغّل التقرير الأول");
+      toast.error("Run the report first");
       return;
     }
     if (report.totals.studentCount === 0) {
-      toast.info("التقرير فاضي — مفيش طلبة في الفترة دي");
+      toast.info("Report is empty — no students in this range");
       return;
     }
     exportReportToExcel(report, "acceptix-report");
-    toast.success("تم تنزيل Excel");
+    toast.success("Excel downloaded");
   }
 
   function handlePdf() {
     if (!report) {
-      toast.error("شغّل التقرير الأول");
+      toast.error("Run the report first");
       return;
     }
     if (report.totals.studentCount === 0) {
-      toast.info("التقرير فاضي — مفيش طلبة في الفترة دي");
+      toast.info("Report is empty — no students in this range");
       return;
     }
     const ok = exportReportToPdf(report);
     if (!ok) {
       toast.error(
-        "متصفّحك بيمنع فتح النافذة الجديدة — افتح إعدادات الـ popup blocker واسمح بـ Langford"
+        "Your browser is blocking new windows — allow pop-ups for Langford."
       );
     }
   }
@@ -148,26 +148,26 @@ function ReportsContent() {
   const memoCourses = useMemo(() => report?.byCourse ?? [], [report]);
 
   return (
-    <div className="space-y-6" dir="rtl">
+    <div className="space-y-6" dir="ltr">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="flex items-center gap-2 text-2xl font-semibold">
             <FileBarChart className="h-6 w-6 text-primary" />
-            التقارير
+            Reports
           </h1>
           <p className="mt-1 text-sm text-muted-foreground">
-            تقرير شهري بالعمولات + تجميع حسب الموظف والكورس + تصدير Excel و PDF.
+            Monthly commission report + grouping by agent and course + Excel & PDF export.
           </p>
         </div>
 
         <div className="flex gap-2">
           <Button variant="outline" onClick={handleExcel} disabled={!report || loading}>
             <FileSpreadsheet className="ml-2 h-4 w-4" />
-            تصدير Excel
+            Export Excel
           </Button>
           <Button variant="outline" onClick={handlePdf} disabled={!report || loading}>
             <Printer className="ml-2 h-4 w-4" />
-            تصدير PDF
+            Export PDF
           </Button>
         </div>
       </div>
@@ -177,13 +177,13 @@ function ReportsContent() {
         <CardHeader className="pb-3">
           <CardTitle className="flex items-center gap-2 text-base">
             <Filter className="h-4 w-4" />
-            الفلاتر
+            Filters
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-3">
           <div className="grid gap-3 lg:grid-cols-5">
             <div className="space-y-2">
-              <Label>الفترة</Label>
+              <Label>Range</Label>
               <Select
                 value={presetId}
                 onValueChange={(v) => applyPreset(v ?? "this-month")}
@@ -197,13 +197,13 @@ function ReportsContent() {
                       {p.labelAr}
                     </SelectItem>
                   ))}
-                  <SelectItem value="custom">مخصّص</SelectItem>
+                  <SelectItem value="custom">Custom</SelectItem>
                 </SelectContent>
               </Select>
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="from">من</Label>
+              <Label htmlFor="from">From</Label>
               <Input
                 id="from"
                 type="date"
@@ -216,7 +216,7 @@ function ReportsContent() {
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="to">إلى</Label>
+              <Label htmlFor="to">To</Label>
               <Input
                 id="to"
                 type="date"
@@ -230,7 +230,7 @@ function ReportsContent() {
             </div>
 
             <div className="space-y-2">
-              <Label>الموظف</Label>
+              <Label>Agent</Label>
               <Select
                 value={agentFilter}
                 onValueChange={(v) => setAgentFilter(v ?? "all")}
@@ -239,7 +239,7 @@ function ReportsContent() {
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">كل الموظفين</SelectItem>
+                  <SelectItem value="all">All agents</SelectItem>
                   {agents.map((a) => (
                     <SelectItem key={a.uid} value={a.uid}>
                       {a.displayName}
@@ -250,7 +250,7 @@ function ReportsContent() {
             </div>
 
             <div className="space-y-2">
-              <Label>الكورس</Label>
+              <Label>Course</Label>
               <Select
                 value={courseFilter}
                 onValueChange={(v) => setCourseFilter(v ?? "all")}
@@ -259,7 +259,7 @@ function ReportsContent() {
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">كل الكورسات</SelectItem>
+                  <SelectItem value="all">All courses</SelectItem>
                   {courses.map((c) => (
                     <SelectItem key={c.id} value={c.id}>
                       {c.name}
@@ -273,7 +273,7 @@ function ReportsContent() {
           <div className="flex justify-start">
             <Button onClick={runReport} disabled={loading}>
               {loading && <Loader2 className="ml-2 h-4 w-4 animate-spin" />}
-              شغّل التقرير
+              Run Report
             </Button>
           </div>
         </CardContent>
@@ -283,7 +283,7 @@ function ReportsContent() {
       <div className="grid gap-3 sm:grid-cols-3">
         <Card>
           <CardContent className="p-4">
-            <p className="text-xs text-muted-foreground">عدد الطلبة</p>
+            <p className="text-xs text-muted-foreground">Students</p>
             <p className="mt-1 text-2xl font-bold">
               {loading ? "—" : totals?.studentCount.toLocaleString("en-US")}
             </p>
@@ -291,7 +291,7 @@ function ReportsContent() {
         </Card>
         <Card>
           <CardContent className="p-4">
-            <p className="text-xs text-muted-foreground">إجمالي الرسوم</p>
+            <p className="text-xs text-muted-foreground">Total Fees</p>
             <p className="mt-1 text-2xl font-bold" dir="ltr">
               {loading
                 ? "—"
@@ -301,7 +301,7 @@ function ReportsContent() {
         </Card>
         <Card className="border-primary/30 bg-primary/5">
           <CardContent className="p-4">
-            <p className="text-xs text-muted-foreground">إجمالي العمولة (10%)</p>
+            <p className="text-xs text-muted-foreground">Total Commission (10%)</p>
             <p className="mt-1 text-2xl font-bold text-primary" dir="ltr">
               {loading
                 ? "—"
@@ -314,7 +314,7 @@ function ReportsContent() {
       {/* Breakdowns */}
       <div className="grid gap-4 lg:grid-cols-2">
         <BreakdownTable
-          title="ملخص الموظفين"
+          title="Agent Summary"
           loading={loading}
           rows={memoAgents.map((a) => ({
             name: a.agentName,
@@ -325,7 +325,7 @@ function ReportsContent() {
           }))}
         />
         <BreakdownTable
-          title="ملخص الكورسات"
+          title="Course Summary"
           loading={loading}
           rows={memoCourses.map((c) => ({
             name: c.courseName,
@@ -370,15 +370,15 @@ function BreakdownTable({
             ))}
           </div>
         ) : rows.length === 0 ? (
-          <p className="py-8 text-center text-sm text-muted-foreground">لا يوجد بيانات</p>
+          <p className="py-8 text-center text-sm text-muted-foreground">No data</p>
         ) : (
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>الاسم</TableHead>
-                <TableHead>العدد</TableHead>
-                <TableHead>الرسوم</TableHead>
-                <TableHead>العمولة</TableHead>
+                <TableHead>Name</TableHead>
+                <TableHead>Count</TableHead>
+                <TableHead>Fee</TableHead>
+                <TableHead>Commission</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>

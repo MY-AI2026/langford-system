@@ -35,36 +35,21 @@ export const REG_EMAIL_FROM = "Langford × Acceptix <noreply@langford.website>";
 
 // ─── Display labels (UI consumes these via the lookups below) ────────────────
 
-export const REG_CATEGORY_LABELS: Record<RegCourseCategory, { en: string; ar: string }> = {
-  esp: {
-    en: "ESP — English for Specific Purposes",
-    ar: "اللغة الإنجليزية لأغراض محددة (ESP)",
-  },
-  exam_prep: {
-    en: "Exam Preparation",
-    ar: "التحضير لاختبارات اللغة",
-  },
-  professional: {
-    en: "Professional Courses",
-    ar: "الكورسات الاحترافية",
-  },
-  diploma: {
-    en: "Diplomas",
-    ar: "الدبلومات",
-  },
-  other: {
-    en: "Other",
-    ar: "أخرى",
-  },
+export const REG_CATEGORY_LABELS: Record<RegCourseCategory, { en: string }> = {
+  esp: { en: "ESP — English for Specific Purposes" },
+  exam_prep: { en: "Exam Preparation" },
+  professional: { en: "Professional Courses" },
+  diploma: { en: "Diplomas" },
+  other: { en: "Other" },
 };
 
 export const REG_STUDENT_STATUS_LABELS: Record<
   RegStudentStatus,
-  { en: string; ar: string; color: string }
+  { en: string; color: string }
 > = {
-  new: { en: "New", ar: "جديد", color: "bg-blue-100 text-blue-700" },
-  enrolled: { en: "Enrolled", ar: "ملتحق", color: "bg-green-100 text-green-700" },
-  cancelled: { en: "Cancelled", ar: "ملغي", color: "bg-red-100 text-red-700" },
+  new: { en: "New", color: "bg-blue-100 text-blue-700" },
+  enrolled: { en: "Enrolled", color: "bg-green-100 text-green-700" },
+  cancelled: { en: "Cancelled", color: "bg-red-100 text-red-700" },
 };
 
 /** Order categories are displayed in dropdowns and reports. */

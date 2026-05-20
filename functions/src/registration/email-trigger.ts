@@ -75,23 +75,23 @@ function renderEmailHtml(input: {
   const fee = input.courseFee.toLocaleString("en-US");
   const commission = input.commissionAmount.toLocaleString("en-US");
   return `<!doctype html>
-<html lang="ar" dir="rtl">
-<body style="font-family:'Cairo','Helvetica Neue',Arial,sans-serif;color:#111827;background:#f9fafb;margin:0;padding:24px;">
+<html lang="en" dir="ltr">
+<body style="font-family:'Inter','Helvetica Neue',Arial,sans-serif;color:#111827;background:#f9fafb;margin:0;padding:24px;">
   <div style="max-width:560px;margin:0 auto;background:white;border:1px solid #e5e7eb;border-radius:8px;overflow:hidden;">
-    <div style="background:#ef4444;color:white;padding:16px 20px;">
-      <h1 style="margin:0;font-size:18px;">طالب جديد سُجِّل عبر Acceptix</h1>
+    <div style="background:#1e40af;color:white;padding:16px 20px;">
+      <h1 style="margin:0;font-size:18px;">New student registered via Acceptix</h1>
     </div>
     <div style="padding:20px;">
       <p style="margin:0 0 16px;font-size:14px;color:#374151;">
-        تم تسجيل طالب جديد بواسطة <strong>${escapeHtml(input.agentName)}</strong>.
+        A new student has been registered by <strong>${escapeHtml(input.agentName)}</strong>.
       </p>
       <table style="width:100%;border-collapse:collapse;font-size:14px;">
-        <tr><td style="padding:8px 0;color:#6b7280;width:120px;">الاسم</td><td style="padding:8px 0;font-weight:600;">${escapeHtml(input.studentName)}</td></tr>
-        <tr><td style="padding:8px 0;color:#6b7280;">الكورس</td><td style="padding:8px 0;">${escapeHtml(input.courseName)}</td></tr>
-        <tr><td style="padding:8px 0;color:#6b7280;">التليفون</td><td style="padding:8px 0;" dir="ltr">${escapeHtml(input.phone)}</td></tr>
-        ${input.email ? `<tr><td style="padding:8px 0;color:#6b7280;">الإيميل</td><td style="padding:8px 0;" dir="ltr">${escapeHtml(input.email)}</td></tr>` : ""}
-        <tr><td style="padding:8px 0;color:#6b7280;">الرسوم</td><td style="padding:8px 0;" dir="ltr">${fee} ${escapeHtml(input.currency)}</td></tr>
-        <tr><td style="padding:8px 0;color:#6b7280;">العمولة (10%)</td><td style="padding:8px 0;color:#b91c1c;font-weight:700;" dir="ltr">${commission} ${escapeHtml(input.currency)}</td></tr>
+        <tr><td style="padding:8px 0;color:#6b7280;width:120px;">Name</td><td style="padding:8px 0;font-weight:600;">${escapeHtml(input.studentName)}</td></tr>
+        <tr><td style="padding:8px 0;color:#6b7280;">Course</td><td style="padding:8px 0;">${escapeHtml(input.courseName)}</td></tr>
+        <tr><td style="padding:8px 0;color:#6b7280;">Phone</td><td style="padding:8px 0;">${escapeHtml(input.phone)}</td></tr>
+        ${input.email ? `<tr><td style="padding:8px 0;color:#6b7280;">Email</td><td style="padding:8px 0;">${escapeHtml(input.email)}</td></tr>` : ""}
+        <tr><td style="padding:8px 0;color:#6b7280;">Fee</td><td style="padding:8px 0;">${fee} ${escapeHtml(input.currency)}</td></tr>
+        <tr><td style="padding:8px 0;color:#6b7280;">Commission (10%)</td><td style="padding:8px 0;color:#1e40af;font-weight:700;">${commission} ${escapeHtml(input.currency)}</td></tr>
       </table>
 
       <p style="margin:24px 0 0;font-size:12px;color:#6b7280;">
@@ -160,7 +160,7 @@ export const onRegStudentCreated = onDocumentCreated(
         from,
         to: recipients,
         replyTo,
-        subject: `طالب جديد: ${payload.studentName} — ${payload.courseName}`,
+        subject: `New student: ${payload.studentName} — ${payload.courseName}`,
         html: renderEmailHtml(payload),
       });
       if (res.error) {

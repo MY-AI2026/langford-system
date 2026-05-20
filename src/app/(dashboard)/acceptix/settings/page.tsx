@@ -43,7 +43,7 @@ function SettingsContent() {
         setReplyTo(s.replyTo);
       } catch (e) {
         console.error("[settings] load failed:", e);
-        toast.error("فشل تحميل الإعدادات — هنستخدم الافتراضيات");
+        toast.error("Failed to load settings — using defaults");
         setEnabled(EMAIL_SETTINGS_DEFAULTS.enabled);
         setRecipients(EMAIL_SETTINGS_DEFAULTS.recipients);
         setFrom(EMAIL_SETTINGS_DEFAULTS.from);
@@ -58,11 +58,11 @@ function SettingsContent() {
     const e = newEmail.trim();
     if (!e) return;
     if (!isValidEmail(e)) {
-      toast.error("الإيميل مش صحيح");
+      toast.error("Invalid email");
       return;
     }
     if (recipients.includes(e)) {
-      toast.error("الإيميل ده موجود بالفعل");
+      toast.error("This email is already in the list");
       return;
     }
     setRecipients([...recipients, e]);
@@ -76,11 +76,11 @@ function SettingsContent() {
   async function handleSave() {
     if (!firebaseUser) return;
     if (recipients.length === 0 && enabled) {
-      toast.error("لازم تضيف إيميل واحد على الأقل أو تعطّل الإشعارات");
+      toast.error("Add at least one recipient or disable notifications");
       return;
     }
     if (replyTo && !isValidEmail(replyTo)) {
-      toast.error("إيميل الـ reply-to مش صحيح");
+      toast.error("Invalid reply-to email");
       return;
     }
     setSaving(true);
@@ -89,10 +89,10 @@ function SettingsContent() {
         { enabled, recipients, from, replyTo },
         firebaseUser.uid
       );
-      toast.success("تم حفظ الإعدادات");
+      toast.success("Settings saved");
     } catch (e) {
       console.error("[settings] save failed:", e);
-      toast.error("فشل الحفظ");
+      toast.error("Save failed");
     } finally {
       setSaving(false);
     }
@@ -108,14 +108,14 @@ function SettingsContent() {
   }
 
   return (
-    <div className="space-y-6" dir="rtl">
+    <div className="space-y-6" dir="ltr">
       <div>
         <h1 className="flex items-center gap-2 text-2xl font-semibold">
           <Settings className="h-6 w-6 text-primary" />
-          إعدادات الموديول
+          Module Settings
         </h1>
         <p className="mt-1 text-sm text-muted-foreground">
-          إدارة إشعارات الإيميل لتسجيل الطلبة الجدد.
+          Manage email notifications for new student registrations.
         </p>
       </div>
 
@@ -123,23 +123,22 @@ function SettingsContent() {
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-base">
             <Mail className="h-4 w-4" />
-            إشعارات البريد الإلكتروني
+            Email Notifications
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-5">
           <div className="flex items-center justify-between rounded-md border p-3">
             <div>
-              <p className="text-sm font-medium">تفعيل الإشعارات</p>
+              <p className="text-sm font-medium">Enable Notifications</p>
               <p className="text-xs text-muted-foreground">
-                لو معطّل، الـ Cloud Function هتـ skip إرسال الإيميل لكن
-                الـ in-app notification هتفضل تشتغل عادي.
+                If disabled, the Cloud Function skips sending email but in-app notifications still work.
               </p>
             </div>
             <Switch checked={enabled} onCheckedChange={setEnabled} />
           </div>
 
           <div className="space-y-2">
-            <Label>المستلمين</Label>
+            <Label>Recipients</Label>
             <div className="flex gap-2">
               <Input
                 type="email"
@@ -157,12 +156,12 @@ function SettingsContent() {
               />
               <Button type="button" variant="outline" onClick={addRecipient}>
                 <Plus className="ml-2 h-4 w-4" />
-                إضافة
+                Add
               </Button>
             </div>
             {recipients.length === 0 ? (
               <p className="text-xs text-muted-foreground">
-                لسه مفيش إيميلات — لو فعّلت الإشعارات هيستخدم الـ default
+                None yet — when enabled the default recipient is used
                 ({EMAIL_SETTINGS_DEFAULTS.recipients.join(", ")}).
               </p>
             ) : (
@@ -180,7 +179,7 @@ function SettingsContent() {
                       variant="ghost"
                       size="icon"
                       onClick={() => removeRecipient(r)}
-                      aria-label={`إزالة ${r}`}
+                      aria-label={`Remove ${r}`}
                     >
                       <Trash2 className="h-4 w-4 text-destructive" />
                     </Button>
@@ -192,7 +191,7 @@ function SettingsContent() {
 
           <div className="grid gap-3 sm:grid-cols-2">
             <div className="space-y-2">
-              <Label htmlFor="from">من (From)</Label>
+              <Label htmlFor="from">ago (From)</Label>
               <Input
                 id="from"
                 value={from}
@@ -202,12 +201,12 @@ function SettingsContent() {
                 placeholder="Name <noreply@your-domain.com>"
               />
               <p className="text-xs text-muted-foreground">
-                لازم الـ domain يكون متحقّق منه في Resend.
+                The domain must be verified in Resend.
               </p>
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="replyTo">رد إلى (Reply-To)</Label>
+              <Label htmlFor="replyTo">Reply-To</Label>
               <Input
                 id="replyTo"
                 type="email"
@@ -223,7 +222,7 @@ function SettingsContent() {
           <div className="flex justify-start pt-2">
             <Button onClick={handleSave} disabled={saving} size="lg">
               {saving && <Loader2 className="ml-2 h-4 w-4 animate-spin" />}
-              حفظ الإعدادات
+              Save Settings
             </Button>
           </div>
         </CardContent>

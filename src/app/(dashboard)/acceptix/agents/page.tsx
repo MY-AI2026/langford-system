@@ -80,11 +80,11 @@ function AdminAgentsContent() {
     try {
       const nextActive = !(agent.isActive !== false);
       await setAgentActive(agent.uid, nextActive);
-      toast.success(nextActive ? "تم تفعيل الحساب" : "تم تعطيل الحساب");
+      toast.success(nextActive ? "Account enabled" : "Account disabled");
     } catch (e) {
       const err = e as { message?: string };
       console.error("[admin-agents] toggle failed:", e);
-      toast.error(err.message || "فشل تغيير الحالة");
+      toast.error(err.message || "Status change failed");
     } finally {
       setTogglingUid(null);
     }
@@ -94,42 +94,42 @@ function AdminAgentsContent() {
     if (!resetTarget) return;
     const parsed = regAgentResetPasswordSchema.safeParse({ password: resetPw });
     if (!parsed.success) {
-      toast.error(parsed.error.issues[0]?.message || "كلمة المرور مش صالحة");
+      toast.error(parsed.error.issues[0]?.message || "Invalid password");
       return;
     }
 
     setResetSubmitting(true);
     try {
       await resetAgentPassword(resetTarget.uid, resetPw);
-      toast.success(`تم تعيين كلمة مرور جديدة لـ ${resetTarget.displayName}`);
+      toast.success(`New password set for ${resetTarget.displayName}`);
       setResetTarget(null);
       setResetPw("");
     } catch (e) {
       const err = e as { message?: string };
       console.error("[admin-agents] reset password failed:", e);
-      toast.error(err.message || "فشل تعيين كلمة المرور");
+      toast.error(err.message || "Failed Set Password");
     } finally {
       setResetSubmitting(false);
     }
   }
 
   return (
-    <div className="space-y-6" dir="rtl">
+    <div className="space-y-6" dir="ltr">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="flex items-center gap-2 text-2xl font-semibold">
             <Users className="h-6 w-6 text-primary" />
-            موظفو Acceptix
+            Acceptix Agents
           </h1>
           <p className="mt-1 text-sm text-muted-foreground">
-            أضِف حسابات جديدة، فعّل/عطّل، أو أعد تعيين كلمات المرور.
+            Add new accounts, activate / disable, or reset passwords.
           </p>
         </div>
 
         <Link href={REG_ROUTES.adminAgentNew}>
           <Button>
             <UserPlus className="ml-2 h-4 w-4" />
-            موظف جديد
+            New Agent
           </Button>
         </Link>
       </div>
@@ -144,14 +144,14 @@ function AdminAgentsContent() {
         <Card>
           <CardContent className="flex flex-col items-center justify-center py-12 text-center">
             <Users className="mb-3 h-10 w-10 text-muted-foreground" />
-            <h3 className="text-base font-semibold">لسه مفيش موظفين</h3>
+            <h3 className="text-base font-semibold">No agents yet</h3>
             <p className="mt-1 max-w-sm text-sm text-muted-foreground">
-              ابدأ بإضافة أول حساب موظف Acceptix.
+              Start by adding the first Acceptix agent account.
             </p>
             <Link href={REG_ROUTES.adminAgentNew}>
               <Button className="mt-4">
                 <UserPlus className="ml-2 h-4 w-4" />
-                إضافة موظف
+                Add Agent
               </Button>
             </Link>
           </CardContent>
@@ -161,10 +161,10 @@ function AdminAgentsContent() {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>الاسم</TableHead>
-                <TableHead>الإيميل</TableHead>
-                <TableHead>الطلبة</TableHead>
-                <TableHead>الحالة</TableHead>
+                <TableHead>Name</TableHead>
+                <TableHead>Email</TableHead>
+                <TableHead>Students</TableHead>
+                <TableHead>Status</TableHead>
                 <TableHead className="w-44"></TableHead>
               </TableRow>
             </TableHeader>
@@ -182,9 +182,9 @@ function AdminAgentsContent() {
                     </TableCell>
                     <TableCell>
                       {active ? (
-                        <Badge className="border-0 bg-green-100 text-green-700">نشط</Badge>
+                        <Badge className="border-0 bg-green-100 text-green-700">Active</Badge>
                       ) : (
-                        <Badge className="border-0 bg-red-100 text-red-700">معطّل</Badge>
+                        <Badge className="border-0 bg-red-100 text-red-700">Disabled</Badge>
                       )}
                     </TableCell>
                     <TableCell>
@@ -193,17 +193,17 @@ function AdminAgentsContent() {
                           variant="ghost"
                           size="sm"
                           onClick={() => setResetTarget(a)}
-                          aria-label="إعادة تعيين كلمة المرور"
+                          aria-label="Reset Password"
                         >
                           <Key className="ml-1 h-4 w-4" />
-                          كلمة المرور
+                          Password
                         </Button>
                         <Button
                           variant="ghost"
                           size="sm"
                           onClick={() => handleToggle(a)}
                           disabled={togglingUid === a.uid}
-                          aria-label={active ? "تعطيل" : "تفعيل"}
+                          aria-label={active ? "Disable" : "Enable"}
                         >
                           {togglingUid === a.uid ? (
                             <Loader2 className="ml-1 h-4 w-4 animate-spin" />
@@ -212,7 +212,7 @@ function AdminAgentsContent() {
                           ) : (
                             <Power className="ml-1 h-4 w-4 text-green-600" />
                           )}
-                          {active ? "تعطيل" : "تفعيل"}
+                          {active ? "Disable" : "Enable"}
                         </Button>
                       </div>
                     </TableCell>
@@ -234,9 +234,9 @@ function AdminAgentsContent() {
           }
         }}
       >
-        <DialogContent dir="rtl">
+        <DialogContent dir="ltr">
           <DialogHeader>
-            <DialogTitle>إعادة تعيين كلمة المرور</DialogTitle>
+            <DialogTitle>Reset Password</DialogTitle>
           </DialogHeader>
           {resetTarget && (
             <div className="space-y-3">
@@ -247,17 +247,17 @@ function AdminAgentsContent() {
                 </p>
               </div>
               <div className="space-y-2">
-                <label className="text-sm font-medium">كلمة مرور جديدة</label>
+                <label className="text-sm font-medium">New Password</label>
                 <Input
                   type="password"
                   value={resetPw}
                   onChange={(e) => setResetPw(e.target.value)}
-                  placeholder="12 حرف على الأقل، فيها رقم ورمز خاص"
+                  placeholder="At least 12 chars, with digit and special character"
                   dir="ltr"
                   className="text-left"
                 />
                 <p className="text-xs text-muted-foreground">
-                  لازم: 12+ حرف، حرف كبير، حرف صغير، رقم، ورمز خاص.
+                  Required: 12+ chars, uppercase, lowercase, digit, and special character.
                 </p>
               </div>
             </div>
@@ -271,11 +271,11 @@ function AdminAgentsContent() {
               }}
               disabled={resetSubmitting}
             >
-              إلغاء
+              Cancel
             </Button>
             <Button onClick={handleResetSubmit} disabled={resetSubmitting}>
               {resetSubmitting && <Loader2 className="ml-2 h-4 w-4 animate-spin" />}
-              تعيين كلمة المرور
+              Set Password
             </Button>
           </DialogFooter>
         </DialogContent>

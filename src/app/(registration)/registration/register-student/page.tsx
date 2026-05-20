@@ -38,10 +38,10 @@ function RegisterStudentContent() {
         }
       );
 
-      toast.success("تم تسجيل الطالب بنجاح ✓", {
-        description: `${data.fullName} اتسجّل وممكن تشوفه في "طلبتي".`,
+      toast.success("Student registered successfully ✓", {
+        description: `${data.fullName} has been added — view them under "My Students".`,
         action: {
-          label: "اعرض طلبتي",
+          label: "View My Students",
           onClick: () => router.push(REG_ROUTES.myStudents),
         },
         duration: 6000,
@@ -50,31 +50,32 @@ function RegisterStudentContent() {
       if (error instanceof Error) {
         switch (error.message) {
           case "PHONE_INVALID":
-            toast.error("رقم التليفون مش صحيح — لازم يكون 7 أرقام على الأقل");
+            toast.error("Invalid phone number — must be at least 7 digits.");
             return;
           case "COURSE_NOT_FOUND":
-            toast.error("الكورس مش موجود — حدّث الصفحة وحاول تاني");
+            toast.error("Course not found — please refresh and try again.");
             return;
           case "COURSE_INACTIVE":
-            toast.error("الكورس ده مش متاح حالياً — اختار كورس تاني");
+            toast.error("That course is not available right now — pick another.");
             return;
         }
       }
       console.error("[register-student] failed:", error);
-      toast.error("حصل خطأ غير متوقع — حاول مرة تانية");
+      toast.error("Unexpected error — please try again.");
     }
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6" dir="ltr">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="flex items-center gap-2 text-2xl font-semibold">
             <UserPlus className="h-6 w-6 text-primary" />
-            تسجيل طالب جديد
+            Register a New Student
           </h1>
           <p className="mt-1 text-sm text-muted-foreground">
-            املأ بيانات الطالب واختار الكورس. هتظهر العمولة قبل التسجيل.
+            Fill in the student details and pick a course. You will see the
+            commission preview before submitting.
           </p>
         </div>
 
@@ -83,14 +84,14 @@ function RegisterStudentContent() {
           size="sm"
           onClick={() => router.push(REG_ROUTES.myStudents)}
         >
-          <ListChecks className="ml-2 h-4 w-4" />
-          طلبتي
+          <ListChecks className="mr-2 h-4 w-4" />
+          My Students
         </Button>
       </div>
 
       <Card>
         <CardHeader>
-          <CardTitle className="text-base">بيانات الطالب</CardTitle>
+          <CardTitle className="text-base">Student Details</CardTitle>
         </CardHeader>
         <CardContent>
           <RegisterStudentForm onSubmit={handleSubmit} />

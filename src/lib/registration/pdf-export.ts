@@ -1,17 +1,12 @@
 /**
- * PDF exporter for the registration-module reports.
+ * PDF exporter for Acceptix registration reports.
  *
- * Strategy: build a fully self-contained HTML document (Arabic fonts +
- * RTL + inline CSS), open it in a new window, and trigger the browser's
- * native print dialog so the admin can "Save as PDF". This sidesteps the
- * Arabic-font headaches that plague client-side PDF libraries — every
- * modern browser renders Arabic + RTL perfectly out of the box.
- *
- * Pros: zero new dependencies, perfect Arabic, perfect RTL, identical
- * preview to the printed PDF.
- *
- * Trade-off: requires a user gesture (the print dialog). Acceptable for
- * a back-office admin tool — they're already clicking "Export PDF".
+ * Strategy: build a fully self-contained HTML document (English, LTR,
+ * dual-brand header with the Acceptix + Langford logos), open it in a new
+ * window, and trigger the browser's native print dialog so the admin can
+ * "Save as PDF". This sidesteps the Arabic/Latin-font headaches that
+ * plague client-side PDF libraries — every modern browser renders
+ * print-to-PDF perfectly.
  */
 
 import { ReportResult } from "@/lib/services/reg-report-service";
@@ -57,24 +52,30 @@ function escapeHtml(s: unknown): string {
     .replace(/"/g, "&quot;");
 }
 
-function buildHtml(report: ReportResult): string {
+function buildHtml(report: ReportResult, origin: string): string {
   const fromStr = formatDate(report.range.from);
   const toStr = formatDate(report.range.to);
   const generatedStr = report.generatedAt.toLocaleString("en-GB");
   const currency = escapeHtml(report.totals.currency);
+
+  // Absolute URLs so the logos render when the doc lives in a fresh
+  // pop-up window (relative `/acceptix-logo.png` would resolve against
+  // about:blank otherwise).
+  const acceptixLogo = `${origin}/acceptix-logo.png`;
+  const langfordLogo = `${origin}/logo.png`;
 
   const studentRows = report.students
     .map(
       (s) => `
       <tr>
         <td>${escapeHtml(s.fullName)}</td>
-        <td dir="ltr">${escapeHtml(s.phone)}</td>
+        <td>${escapeHtml(s.phone)}</td>
         <td>${escapeHtml(s.courseName)}</td>
         <td>${escapeHtml(s.createdByName)}</td>
-        <td>${escapeHtml(REG_STUDENT_STATUS_LABELS[s.status]?.ar ?? s.status)}</td>
-        <td dir="ltr">${formatNumber(s.courseFee ?? 0)} ${escapeHtml(s.currency)}</td>
-        <td dir="ltr"><strong>${formatNumber(s.commissionAmount ?? 0)} ${escapeHtml(s.currency)}</strong></td>
-        <td dir="ltr">${formatDate(s.createdAt)}</td>
+        <td>${escapeHtml(REG_STUDENT_STATUS_LABELS[s.status]?.en ?? s.status)}</td>
+        <td class="num">${formatNumber(s.courseFee ?? 0)} ${escapeHtml(s.currency)}</td>
+        <td class="num"><strong>${formatNumber(s.commissionAmount ?? 0)} ${escapeHtml(s.currency)}</strong></td>
+        <td>${formatDate(s.createdAt)}</td>
       </tr>
     `
     )
@@ -85,9 +86,9 @@ function buildHtml(report: ReportResult): string {
       (a) => `
       <tr>
         <td>${escapeHtml(a.agentName)}</td>
-        <td>${a.studentCount}</td>
-        <td dir="ltr">${formatNumber(a.totalFees)} ${escapeHtml(a.currency)}</td>
-        <td dir="ltr"><strong>${formatNumber(a.totalCommission)} ${escapeHtml(a.currency)}</strong></td>
+        <td class="num">${a.studentCount}</td>
+        <td class="num">${formatNumber(a.totalFees)} ${escapeHtml(a.currency)}</td>
+        <td class="num"><strong>${formatNumber(a.totalCommission)} ${escapeHtml(a.currency)}</strong></td>
       </tr>
     `
     )
@@ -98,53 +99,103 @@ function buildHtml(report: ReportResult): string {
       (c) => `
       <tr>
         <td>${escapeHtml(c.courseName)}</td>
-        <td>${c.studentCount}</td>
-        <td dir="ltr">${formatNumber(c.totalFees)} ${escapeHtml(c.currency)}</td>
-        <td dir="ltr"><strong>${formatNumber(c.totalCommission)} ${escapeHtml(c.currency)}</strong></td>
+        <td class="num">${c.studentCount}</td>
+        <td class="num">${formatNumber(c.totalFees)} ${escapeHtml(c.currency)}</td>
+        <td class="num"><strong>${formatNumber(c.totalCommission)} ${escapeHtml(c.currency)}</strong></td>
       </tr>
     `
     )
     .join("");
 
   return `<!doctype html>
-<html lang="ar" dir="rtl">
+<html lang="en" dir="ltr">
 <head>
 <meta charset="utf-8">
-<title>تقرير Langford × Acceptix — ${fromStr} → ${toStr}</title>
+<title>Langford × Acceptix Report — ${fromStr} to ${toStr}</title>
 <style>
-  @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap');
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
 
   * { box-sizing: border-box; }
   body {
-    font-family: 'Cairo', 'Helvetica Neue', Arial, sans-serif;
+    font-family: 'Inter', 'Helvetica Neue', Arial, sans-serif;
     color: #111827;
     margin: 0;
     padding: 24px;
     background: white;
     line-height: 1.5;
   }
+
+  /* ── Branded header — dual logo ─────────────────────────────────── */
   header {
     display: flex;
     justify-content: space-between;
-    align-items: baseline;
-    border-bottom: 2px solid #ef4444;
-    padding-bottom: 12px;
+    align-items: center;
+    border-bottom: 3px solid #1e40af;
+    padding-bottom: 14px;
     margin-bottom: 20px;
   }
-  header h1 {
-    font-size: 22px;
-    margin: 0;
+  header .brand-left {
+    display: flex;
+    align-items: center;
+    gap: 12px;
   }
-  header .meta {
-    font-size: 12px;
+  header .brand-left img.acceptix {
+    width: 52px;
+    height: 52px;
+    object-fit: contain;
+  }
+  header .brand-left .text h1 {
+    margin: 0;
+    font-size: 22px;
+    color: #1e40af;
+    letter-spacing: -0.02em;
+  }
+  header .brand-left .text p {
+    margin: 2px 0 0;
+    font-size: 11px;
+    color: #6b7280;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+  }
+  header .brand-right {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 11px;
     color: #6b7280;
   }
-  .range {
+  header .brand-right img.langford {
+    width: 36px;
+    height: 36px;
+    object-fit: contain;
+  }
+  header .brand-right .stack {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 2px;
+  }
+  header .brand-right .stack .powered {
+    font-size: 9px;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: #9ca3af;
+  }
+  header .brand-right .stack .langford-name {
     font-size: 13px;
+    font-weight: 600;
+    color: #b91c1c;
+  }
+
+  .meta {
+    display: flex;
+    justify-content: space-between;
+    font-size: 12px;
     color: #6b7280;
     margin-bottom: 16px;
   }
 
+  /* ── Summary cards ───────────────────────────────────────────────── */
   .summary {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
@@ -158,27 +209,29 @@ function buildHtml(report: ReportResult): string {
     background: #f9fafb;
   }
   .summary .card.primary {
-    background: #fef2f2;
-    border-color: #fecaca;
+    background: #eff6ff;
+    border-color: #bfdbfe;
   }
   .summary .card .label {
     font-size: 11px;
     color: #6b7280;
     margin-bottom: 4px;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
   }
   .summary .card .value {
     font-size: 20px;
     font-weight: 700;
   }
-  .summary .card.primary .value { color: #b91c1c; }
+  .summary .card.primary .value { color: #1e40af; }
 
   section { margin-bottom: 28px; page-break-inside: avoid; }
   section h2 {
     font-size: 15px;
     margin: 0 0 8px;
     color: #111827;
-    border-right: 4px solid #ef4444;
-    padding-right: 8px;
+    border-left: 4px solid #1e40af;
+    padding-left: 8px;
   }
   table {
     width: 100%;
@@ -187,12 +240,14 @@ function buildHtml(report: ReportResult): string {
   }
   thead { background: #f3f4f6; }
   th, td {
-    text-align: right;
+    text-align: left;
     padding: 8px 10px;
     border-bottom: 1px solid #e5e7eb;
     vertical-align: top;
   }
   th { font-weight: 600; color: #374151; }
+  td.num { text-align: right; }
+  th.num { text-align: right; }
   tbody tr:nth-child(even) { background: #fafafa; }
 
   footer {
@@ -202,100 +257,126 @@ function buildHtml(report: ReportResult): string {
     font-size: 11px;
     color: #6b7280;
     text-align: center;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 8px;
+  }
+  footer img {
+    width: 18px;
+    height: 18px;
+    object-fit: contain;
+    opacity: 0.6;
   }
 
   @media print {
     body { padding: 12mm; }
-    header { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-    .summary .card { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    header,
+    .summary .card,
     thead { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
   }
 </style>
 </head>
 <body>
 <header>
-  <h1>تقرير Langford × Acceptix</h1>
-  <div class="meta">صدر في ${escapeHtml(generatedStr)}</div>
+  <div class="brand-left">
+    <img class="acceptix" src="${escapeHtml(acceptixLogo)}" alt="Acceptix" />
+    <div class="text">
+      <h1>Acceptix Registration Report</h1>
+      <p>Langford International Institute · Kuwait</p>
+    </div>
+  </div>
+  <div class="brand-right">
+    <div class="stack">
+      <span class="powered">Powered by</span>
+      <span class="langford-name">Langford</span>
+    </div>
+    <img class="langford" src="${escapeHtml(langfordLogo)}" alt="Langford" />
+  </div>
 </header>
 
-<div class="range">الفترة: ${escapeHtml(fromStr)} → ${escapeHtml(toStr)}</div>
+<div class="meta">
+  <span>Range: ${escapeHtml(fromStr)} → ${escapeHtml(toStr)}</span>
+  <span>Generated at ${escapeHtml(generatedStr)}</span>
+</div>
 
 <div class="summary">
   <div class="card">
-    <div class="label">عدد الطلبة</div>
+    <div class="label">Total Students</div>
     <div class="value">${report.totals.studentCount}</div>
   </div>
   <div class="card">
-    <div class="label">إجمالي الرسوم</div>
-    <div class="value" dir="ltr">${formatNumber(report.totals.totalFees)} ${currency}</div>
+    <div class="label">Total Fees</div>
+    <div class="value">${formatNumber(report.totals.totalFees)} ${currency}</div>
   </div>
   <div class="card primary">
-    <div class="label">إجمالي العمولة (10%)</div>
-    <div class="value" dir="ltr">${formatNumber(report.totals.totalCommission)} ${currency}</div>
+    <div class="label">Total Commission (10%)</div>
+    <div class="value">${formatNumber(report.totals.totalCommission)} ${currency}</div>
   </div>
 </div>
 
 <section>
-  <h2>ملخص الموظفين</h2>
+  <h2>Agent Summary</h2>
   <table>
     <thead>
       <tr>
-        <th>الموظف</th>
-        <th>عدد الطلبة</th>
-        <th>إجمالي الرسوم</th>
-        <th>إجمالي العمولة</th>
+        <th>Agent</th>
+        <th class="num">Students</th>
+        <th class="num">Total Fees</th>
+        <th class="num">Total Commission</th>
       </tr>
     </thead>
-    <tbody>${agentRows || `<tr><td colspan="4" style="text-align:center;color:#6b7280;">لا يوجد</td></tr>`}</tbody>
+    <tbody>${agentRows || `<tr><td colspan="4" style="text-align:center;color:#6b7280;">No data</td></tr>`}</tbody>
   </table>
 </section>
 
 <section>
-  <h2>ملخص الكورسات</h2>
+  <h2>Course Summary</h2>
   <table>
     <thead>
       <tr>
-        <th>الكورس</th>
-        <th>عدد الطلبة</th>
-        <th>إجمالي الرسوم</th>
-        <th>إجمالي العمولة</th>
+        <th>Course</th>
+        <th class="num">Students</th>
+        <th class="num">Total Fees</th>
+        <th class="num">Total Commission</th>
       </tr>
     </thead>
-    <tbody>${courseRows || `<tr><td colspan="4" style="text-align:center;color:#6b7280;">لا يوجد</td></tr>`}</tbody>
+    <tbody>${courseRows || `<tr><td colspan="4" style="text-align:center;color:#6b7280;">No data</td></tr>`}</tbody>
   </table>
 </section>
 
 <section>
-  <h2>تفاصيل الطلبة</h2>
+  <h2>Student Details</h2>
   <table>
     <thead>
       <tr>
-        <th>الاسم</th>
-        <th>التليفون</th>
-        <th>الكورس</th>
-        <th>الموظف</th>
-        <th>الحالة</th>
-        <th>الرسوم</th>
-        <th>العمولة</th>
-        <th>التاريخ</th>
+        <th>Name</th>
+        <th>Phone</th>
+        <th>Course</th>
+        <th>Agent</th>
+        <th>Status</th>
+        <th class="num">Fee</th>
+        <th class="num">Commission</th>
+        <th>Date</th>
       </tr>
     </thead>
-    <tbody>${studentRows || `<tr><td colspan="8" style="text-align:center;color:#6b7280;">لا يوجد</td></tr>`}</tbody>
+    <tbody>${studentRows || `<tr><td colspan="8" style="text-align:center;color:#6b7280;">No data</td></tr>`}</tbody>
   </table>
 </section>
 
 <footer>
-  Langford International Institute × Acceptix — تقرير العمولات الشهري
+  <img src="${escapeHtml(acceptixLogo)}" alt="" />
+  <span>Acceptix × Langford — Monthly Commission Report</span>
+  <img src="${escapeHtml(langfordLogo)}" alt="" />
 </footer>
 
 <script>
-  // Wait for fonts then trigger the print dialog.
+  // Wait for fonts + images then trigger the print dialog.
   window.addEventListener('load', () => {
-    if (document.fonts && document.fonts.ready) {
-      document.fonts.ready.then(() => setTimeout(() => window.print(), 250));
-    } else {
-      setTimeout(() => window.print(), 500);
-    }
+    const ready = document.fonts && document.fonts.ready
+      ? document.fonts.ready
+      : Promise.resolve();
+    ready.then(() => setTimeout(() => window.print(), 400));
   });
 </script>
 </body>
@@ -303,12 +384,15 @@ function buildHtml(report: ReportResult): string {
 }
 
 /**
- * Open the report in a new window and trigger print-to-PDF. Pop-up
- * blockers may stop the new window — caller should surface a friendly
- * toast if `null` comes back.
+ * Open the report in a new window and trigger print-to-PDF. Returns
+ * false if the popup was blocked.
  */
 export function exportReportToPdf(report: ReportResult): boolean {
-  const html = buildHtml(report);
+  const origin =
+    typeof window !== "undefined" && window.location
+      ? window.location.origin
+      : "";
+  const html = buildHtml(report, origin);
   const win = window.open("", "_blank", "noopener,noreferrer,width=1024,height=768");
   if (!win) {
     return false;

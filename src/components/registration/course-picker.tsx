@@ -24,6 +24,8 @@ interface CoursePickerProps {
   disabled?: boolean;
 }
 
+const DEFAULT_PLACEHOLDER = "Select a course";
+
 /**
  * Course dropdown grouped by category, with the fee/currency rendered
  * inline so the agent can confirm pricing at a glance. Only ACTIVE courses
@@ -33,7 +35,7 @@ export function CoursePicker({
   courses,
   value,
   onChange,
-  placeholder = "اختر الكورس",
+  placeholder = DEFAULT_PLACEHOLDER,
   disabled,
 }: CoursePickerProps) {
   const grouped = useMemo(() => {
@@ -43,9 +45,8 @@ export function CoursePicker({
       list.push(c);
       map.set(c.category, list);
     }
-    // Sort each group's courses by name for consistent ordering
     for (const list of map.values()) {
-      list.sort((a, b) => a.name.localeCompare(b.name, "ar"));
+      list.sort((a, b) => a.name.localeCompare(b.name, "en"));
     }
     return map;
   }, [courses]);
@@ -66,7 +67,7 @@ export function CoursePicker({
           return (
             <SelectGroup key={cat}>
               <SelectLabel className="text-xs text-muted-foreground">
-                {REG_CATEGORY_LABELS[cat].ar}
+                {REG_CATEGORY_LABELS[cat].en}
               </SelectLabel>
               {list.map((c) => (
                 <SelectItem key={c.id} value={c.id}>

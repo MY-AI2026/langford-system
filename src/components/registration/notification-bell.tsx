@@ -68,7 +68,7 @@ export function NotificationBell() {
         variant="ghost"
         size="icon"
         onClick={() => setOpen(true)}
-        aria-label={`الإشعارات${hasUnread ? ` (${unreadCount} غير مقروءة)` : ""}`}
+        aria-label={`Notifications${hasUnread ? ` (${unreadCount} unread)` : ""}`}
         className="relative"
       >
         {hasUnread ? (
@@ -90,7 +90,7 @@ export function NotificationBell() {
         <SheetContent side="left" className="w-96 p-0">
           <SheetHeader className="border-b px-4 py-3">
             <div className="flex items-center justify-between">
-              <SheetTitle>الإشعارات</SheetTitle>
+              <SheetTitle>Notifications</SheetTitle>
               {hasUnread && (
                 <Button
                   variant="ghost"
@@ -99,17 +99,17 @@ export function NotificationBell() {
                   className="text-xs"
                 >
                   <CheckCheck className="ml-1 h-4 w-4" />
-                  علّم الكل كمقروء
+                  Mark all as read
                 </Button>
               )}
             </div>
           </SheetHeader>
 
-          <div className="max-h-[calc(100vh-3.5rem)] overflow-y-auto" dir="rtl">
+          <div className="max-h-[calc(100vh-3.5rem)] overflow-y-auto" dir="ltr">
             {items.length === 0 ? (
               <div className="flex h-64 flex-col items-center justify-center px-4 text-center">
                 <Bell className="mb-2 h-8 w-8 text-muted-foreground" />
-                <p className="text-sm text-muted-foreground">مفيش إشعارات.</p>
+                <p className="text-sm text-muted-foreground">No notifications.</p>
               </div>
             ) : (
               <ul className="divide-y">
@@ -118,7 +118,7 @@ export function NotificationBell() {
                     <button
                       onClick={() => handleClickItem(notif)}
                       className={[
-                        "flex w-full items-start gap-3 px-4 py-3 text-right transition-colors hover:bg-muted/50",
+                        "flex w-full items-start gap-3 px-4 py-3 text-left transition-colors hover:bg-muted/50",
                         notif.isRead ? "" : "bg-primary/5",
                       ].join(" ")}
                     >
@@ -138,7 +138,7 @@ export function NotificationBell() {
                           <span>{formatRelative(notif.createdAt)}</span>
                           {notif.emailSent && (
                             <Badge variant="secondary" className="border-0 text-[10px]">
-                              تم إرسال إيميل
+                              Email sent
                             </Badge>
                           )}
                         </div>
@@ -173,12 +173,12 @@ function formatRelative(value: unknown): string {
 
   const diffMs = Date.now() - d.getTime();
   const min = Math.round(diffMs / 60000);
-  if (min < 1) return "دلوقتي";
-  if (min < 60) return `من ${min} دقيقة`;
+  if (min < 1) return "just now";
+  if (min < 60) return `${min}m ago`;
   const hr = Math.round(min / 60);
-  if (hr < 24) return `من ${hr} ساعة`;
+  if (hr < 24) return `${hr}h ago`;
   const day = Math.round(hr / 24);
-  if (day < 30) return `من ${day} يوم`;
+  if (day < 30) return `${day}d ago`;
   return d.toLocaleDateString("en-GB", {
     day: "2-digit",
     month: "2-digit",

@@ -1,24 +1,23 @@
 /**
- * Excel exporter for the registration-module reports.
+ * Excel exporter for the Acceptix registration reports.
  *
- * Three sheets in one workbook:
- *   1. تفاصيل الطلبة  — row per regStudent (name, phone, course, agent, fee, commission, date)
- *   2. ملخص الموظفين — per-agent aggregate (count, fees, commission)
- *   3. ملخص الكورسات — per-course aggregate (count, fees, commission)
+ * Three sheets per workbook:
+ *   1. Student Details — row per regStudent (name, phone, course, agent, fee, commission, date)
+ *   2. Agent Summary   — per-agent aggregate (count, fees, commission)
+ *   3. Course Summary  — per-course aggregate (count, fees, commission)
  *
- * RTL sheets, Arabic-first headers, column widths chosen to look right
- * out-of-the-box in Excel / Numbers / Google Sheets. Uses the SheetJS
- * (xlsx) dep that's already in the main app.
+ * LTR English sheets — column widths chosen to look right out of the box
+ * in Excel / Numbers / Google Sheets. Uses the SheetJS (xlsx) dep that's
+ * already in the main app.
  */
 
 import * as XLSX from "xlsx";
 import { ReportResult } from "@/lib/services/reg-report-service";
 import { REG_STUDENT_STATUS_LABELS } from "@/lib/registration/constants";
 
-function rtlSheetFromAOA(data: (string | number)[][], colWidths: number[]) {
+function sheetFromAOA(data: (string | number)[][], colWidths: number[]) {
   const ws = XLSX.utils.aoa_to_sheet(data);
   ws["!cols"] = colWidths.map((wch) => ({ wch }));
-  ws["!sheetView"] = { RTL: true };
   return ws;
 }
 
@@ -51,16 +50,16 @@ export function exportReportToExcel(report: ReportResult, filenameBase = "accept
 
   // ── Sheet 1: Student details ─────────────────────────────────────────────
   const studentHeader = [
-    "اسم الطالب",
-    "التليفون",
-    "الإيميل",
-    "الكورس",
-    "الموظف",
-    "الحالة",
-    "الرسوم",
-    "العمولة",
-    "العملة",
-    "تاريخ التسجيل",
+    "Student Name",
+    "Phone",
+    "Email",
+    "Course",
+    "Agent",
+    "Status",
+    "Fee",
+    "Commission",
+    "Currency",
+    "Registration Date",
   ];
   const studentRows = report.students.map((s) => [
     s.fullName ?? "",
@@ -68,7 +67,7 @@ export function exportReportToExcel(report: ReportResult, filenameBase = "accept
     s.email ?? "",
     s.courseName ?? "",
     s.createdByName ?? "",
-    REG_STUDENT_STATUS_LABELS[s.status]?.ar ?? s.status,
+    REG_STUDENT_STATUS_LABELS[s.status]?.en ?? s.status,
     s.courseFee ?? 0,
     s.commissionAmount ?? 0,
     s.currency ?? "",
@@ -76,7 +75,7 @@ export function exportReportToExcel(report: ReportResult, filenameBase = "accept
   ]);
   // Totals footer
   const studentFooter = [
-    "الإجمالي",
+    "Total",
     "",
     "",
     "",
@@ -87,14 +86,14 @@ export function exportReportToExcel(report: ReportResult, filenameBase = "accept
     report.totals.currency,
     "",
   ];
-  const ws1 = rtlSheetFromAOA(
+  const ws1 = sheetFromAOA(
     [studentHeader, ...studentRows, [], studentFooter],
     [22, 14, 24, 24, 18, 12, 12, 12, 8, 14]
   );
-  XLSX.utils.book_append_sheet(wb, ws1, "تفاصيل الطلبة");
+  XLSX.utils.book_append_sheet(wb, ws1, "Student Details");
 
   // ── Sheet 2: Agent breakdown ────────────────────────────────────────────
-  const agentHeader = ["الموظف", "عدد الطلبة", "إجمالي الرسوم", "إجمالي العمولة", "العملة"];
+  const agentHeader = ["Agent", "Students", "Total Fees", "Total Commission", "Currency"];
   const agentRows = report.byAgent.map((a) => [
     a.agentName,
     a.studentCount,
@@ -102,14 +101,14 @@ export function exportReportToExcel(report: ReportResult, filenameBase = "accept
     a.totalCommission,
     a.currency,
   ]);
-  const ws2 = rtlSheetFromAOA(
+  const ws2 = sheetFromAOA(
     [agentHeader, ...agentRows],
     [22, 12, 16, 16, 8]
   );
-  XLSX.utils.book_append_sheet(wb, ws2, "ملخص الموظفين");
+  XLSX.utils.book_append_sheet(wb, ws2, "Agent Summary");
 
   // ── Sheet 3: Course breakdown ───────────────────────────────────────────
-  const courseHeader = ["الكورس", "عدد الطلبة", "إجمالي الرسوم", "إجمالي العمولة", "العملة"];
+  const courseHeader = ["Course", "Students", "Total Fees", "Total Commission", "Currency"];
   const courseRows = report.byCourse.map((c) => [
     c.courseName,
     c.studentCount,
@@ -117,11 +116,11 @@ export function exportReportToExcel(report: ReportResult, filenameBase = "accept
     c.totalCommission,
     c.currency,
   ]);
-  const ws3 = rtlSheetFromAOA(
+  const ws3 = sheetFromAOA(
     [courseHeader, ...courseRows],
     [28, 12, 16, 16, 8]
   );
-  XLSX.utils.book_append_sheet(wb, ws3, "ملخص الكورسات");
+  XLSX.utils.book_append_sheet(wb, ws3, "Course Summary");
 
   const stamp = new Date().toISOString().slice(0, 10);
   XLSX.writeFile(wb, `${filenameBase}_${stamp}.xlsx`);

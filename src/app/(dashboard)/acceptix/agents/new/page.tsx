@@ -41,8 +41,8 @@ function NewAgentContent() {
         phone: data.phone,
         password: data.password,
       });
-      toast.success("تم إنشاء الحساب ✓", {
-        description: `${result.fullName} يقدر يدخل دلوقتي بـ ${result.email}`,
+      toast.success("Account created ✓", {
+        description: `${result.fullName} can sign in now with ${result.email}`,
         duration: 6000,
       });
       router.push(REG_ROUTES.adminAgents);
@@ -51,43 +51,43 @@ function NewAgentContent() {
       console.error("[new-agent] failed:", err);
       // Cloud Functions HttpsError → message contains the Arabic text we
       // set on the server. Surface it directly.
-      toast.error(err.message || "فشل إنشاء الحساب");
+      toast.error(err.message || "Account creation failed");
     }
   }
 
   return (
-    <div className="space-y-6" dir="rtl">
+    <div className="space-y-6" dir="ltr">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="flex items-center gap-2 text-2xl font-semibold">
             <UserPlus className="h-6 w-6 text-primary" />
-            موظف Acceptix جديد
+            New Acceptix Agent
           </h1>
           <p className="mt-1 text-sm text-muted-foreground">
-            أنشئ حساب يدخل ويسجل طلبة. الموظف يقدر يـ login فوراً بالبيانات دي.
+            Create an account that can sign in and register students. The agent can log in immediately with these credentials.
           </p>
         </div>
 
         <Button variant="ghost" size="sm" onClick={() => router.push(REG_ROUTES.adminAgents)}>
           <ArrowRight className="ml-2 h-4 w-4" />
-          رجوع للقائمة
+          Back to list
         </Button>
       </div>
 
       <Card>
         <CardHeader>
-          <CardTitle className="text-base">بيانات الموظف</CardTitle>
+          <CardTitle className="text-base">Agent Details</CardTitle>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
             <div className="grid gap-4 sm:grid-cols-2">
               <div className="space-y-2">
                 <Label htmlFor="fullName">
-                  الاسم الكامل <span className="text-destructive">*</span>
+                  Full Name <span className="text-destructive">*</span>
                 </Label>
                 <Input
                   id="fullName"
-                  placeholder="اسم الموظف"
+                  placeholder="Agent name"
                   autoComplete="off"
                   {...register("fullName")}
                   aria-invalid={!!errors.fullName}
@@ -99,7 +99,7 @@ function NewAgentContent() {
 
               <div className="space-y-2">
                 <Label htmlFor="email">
-                  الإيميل <span className="text-destructive">*</span>
+                  Email <span className="text-destructive">*</span>
                 </Label>
                 <Input
                   id="email"
@@ -117,12 +117,12 @@ function NewAgentContent() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="phone">التليفون (اختياري)</Label>
+                <Label htmlFor="phone">Phone (optional)</Label>
                 <Input
                   id="phone"
                   type="tel"
                   inputMode="tel"
-                  placeholder="مثال: 9XXXXXXX"
+                  placeholder="e.g. 9XXXXXXX"
                   autoComplete="off"
                   dir="ltr"
                   className="text-left"
@@ -132,12 +132,12 @@ function NewAgentContent() {
 
               <div className="space-y-2">
                 <Label htmlFor="password">
-                  كلمة مرور مبدئية <span className="text-destructive">*</span>
+                  Initial Password <span className="text-destructive">*</span>
                 </Label>
                 <Input
                   id="password"
                   type="password"
-                  placeholder="12 حرف على الأقل"
+                  placeholder="12 chars minimum"
                   autoComplete="new-password"
                   dir="ltr"
                   className="text-left"
@@ -148,7 +148,7 @@ function NewAgentContent() {
                   <p className="text-sm text-destructive">{errors.password.message}</p>
                 )}
                 <p className="text-xs text-muted-foreground">
-                  لازم: 12+ حرف، حرف كبير، حرف صغير، رقم، ورمز خاص.
+                  Required: 12+ chars, uppercase, lowercase, digit, and special character.
                 </p>
               </div>
             </div>
@@ -156,7 +156,7 @@ function NewAgentContent() {
             <div className="flex justify-start gap-2 pt-2">
               <Button type="submit" disabled={isSubmitting} size="lg">
                 {isSubmitting && <Loader2 className="ml-2 h-4 w-4 animate-spin" />}
-                إنشاء الحساب
+                Create Account
               </Button>
               <Button
                 type="button"
@@ -165,7 +165,7 @@ function NewAgentContent() {
                 onClick={() => router.push(REG_ROUTES.adminAgents)}
                 disabled={isSubmitting}
               >
-                إلغاء
+                Cancel
               </Button>
             </div>
           </form>

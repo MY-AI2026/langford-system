@@ -29,21 +29,21 @@ interface CreateAgentInput {
 // downgrade requirements.
 function validateStrongPassword(pw: string): string | null {
   if (typeof pw !== "string") return "Password must be a string.";
-  if (pw.length < 12) return "كلمة المرور لازم تكون 12 حرف على الأقل";
-  if (!/[A-Z]/.test(pw)) return "لازم يكون فيها حرف كبير (A-Z)";
-  if (!/[a-z]/.test(pw)) return "لازم يكون فيها حرف صغير (a-z)";
-  if (!/\d/.test(pw)) return "لازم يكون فيها رقم (0-9)";
-  if (!/[^A-Za-z0-9]/.test(pw)) return "لازم يكون فيها رمز خاص (!@#$...)";
+  if (pw.length < 12) return "Password must be at least 12 characters";
+  if (!/[A-Z]/.test(pw)) return "Must include an uppercase letter (A-Z)";
+  if (!/[a-z]/.test(pw)) return "Must include a lowercase letter (a-z)";
+  if (!/\d/.test(pw)) return "Must include a digit (0-9)";
+  if (!/[^A-Za-z0-9]/.test(pw)) return "Must include a special character (!@#$...)";
   return null;
 }
 
 function validateEmail(email: string): string | null {
   if (typeof email !== "string") return "Email must be a string.";
   const trimmed = email.trim();
-  if (trimmed.length === 0) return "الإيميل مطلوب";
+  if (trimmed.length === 0) return "Email is required";
   // Conservative pattern — better to reject a few edge-case-valid emails
   // than to accept obviously malformed input that breaks Firebase Auth.
-  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmed)) return "الإيميل مش صحيح";
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmed)) return "Invalid email";
   return null;
 }
 
@@ -63,7 +63,7 @@ export const regCreateAcceptixAgent = onCall<CreateAgentInput>(
 
     // ── Input validation (server-side mirror of the Zod schema) ────────────
     if (fullName.length < 2) {
-      throw new HttpsError("invalid-argument", "الاسم لازم يكون حرفين على الأقل");
+      throw new HttpsError("invalid-argument", "Name must be at least 2 characters");
     }
     const emailErr = validateEmail(email);
     if (emailErr) throw new HttpsError("invalid-argument", emailErr);
@@ -73,7 +73,7 @@ export const regCreateAcceptixAgent = onCall<CreateAgentInput>(
     // ── Pre-flight: surface duplicate-email cleanly before we try to create.
     try {
       await admin.auth().getUserByEmail(email);
-      throw new HttpsError("already-exists", "الإيميل ده مستخدم قبل كده");
+      throw new HttpsError("already-exists", "Email is already in use");
     } catch (e) {
       // getUserByEmail throws when the user does NOT exist — that's our
       // happy path. Re-throw anything that isn't auth/user-not-found.
@@ -97,10 +97,10 @@ export const regCreateAcceptixAgent = onCall<CreateAgentInput>(
     } catch (e) {
       const err = e as { code?: string; message?: string };
       if (err.code === "auth/email-already-exists") {
-        throw new HttpsError("already-exists", "الإيميل ده مستخدم قبل كده");
+        throw new HttpsError("already-exists", "Email is already in use");
       }
       console.error("[regCreateAcceptixAgent] createUser failed:", err);
-      throw new HttpsError("internal", "فشل إنشاء الحساب — حاول تاني");
+      throw new HttpsError("internal", "Account creation failed — try again");
     }
 
     // ── Step 2: Create /users/{uid} doc — roll back Auth user on failure ──
@@ -134,7 +134,7 @@ export const regCreateAcceptixAgent = onCall<CreateAgentInput>(
           newUid
         );
       }
-      throw new HttpsError("internal", "فشل حفظ بيانات الموظف — حاول تاني");
+      throw new HttpsError("internal", "Failed to save agent data — try again");
     }
 
     // ── Step 3: Audit (best-effort) ───────────────────────────────────────

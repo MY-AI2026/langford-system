@@ -66,7 +66,6 @@ export function RegisterStudentForm({
     return () => unsub();
   }, []);
 
-  // Live preview of the picked course's fee + commission ───────────────────
   const selectedCourseId = watch("courseId");
   const selectedCourse = useMemo(
     () => courses.find((c) => c.id === selectedCourseId) ?? null,
@@ -80,23 +79,21 @@ export function RegisterStudentForm({
     await onSubmit({ ...data, idempotencyKey });
 
     if (resetOnSuccess) {
-      // Rotate the idempotency key for the next submission so re-submitting
-      // a fresh student isn't deduped against the previous one.
       setIdempotencyKey(makeIdempotencyKey());
       reset();
     }
   }
 
   return (
-    <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-6" dir="rtl">
+    <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-6" dir="ltr">
       <div className="grid gap-4 sm:grid-cols-2">
         <div className="space-y-2">
           <Label htmlFor="fullName">
-            اسم الطالب <span className="text-destructive">*</span>
+            Student Name <span className="text-destructive">*</span>
           </Label>
           <Input
             id="fullName"
-            placeholder="الاسم الكامل"
+            placeholder="Full name"
             autoComplete="off"
             {...register("fullName")}
             aria-invalid={!!errors.fullName}
@@ -111,16 +108,14 @@ export function RegisterStudentForm({
 
         <div className="space-y-2">
           <Label htmlFor="phone">
-            التليفون <span className="text-destructive">*</span>
+            Phone <span className="text-destructive">*</span>
           </Label>
           <Input
             id="phone"
             type="tel"
             inputMode="tel"
-            placeholder="مثال: 9XXXXXXX"
+            placeholder="e.g. 9XXXXXXX"
             autoComplete="off"
-            dir="ltr"
-            className="text-left"
             {...register("phone")}
             aria-invalid={!!errors.phone}
             aria-describedby={errors.phone ? "phone-error" : undefined}
@@ -133,14 +128,12 @@ export function RegisterStudentForm({
         </div>
 
         <div className="space-y-2 sm:col-span-2">
-          <Label htmlFor="email">الإيميل (اختياري)</Label>
+          <Label htmlFor="email">Email (optional)</Label>
           <Input
             id="email"
             type="email"
             placeholder="student@example.com"
             autoComplete="off"
-            dir="ltr"
-            className="text-left"
             {...register("email")}
             aria-invalid={!!errors.email}
             aria-describedby={errors.email ? "email-error" : undefined}
@@ -154,7 +147,7 @@ export function RegisterStudentForm({
 
         <div className="space-y-2 sm:col-span-2">
           <Label>
-            الكورس <span className="text-destructive">*</span>
+            Course <span className="text-destructive">*</span>
           </Label>
           <CoursePicker
             courses={courses}
@@ -162,7 +155,7 @@ export function RegisterStudentForm({
             onChange={(val) =>
               setValue("courseId", val, { shouldValidate: true })
             }
-            placeholder={loadingCourses ? "جاري تحميل الكورسات…" : "اختر الكورس"}
+            placeholder={loadingCourses ? "Loading courses…" : "Select a course"}
             disabled={loadingCourses}
           />
           {errors.courseId && (
@@ -171,10 +164,10 @@ export function RegisterStudentForm({
         </div>
 
         <div className="space-y-2 sm:col-span-2">
-          <Label htmlFor="notes">ملاحظات (اختياري)</Label>
+          <Label htmlFor="notes">Notes (optional)</Label>
           <Textarea
             id="notes"
-            placeholder="أي ملاحظات إضافية عن الطالب"
+            placeholder="Any additional notes about the student"
             rows={3}
             {...register("notes")}
           />
@@ -186,27 +179,27 @@ export function RegisterStudentForm({
           <CardContent className="space-y-2 p-4">
             <div className="flex items-center gap-2 text-sm font-medium">
               <GraduationCap className="h-4 w-4 text-primary" />
-              <span>الكورس المختار</span>
+              <span>Selected Course</span>
             </div>
             <div className="grid gap-2 text-sm sm:grid-cols-3">
               <div>
-                <p className="text-xs text-muted-foreground">الاسم</p>
+                <p className="text-xs text-muted-foreground">Name</p>
                 <p className="font-medium">{selectedCourse.name}</p>
               </div>
               <div>
-                <p className="text-xs text-muted-foreground">الرسوم</p>
-                <p className="font-medium" dir="ltr">
+                <p className="text-xs text-muted-foreground">Fee</p>
+                <p className="font-medium">
                   {selectedCourse.fee > 0
                     ? `${selectedCourse.fee.toLocaleString("en-US")} ${selectedCourse.currency || REG_DEFAULT_CURRENCY}`
-                    : "غير محدّدة"}
+                    : "Not set"}
                 </p>
               </div>
               <div>
                 <p className="flex items-center gap-1 text-xs text-muted-foreground">
                   <Sparkles className="h-3 w-3" />
-                  العمولة (10%)
+                  Commission (10%)
                 </p>
-                <p className="font-medium text-primary" dir="ltr">
+                <p className="font-medium text-primary">
                   {commissionPreview > 0
                     ? `${commissionPreview.toLocaleString("en-US")} ${selectedCourse.currency || REG_DEFAULT_CURRENCY}`
                     : "—"}
@@ -215,7 +208,8 @@ export function RegisterStudentForm({
             </div>
             {selectedCourse.fee === 0 && (
               <p className="text-xs text-muted-foreground">
-                ℹ️ الكورس ده مالوش رسوم محدّدة لسه — العمولة هتبقى صفر لحد ما الإدارة تحدّد السعر.
+                ℹ️ This course has no fee set yet — commission will be zero
+                until management defines a price.
               </p>
             )}
           </CardContent>
@@ -229,19 +223,14 @@ export function RegisterStudentForm({
           disabled={isSubmitting || loadingCourses}
           className="min-w-[160px]"
         >
-          {isSubmitting && <Loader2 className="ml-2 h-4 w-4 animate-spin" />}
-          تسجيل الطالب
+          {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+          Register Student
         </Button>
       </div>
     </form>
   );
 }
 
-/**
- * Generate a fresh idempotency key — short enough to log, long enough to
- * be effectively unique across an agent's lifetime of submissions. Mixes
- * `Date.now()` with two `Math.random()` chunks for ~52 bits of entropy.
- */
 function makeIdempotencyKey(): string {
   const ts = Date.now().toString(36);
   const rand = Math.random().toString(36).slice(2, 10);

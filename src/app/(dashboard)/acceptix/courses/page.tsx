@@ -108,10 +108,10 @@ function AdminCoursesContent() {
         displayName: userData.displayName,
         role: "admin",
       });
-      toast.success(course.isActive ? "اتعطّل الكورس" : "اتفعّل الكورس");
+      toast.success(course.isActive ? "Course hidden" : "Course activated");
     } catch (e) {
       console.error("[admin-courses] toggle failed:", e);
-      toast.error("فشل تغيير الحالة");
+      toast.error("Status change failed");
     }
   }
 
@@ -119,7 +119,7 @@ function AdminCoursesContent() {
     if (!firebaseUser || !userData) return;
     if (courses.length > 0) {
       const ok = window.confirm(
-        "في كورسات موجودة بالفعل. الـ seed بيتخطّى أي كورس بنفس الاسم لكنه هيضيف اللي ناقص. تكمل؟"
+        "Some courses already exist. The seed skips duplicates but adds the missing ones. Continue?"
       );
       if (!ok) return;
     }
@@ -150,27 +150,26 @@ function AdminCoursesContent() {
         added++;
       }
       toast.success(
-        added > 0 ? `تم إضافة ${added} كورس` : "كل الكورسات الافتراضية موجودة بالفعل"
+        added > 0 ? `Added ${added} course(s)` : "All default courses are already present"
       );
     } catch (e) {
       console.error("[admin-courses] seed failed:", e);
-      toast.error("فشل تشغيل الـ seed");
+      toast.error("Seed failed");
     } finally {
       setSeeding(false);
     }
   }
 
   return (
-    <div className="space-y-6" dir="rtl">
+    <div className="space-y-6" dir="ltr">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="flex items-center gap-2 text-2xl font-semibold">
             <BookOpen className="h-6 w-6 text-primary" />
-            إدارة الكورسات
+            Manage Courses
           </h1>
           <p className="mt-1 text-sm text-muted-foreground">
-            أضف، عدّل، أو أخفِ الكورسات. الإخفاء بيمنع الموظفين من اختيار الكورس
-            من غير ما يحذف السجل.
+            Add, edit, or hide courses. Hiding prevents agents from picking the course without deleting the record.
           </p>
         </div>
 
@@ -181,11 +180,11 @@ function AdminCoursesContent() {
             ) : (
               <Sparkles className="ml-2 h-4 w-4" />
             )}
-            تحميل الكورسات الافتراضية
+            Load Default Catalogue
           </Button>
           <Button onClick={openCreate}>
             <Plus className="ml-2 h-4 w-4" />
-            كورس جديد
+            New Course
           </Button>
         </div>
       </div>
@@ -200,19 +199,19 @@ function AdminCoursesContent() {
         <Card>
           <CardContent className="flex flex-col items-center justify-center py-12 text-center">
             <BookOpen className="mb-3 h-10 w-10 text-muted-foreground" />
-            <h3 className="text-base font-semibold">لسه مفيش كورسات</h3>
+            <h3 className="text-base font-semibold">No courses yet</h3>
             <p className="mt-1 max-w-sm text-sm text-muted-foreground">
-              ابدأ بتحميل الكورسات الافتراضية من اتفاقية Acceptix، أو أضف كورس
-              يدوياً.
+              Load the default catalogue from the Acceptix agreement, or add a
+              course manually.
             </p>
             <div className="mt-4 flex gap-2">
               <Button variant="outline" onClick={handleSeed} disabled={seeding}>
                 <Sparkles className="ml-2 h-4 w-4" />
-                تحميل الافتراضية
+                Load Defaults
               </Button>
               <Button onClick={openCreate}>
                 <Plus className="ml-2 h-4 w-4" />
-                كورس جديد
+                New Course
               </Button>
             </div>
           </CardContent>
@@ -226,7 +225,7 @@ function AdminCoursesContent() {
               <Card key={cat}>
                 <CardHeader>
                   <CardTitle className="text-base">
-                    {REG_CATEGORY_LABELS[cat].ar}{" "}
+                    {REG_CATEGORY_LABELS[cat].en}{" "}
                     <span className="text-sm text-muted-foreground">
                       ({list.length})
                     </span>
@@ -236,11 +235,11 @@ function AdminCoursesContent() {
                   <Table>
                     <TableHeader>
                       <TableRow>
-                        <TableHead>الاسم</TableHead>
-                        <TableHead>الرسوم</TableHead>
-                        <TableHead>المدّة</TableHead>
-                        <TableHead>الحصرية</TableHead>
-                        <TableHead>الحالة</TableHead>
+                        <TableHead>Name</TableHead>
+                        <TableHead>Fee</TableHead>
+                        <TableHead>Duration</TableHead>
+                        <TableHead>Exclusive</TableHead>
+                        <TableHead>Status</TableHead>
                         <TableHead className="w-32"></TableHead>
                       </TableRow>
                     </TableHeader>
@@ -266,11 +265,11 @@ function AdminCoursesContent() {
                           <TableCell>
                             {c.isActive ? (
                               <Badge className="border-0 bg-green-100 text-green-700">
-                                نشط
+                                Active
                               </Badge>
                             ) : (
                               <Badge className="border-0 bg-muted text-muted-foreground">
-                                مخفي
+                                Hidden
                               </Badge>
                             )}
                           </TableCell>
@@ -280,7 +279,7 @@ function AdminCoursesContent() {
                                 variant="ghost"
                                 size="icon"
                                 onClick={() => openEdit(c)}
-                                aria-label="تعديل"
+                                aria-label="Edit"
                               >
                                 <Pencil className="h-4 w-4" />
                               </Button>
@@ -288,7 +287,7 @@ function AdminCoursesContent() {
                                 variant="ghost"
                                 size="icon"
                                 onClick={() => handleToggleActive(c)}
-                                aria-label={c.isActive ? "إخفاء" : "إظهار"}
+                                aria-label={c.isActive ? "Hide" : "Show"}
                               >
                                 {c.isActive ? (
                                   <EyeOff className="h-4 w-4" />
@@ -398,7 +397,7 @@ function CourseDialog({
           },
           { uid: firebaseUser.uid, displayName: userData.displayName, role: "admin" }
         );
-        toast.success("تم تحديث الكورس");
+        toast.success("Course updated");
       } else {
         await createCourse(
           {
@@ -414,25 +413,25 @@ function CourseDialog({
           },
           { uid: firebaseUser.uid, displayName: userData.displayName, role: "admin" }
         );
-        toast.success("تم إنشاء الكورس");
+        toast.success("Course created");
       }
       onOpenChange(false);
     } catch (e) {
       console.error("[course-dialog] save failed:", e);
-      toast.error("فشل الحفظ");
+      toast.error("Save failed");
     }
   }
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent dir="rtl" className="max-w-lg">
+      <DialogContent dir="ltr" className="max-w-lg">
         <DialogHeader>
-          <DialogTitle>{editing ? "تعديل كورس" : "كورس جديد"}</DialogTitle>
+          <DialogTitle>{editing ? "Edit course(s)" : "New Course"}</DialogTitle>
         </DialogHeader>
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
           <div className="space-y-2">
             <Label htmlFor="c-name">
-              الاسم <span className="text-destructive">*</span>
+              Name <span className="text-destructive">*</span>
             </Label>
             <Input id="c-name" {...register("name")} aria-invalid={!!errors.name} />
             {errors.name && (
@@ -442,7 +441,7 @@ function CourseDialog({
 
           <div className="grid gap-3 sm:grid-cols-2">
             <div className="space-y-2">
-              <Label>الفئة</Label>
+              <Label>Category</Label>
               <Select
                 value={watch("category")}
                 onValueChange={(v) => setValue("category", v as RegCourseCategory)}
@@ -453,7 +452,7 @@ function CourseDialog({
                 <SelectContent>
                   {REG_CATEGORY_ORDER.map((cat) => (
                     <SelectItem key={cat} value={cat}>
-                      {REG_CATEGORY_LABELS[cat].ar}
+                      {REG_CATEGORY_LABELS[cat].en}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -461,12 +460,12 @@ function CourseDialog({
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="c-currency">العملة</Label>
+              <Label htmlFor="c-currency">Currency</Label>
               <Input id="c-currency" {...register("currency")} dir="ltr" />
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="c-fee">الرسوم</Label>
+              <Label htmlFor="c-fee">Fee</Label>
               <Input
                 id="c-fee"
                 type="number"
@@ -482,17 +481,17 @@ function CourseDialog({
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="c-dur">المدّة (وصف)</Label>
+              <Label htmlFor="c-dur">Duration (label)</Label>
               <Input
                 id="c-dur"
-                placeholder="مثال: 3 شهور / 160 ساعة"
+                placeholder="e.g. 3 months / 160 hours"
                 {...register("durationLabel")}
               />
             </div>
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="c-desc">الوصف</Label>
+            <Label htmlFor="c-desc">Description</Label>
             <Textarea id="c-desc" rows={3} {...register("description")} />
           </div>
 
@@ -500,7 +499,7 @@ function CourseDialog({
             <div>
               <p className="text-sm font-medium">Acceptix Exclusive</p>
               <p className="text-xs text-muted-foreground">
-                علّمه لو الكورس حصري على Acceptix (مثلاً ESP).
+                Check if the course is exclusive to Acceptix (e.g. ESP).
               </p>
             </div>
             <Switch
@@ -511,9 +510,9 @@ function CourseDialog({
 
           <div className="flex items-center justify-between rounded-md border p-3">
             <div>
-              <p className="text-sm font-medium">نشط</p>
+              <p className="text-sm font-medium">Active</p>
               <p className="text-xs text-muted-foreground">
-                لو معطّل، الموظفين مش هيشوفوا الكورس وقت التسجيل.
+                If disabled, agents won't see this course when registering students.
               </p>
             </div>
             <Switch
@@ -529,11 +528,11 @@ function CourseDialog({
               onClick={() => onOpenChange(false)}
               disabled={isSubmitting}
             >
-              إلغاء
+              Cancel
             </Button>
             <Button type="submit" disabled={isSubmitting}>
               {isSubmitting && <Loader2 className="ml-2 h-4 w-4 animate-spin" />}
-              حفظ
+              Save
             </Button>
           </DialogFooter>
         </form>

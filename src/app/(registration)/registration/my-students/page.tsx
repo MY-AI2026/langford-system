@@ -67,55 +67,52 @@ function MyStudentsContent() {
   }, [students]);
 
   return (
-    <div className="space-y-6" dir="rtl">
-      {/* Header */}
+    <div className="space-y-6" dir="ltr">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="flex items-center gap-2 text-2xl font-semibold">
             <ListChecks className="h-6 w-6 text-primary" />
-            طلبتي
+            My Students
           </h1>
           <p className="mt-1 text-sm text-muted-foreground">
-            الطلبة اللي إنت سجّلتهم. مش هتشوف طلبة الموظفين التانيين.
+            Students you have registered. You cannot see other agents&apos; students.
           </p>
         </div>
 
         <Button onClick={() => router.push(REG_ROUTES.registerStudent)}>
-          <UserPlus className="ml-2 h-4 w-4" />
-          سجّل طالب جديد
+          <UserPlus className="mr-2 h-4 w-4" />
+          Register a New Student
         </Button>
       </div>
 
-      {/* Stat cards */}
       <div className="grid gap-3 sm:grid-cols-4">
-        <StatCard label="الإجمالي" value={total} tone="primary" />
+        <StatCard label="Total" value={total} tone="primary" />
         <StatCard
-          label={REG_STUDENT_STATUS_LABELS.new.ar}
+          label={REG_STUDENT_STATUS_LABELS.new.en}
           value={stats.new}
           tone="blue"
         />
         <StatCard
-          label={REG_STUDENT_STATUS_LABELS.enrolled.ar}
+          label={REG_STUDENT_STATUS_LABELS.enrolled.en}
           value={stats.enrolled}
           tone="green"
         />
         <StatCard
-          label={REG_STUDENT_STATUS_LABELS.cancelled.ar}
+          label={REG_STUDENT_STATUS_LABELS.cancelled.en}
           value={stats.cancelled}
           tone="red"
         />
       </div>
 
-      {/* Filters */}
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
         <div className="relative flex-1">
-          <Search className="absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <Input
-            placeholder="ابحث بالاسم أو التليفون أو الإيميل"
+            placeholder="Search by name, phone, or email"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="pr-9"
-            aria-label="بحث"
+            className="pl-9"
+            aria-label="Search"
           />
         </div>
         <Select
@@ -128,17 +125,16 @@ function MyStudentsContent() {
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">كل الحالات</SelectItem>
+            <SelectItem value="all">All statuses</SelectItem>
             {REG_STATUS_ORDER.map((s) => (
               <SelectItem key={s} value={s}>
-                {REG_STUDENT_STATUS_LABELS[s].ar}
+                {REG_STUDENT_STATUS_LABELS[s].en}
               </SelectItem>
             ))}
           </SelectContent>
         </Select>
       </div>
 
-      {/* Table */}
       {loading ? (
         <TableSkeleton />
       ) : students.length === 0 ? (
@@ -148,11 +144,11 @@ function MyStudentsContent() {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>الطالب</TableHead>
-                <TableHead>الكورس</TableHead>
-                <TableHead>التليفون</TableHead>
-                <TableHead>الحالة</TableHead>
-                <TableHead>تاريخ التسجيل</TableHead>
+                <TableHead>Student</TableHead>
+                <TableHead>Course</TableHead>
+                <TableHead>Phone</TableHead>
+                <TableHead>Status</TableHead>
+                <TableHead>Registered</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -161,33 +157,27 @@ function MyStudentsContent() {
                   <TableCell className="font-medium">
                     {s.fullName}
                     {s.email && (
-                      <p className="text-xs text-muted-foreground" dir="ltr">
-                        {s.email}
-                      </p>
+                      <p className="text-xs text-muted-foreground">{s.email}</p>
                     )}
                   </TableCell>
                   <TableCell>
                     {s.courseName}
-                    <p className="text-xs text-muted-foreground" dir="ltr">
+                    <p className="text-xs text-muted-foreground">
                       {s.courseFee > 0
                         ? `${s.courseFee.toLocaleString("en-US")} ${s.currency}`
                         : "—"}
                     </p>
                   </TableCell>
-                  <TableCell dir="ltr" className="text-left">
-                    {s.phone}
-                  </TableCell>
+                  <TableCell>{s.phone}</TableCell>
                   <TableCell>
                     <Badge
                       variant="secondary"
                       className={`border-0 ${REG_STUDENT_STATUS_LABELS[s.status].color}`}
                     >
-                      {REG_STUDENT_STATUS_LABELS[s.status].ar}
+                      {REG_STUDENT_STATUS_LABELS[s.status].en}
                     </Badge>
                   </TableCell>
-                  <TableCell dir="ltr" className="text-left">
-                    {formatDate(s.createdAt)}
-                  </TableCell>
+                  <TableCell>{formatDate(s.createdAt)}</TableCell>
                 </TableRow>
               ))}
             </TableBody>
@@ -197,8 +187,6 @@ function MyStudentsContent() {
     </div>
   );
 }
-
-// ─── Sub-components ──────────────────────────────────────────────────────────
 
 function StatCard({
   label,
@@ -240,20 +228,18 @@ function EmptyState({ onAdd }: { onAdd: () => void }) {
     <Card>
       <CardContent className="flex flex-col items-center justify-center py-12 text-center">
         <Inbox className="mb-3 h-10 w-10 text-muted-foreground" />
-        <h3 className="text-base font-semibold">لسه مفيش طلبة</h3>
+        <h3 className="text-base font-semibold">No students yet</h3>
         <p className="mt-1 max-w-sm text-sm text-muted-foreground">
-          سجّل أول طالب وهيظهر هنا على طول.
+          Register your first student and it will appear here right away.
         </p>
         <Button className="mt-4" onClick={onAdd}>
-          <UserPlus className="ml-2 h-4 w-4" />
-          سجّل طالب جديد
+          <UserPlus className="mr-2 h-4 w-4" />
+          Register a New Student
         </Button>
       </CardContent>
     </Card>
   );
 }
-
-// ─── Helpers ─────────────────────────────────────────────────────────────────
 
 function formatDate(value: unknown): string {
   if (!value) return "—";

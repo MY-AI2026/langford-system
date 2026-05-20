@@ -27,11 +27,11 @@ interface ResetPasswordInput {
 // shared to keep the validation visible in each function file.
 function validateStrongPassword(pw: string): string | null {
   if (typeof pw !== "string") return "Password must be a string.";
-  if (pw.length < 12) return "كلمة المرور لازم تكون 12 حرف على الأقل";
-  if (!/[A-Z]/.test(pw)) return "لازم يكون فيها حرف كبير (A-Z)";
-  if (!/[a-z]/.test(pw)) return "لازم يكون فيها حرف صغير (a-z)";
-  if (!/\d/.test(pw)) return "لازم يكون فيها رقم (0-9)";
-  if (!/[^A-Za-z0-9]/.test(pw)) return "لازم يكون فيها رمز خاص (!@#$...)";
+  if (pw.length < 12) return "Password must be at least 12 characters";
+  if (!/[A-Z]/.test(pw)) return "Must include an uppercase letter (A-Z)";
+  if (!/[a-z]/.test(pw)) return "Must include a lowercase letter (a-z)";
+  if (!/\d/.test(pw)) return "Must include a digit (0-9)";
+  if (!/[^A-Za-z0-9]/.test(pw)) return "Must include a special character (!@#$...)";
   return null;
 }
 
