@@ -20,3 +20,4 @@ export {
   regToggleAgentActive,
   regResetAgentPassword,
 } from "./registration/manage-agent";
+export { onRegStudentCreated } from "./registration/email-trigger";

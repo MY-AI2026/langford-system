@@ -92,6 +92,7 @@ export const REG_ROUTES = {
   adminAgentNew: "/registration/admin/agents/new",
   adminCourses: "/registration/admin/courses",
   adminReports: "/registration/admin/reports",
+  adminSettings: "/registration/admin/settings",
 } as const;
 
 /**

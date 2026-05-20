@@ -1,6 +1,6 @@
 # Langford × Acceptix — Registration Module
 
-> Status: **PR #1 (Foundation)** — schema, types, Firestore rules, services, route group scaffold. No UI yet — that lands in PR #2.
+> Status: **All 4 PRs landed** — foundation, agent portal, admin console, reports + email. Module is feature-complete.
 
 ## Purpose
 
@@ -85,14 +85,34 @@ firestore.rules                           ← Strict module-specific blocks (see
 firestore.indexes.json                    ← Composite indexes for the module's queries
 ```
 
-## PR roadmap
+## PR roadmap (all merged)
 
 | PR | Scope | External deps |
 |----|-------|---------------|
-| **#1 Foundation (this PR)** | Schema + rules + services + scaffolding | None |
-| **#2 Agent Portal** | Login routing, `/registration/register-student`, `/registration/my-students` | None |
-| **#3 Admin Console** | Dashboard, manage agents (Cloud Function for user creation), manage courses, all students | Cloud Functions (Blaze) |
-| **#4 Reports + Email** | Reports (PDF + Excel) + commission summary + Resend email notifications | Resend account |
+| **#1 Foundation** ✅ | Schema + rules + services + scaffolding | None |
+| **#2 Agent Portal** ✅ | Login routing, `/registration/register-student`, `/registration/my-students` | None |
+| **#3 Admin Console** ✅ | Dashboard, manage agents (Cloud Function for user creation), manage courses, all students | Cloud Functions (Blaze) |
+| **#4 Reports + Email** ✅ | Reports (PDF + Excel) + commission summary + Resend email notifications + in-app drawer | Resend account |
+
+## Production deployment checklist
+
+1. **Firestore rules + indexes:**
+   ```sh
+   npx firebase deploy --only firestore:rules,firestore:indexes
+   ```
+2. **Cloud Functions:**
+   ```sh
+   cd functions && npm install
+   firebase functions:secrets:set RESEND_API_KEY   # paste your Resend API key
+   firebase deploy --only functions
+   ```
+3. **Resend domain verification:** add the DKIM + SPF DNS records that
+   Resend provides for `langford.website` (5 minute setup). Without
+   this, emails will either be marked as spam or rejected outright.
+4. **First admin login → `/registration/admin/courses` → click "تحميل
+   الكورسات الافتراضية"** to seed the catalogue. Or run the CLI script
+   in `scripts/seed-registration-courses.ts`.
+5. **Create first agent:** `/registration/admin/agents/new`.
 
 ## Email config (lands in PR #4, defaults defined now)
 

@@ -10,6 +10,7 @@ import { REG_ROUTES } from "@/lib/registration/constants";
 import { UserRole } from "@/lib/types";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet";
+import { NotificationBell } from "./notification-bell";
 import {
   GraduationCap,
   LogOut,
@@ -20,6 +21,7 @@ import {
   Users,
   BookOpen,
   FileBarChart,
+  Settings,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 
@@ -46,6 +48,7 @@ function navLinksForRole(role: UserRole | null): NavLink[] {
       { href: REG_ROUTES.adminAgents, label: "موظفو Acceptix", icon: UserPlus },
       { href: REG_ROUTES.adminCourses, label: "إدارة الكورسات", icon: BookOpen },
       { href: REG_ROUTES.adminReports, label: "التقارير", icon: FileBarChart },
+      { href: REG_ROUTES.adminSettings, label: "الإعدادات", icon: Settings },
       // Admin can also use the agent surfaces for QA / fallback create.
       { href: REG_ROUTES.registerStudent, label: "تسجيل طالب", icon: UserPlus },
       { href: REG_ROUTES.myStudents, label: "طلبتي", icon: ListChecks },
@@ -118,7 +121,8 @@ export function RegistrationShell({ children }: { children: React.ReactNode }) {
             </Link>
           </div>
 
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2">
+            {role === "admin" && <NotificationBell />}
             {userData?.displayName && (
               <span className="hidden text-sm text-muted-foreground sm:inline">
                 {userData.displayName}

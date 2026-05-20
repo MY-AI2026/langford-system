@@ -169,6 +169,14 @@ service cloud.firestore {
       allow update, delete: if false;
     }
 
+    // ─── regSettings ─ admin-tunable module settings (email recipients, etc.) ──
+    match /regSettings/{settingId} {
+      allow read: if regIsAdmin();
+      allow create, update: if regIsAdmin();
+      // Settings docs are not deleted — admin disables instead.
+      allow delete: if false;
+    }
+
     // ─── regNotifications ─ admin inbox for new-student alerts ──────────────
     match /regNotifications/{notifId} {
       allow read: if regIsAdmin();
