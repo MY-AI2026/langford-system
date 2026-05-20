@@ -27,7 +27,10 @@ import { Resend } from "resend";
 // sync manually because the functions package can't import from the
 // main app's source tree.
 const DEFAULT_ADMIN_RECIPIENTS = ["ahmedelsayed@langfordkw.com"];
-const DEFAULT_FROM = "Langford × Acceptix <noreply@langford.website>";
+// Resend's universal test sender — works immediately without DNS setup.
+// Swap to a verified domain (e.g. "Langford × Acceptix <noreply@langford.website>")
+// after running `Verify domain` in the Resend dashboard.
+const DEFAULT_FROM = "Acceptix <onboarding@resend.dev>";
 const DEFAULT_REPLY_TO = "ahmedelsayed@langfordkw.com";
 
 const RESEND_API_KEY = defineSecret("RESEND_API_KEY");

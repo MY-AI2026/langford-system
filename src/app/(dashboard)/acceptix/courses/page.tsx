@@ -119,38 +119,83 @@ function AdminCoursesContent() {
     if (!firebaseUser || !userData) return;
     if (courses.length > 0) {
       const ok = window.confirm(
-        "Some courses already exist. The seed skips duplicates but adds the missing ones. Continue?"
+        "Sync default catalogue?\n\n" +
+          "• New courses will be added.\n" +
+          "• Existing courses (matched by name) will be updated with the " +
+          "latest fee, category, description, and tier.\n\n" +
+          "Custom courses you created manually are untouched."
       );
       if (!ok) return;
     }
     setSeeding(true);
     try {
-      const existingNames = new Set(courses.map((c) => c.name));
+      const existingByName = new Map(courses.map((c) => [c.name, c]));
+      const actor = {
+        uid: firebaseUser.uid,
+        displayName: userData.displayName,
+        role: "admin" as const,
+      };
       let added = 0;
+      let updated = 0;
+
       for (const seed of SEED_COURSES) {
-        if (existingNames.has(seed.name)) continue;
-        await createCourse(
-          {
-            name: seed.name,
-            category: seed.category,
-            description: seed.description,
-            fee: seed.fee ?? 0,
-            currency: REG_DEFAULT_CURRENCY,
-            durationHours: seed.durationHours,
-            durationLabel: seed.durationLabel,
-            isExclusiveAcceptix: seed.isExclusiveAcceptix,
-            isActive: true,
-          },
-          {
-            uid: firebaseUser.uid,
-            displayName: userData.displayName,
-            role: "admin",
-          }
-        );
-        added++;
+        const existing = existingByName.get(seed.name);
+
+        if (!existing) {
+          await createCourse(
+            {
+              name: seed.name,
+              category: seed.category,
+              description: seed.description,
+              fee: seed.fee ?? 0,
+              currency: REG_DEFAULT_CURRENCY,
+              durationHours: seed.durationHours,
+              durationLabel: seed.durationLabel,
+              isExclusiveAcceptix: seed.isExclusiveAcceptix,
+              isActive: true,
+            },
+            actor
+          );
+          added++;
+          continue;
+        }
+
+        // Existing — only update if there's a meaningful drift from the seed.
+        const targetFee = seed.fee ?? 0;
+        const drift =
+          existing.fee !== targetFee ||
+          existing.category !== seed.category ||
+          existing.isExclusiveAcceptix !== seed.isExclusiveAcceptix ||
+          (existing.durationLabel ?? "") !== seed.durationLabel;
+
+        if (drift) {
+          await updateCourse(
+            existing.id,
+            {
+              category: seed.category,
+              description: seed.description,
+              fee: targetFee,
+              currency: REG_DEFAULT_CURRENCY,
+              durationHours: seed.durationHours,
+              durationLabel: seed.durationLabel,
+              isExclusiveAcceptix: seed.isExclusiveAcceptix,
+            },
+            actor,
+            {
+              fee: { from: existing.fee, to: targetFee },
+            }
+          );
+          updated++;
+        }
       }
+
+      const parts: string[] = [];
+      if (added > 0) parts.push(`added ${added}`);
+      if (updated > 0) parts.push(`updated ${updated}`);
       toast.success(
-        added > 0 ? `Added ${added} course(s)` : "All default courses are already present"
+        parts.length > 0
+          ? `Catalogue synced — ${parts.join(", ")}.`
+          : "Catalogue already up to date."
       );
     } catch (e) {
       console.error("[admin-courses] seed failed:", e);
