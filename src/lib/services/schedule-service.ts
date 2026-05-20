@@ -79,19 +79,18 @@ export async function createSchedulePattern(
 ): Promise<string[]> {
   const days = PATTERN_DAYS[pattern];
   const patternGroupId = `pg_${Date.now()}_${Math.random().toString(36).substring(2, 8)}`;
-  const ids: string[] = [];
 
-  for (const dayOfWeek of days) {
-    const id = await createScheduleEntry({
-      ...data,
-      dayOfWeek,
-      dayPattern: pattern,
-      patternGroupId,
-    });
-    ids.push(id);
-  }
-
-  return ids;
+  // Create all three day entries in parallel — saves ~2 round-trips vs sequential.
+  return Promise.all(
+    days.map((dayOfWeek) =>
+      createScheduleEntry({
+        ...data,
+        dayOfWeek,
+        dayPattern: pattern,
+        patternGroupId,
+      })
+    )
+  );
 }
 
 /** Update a single schedule entry */
@@ -111,9 +110,7 @@ export async function updateSchedulePattern(
   data: Partial<Omit<ScheduleEntryInput, "dayOfWeek" | "patternGroupId">>
 ): Promise<void> {
   const entries = await getEntriesByPatternGroup(patternGroupId);
-  for (const entry of entries) {
-    await updateScheduleEntry(entry.id, data);
-  }
+  await Promise.all(entries.map((entry) => updateScheduleEntry(entry.id, data)));
 }
 
 /** Delete a single schedule entry */
@@ -124,24 +121,33 @@ export async function deleteScheduleEntry(entryId: string): Promise<void> {
 /** Delete all entries in a pattern group */
 export async function deleteSchedulePattern(patternGroupId: string): Promise<void> {
   const entries = await getEntriesByPatternGroup(patternGroupId);
-  for (const entry of entries) {
-    await restDelete(`schedules/${entry.id}`);
-  }
+  await Promise.all(
+    entries.map((entry) =>
+      restDelete(`schedules/${entry.id}`).catch((e) =>
+        console.warn(`[schedule] delete ${entry.id} failed:`, e)
+      )
+    )
+  );
 }
 
-/** Get entries by pattern group ID */
+/** Get entries by pattern group ID. Returns [] on any error — callers can safely no-op. */
 async function getEntriesByPatternGroup(patternGroupId: string): Promise<ScheduleEntry[]> {
-  const structuredQuery = {
-    from: [{ collectionId: "schedules" }],
-    where: {
-      fieldFilter: {
-        field: { fieldPath: "patternGroupId" },
-        op: "EQUAL",
-        value: { stringValue: patternGroupId },
+  try {
+    const structuredQuery = {
+      from: [{ collectionId: "schedules" }],
+      where: {
+        fieldFilter: {
+          field: { fieldPath: "patternGroupId" },
+          op: "EQUAL",
+          value: { stringValue: patternGroupId },
+        },
       },
-    },
-  };
-  return (await runQuery(structuredQuery)) as ScheduleEntry[];
+    };
+    return (await runQuery(structuredQuery)) as ScheduleEntry[];
+  } catch (e) {
+    console.error("[schedule] getEntriesByPatternGroup failed:", e);
+    return [];
+  }
 }
 
 /** Fetch enrolled students for a course with their names and levels */
@@ -212,15 +218,22 @@ export async function fetchStudentsForCourse(courseId: string): Promise<Schedule
   }
 }
 
-/** Get all active instructors */
+/** Get all active instructors. Returns [] on any error so the UI degrades to an empty list. */
 export async function getInstructors(): Promise<User[]> {
-  const results = await fetchCollection("users");
-  return results
-    .map((r) => ({ ...r, uid: r.id }) as User)
-    .filter((u) => u.role === "instructor" && u.isActive !== false);
+  try {
+    const results = await fetchCollection("users");
+    return results
+      .map((r) => ({ ...r, uid: r.id }) as User)
+      .filter((u) => u.role === "instructor" && u.isActive !== false);
+  } catch (e) {
+    console.error("[schedule] getInstructors failed:", e);
+    return [];
+  }
 }
 
-/** Check for time conflicts for a specific instructor on a given day */
+/** Check for time conflicts for a specific instructor on a given day.
+ * Returns null both when there's no conflict and when the query fails —
+ * the caller treats null as "no known conflict" and falls back to other checks. */
 export async function checkTimeConflict(
   instructorId: string,
   dayOfWeek: DayOfWeek,
@@ -228,29 +241,34 @@ export async function checkTimeConflict(
   endTime: string,
   excludeEntryId?: string
 ): Promise<ScheduleEntry | null> {
-  const structuredQuery = {
-    from: [{ collectionId: "schedules" }],
-    where: {
-      fieldFilter: {
-        field: { fieldPath: "instructorId" },
-        op: "EQUAL",
-        value: { stringValue: instructorId },
+  try {
+    const structuredQuery = {
+      from: [{ collectionId: "schedules" }],
+      where: {
+        fieldFilter: {
+          field: { fieldPath: "instructorId" },
+          op: "EQUAL",
+          value: { stringValue: instructorId },
+        },
       },
-    },
-  };
+    };
 
-  const allEntries = (await runQuery(structuredQuery)) as ScheduleEntry[];
-  const entries = allEntries.filter(
-    (e) => e.isActive !== false && e.dayOfWeek === dayOfWeek
-  );
+    const allEntries = (await runQuery(structuredQuery)) as ScheduleEntry[];
+    const entries = allEntries.filter(
+      (e) => e.isActive !== false && e.dayOfWeek === dayOfWeek
+    );
 
-  for (const entry of entries) {
-    if (excludeEntryId && entry.id === excludeEntryId) continue;
-    // Check overlap: new start < existing end AND new end > existing start
-    if (startTime < entry.endTime && endTime > entry.startTime) {
-      return entry;
+    for (const entry of entries) {
+      if (excludeEntryId && entry.id === excludeEntryId) continue;
+      // Check overlap: new start < existing end AND new end > existing start
+      if (startTime < entry.endTime && endTime > entry.startTime) {
+        return entry;
+      }
     }
-  }
 
-  return null;
+    return null;
+  } catch (e) {
+    console.error("[schedule] checkTimeConflict failed:", e);
+    return null;
+  }
 }

@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { useAuth } from "@/contexts/auth-context";
 import { PageHeader } from "@/components/layout/page-header";
+import { RoleGate } from "@/components/auth/role-gate";
 import { StudentStatusBadge } from "@/components/students/student-status-badge";
 import { EvaluationForm } from "@/components/evaluation/evaluation-form";
 import { PaymentForm } from "@/components/payments/payment-form";
@@ -72,7 +73,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 
-export default function StudentDetailPage() {
+function StudentDetailContent() {
   const params = useParams();
   const router = useRouter();
   const { firebaseUser, userData, role } = useAuth();
@@ -809,5 +810,13 @@ export default function StudentDetailPage() {
         </DialogContent>
       </Dialog>
     </div>
+  );
+}
+
+export default function StudentDetailPage() {
+  return (
+    <RoleGate allowedRoles={["admin", "sales", "coordinator", "accountant"]}>
+      <StudentDetailContent />
+    </RoleGate>
   );
 }

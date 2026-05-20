@@ -49,6 +49,9 @@ Student management and sales tracking system for Langford International Institut
 | `students/{id}/attendance` | Attendance records |
 | `courses` | Course definitions |
 | `schedules` | Instructor weekly schedule entries |
+| `embassyPayments` | Embassy-handled student payments |
+| `summerClubStudents` | Summer Club student records (isolated from main students) |
+| `summerClubStudents/{id}/payments` | Summer Club payment subcollection |
 | `loginLogs` | Login audit trail |
 | `auditLog` | System audit log |
 
@@ -66,6 +69,23 @@ Student management and sales tracking system for Langford International Institut
 2. Push: `git push origin main` (may need token in URL for auth)
 3. Deploy: `npx vercel --prod --yes`
 4. If new Firestore collection added: `npx firebase deploy --only firestore:rules`
+
+## Recent Changes (2026-05-20)
+- **Route-level RoleGate** added to `pipeline`, `payments`, `students`, `students/new`, `students/[id]`, `students/[id]/edit` (defense-in-depth — pages were previously relying on conditional render only).
+- **Delete N+1 fixes**: `deleteStudent`, `deleteInstallmentPlan`, `deleteSummerClubStudent` now batch subcollection deletes via `Promise.all` instead of sequential loops. Schedule pattern create/update/delete also parallelized.
+- **Defensive try/catch** added to `schedule-service` helpers (`getEntriesByPatternGroup`, `getInstructors`, `checkTimeConflict`) — they now degrade gracefully instead of throwing.
+- **Documentation refresh**: `useFollowupCount` TODO replaced with a real README explaining why it's deliberately disabled and how to re-enable it.
+
+## Recent Changes (2026-04-12 → 2026-05-20 — backfilled)
+- **Summer Club module** (`d56a91a`) — `summerClubStudents` collection with isolated data + per-sales privacy. Pages under `/summer-club`, dedicated service `summer-club-service.ts`, phone uniqueness with pre/post-create dup guards.
+- **Monthly reset + accountant dashboard** (`8257f4f`) — month filter on sales and accountant dashboards.
+- **Coordinator can manage course rosters end-to-end** (`b40651d`).
+- **Outstanding balances report** (`5865d01`) — `/reports/outstanding-balances` (name, amount, due date) for accountant.
+- **Security fix**: sales filter moved to Firestore query layer (`e385ba7`) — sales reps can no longer read all students via direct REST.
+- **Observability**: Sentry integration for runtime error tracking (`9422360`).
+- **CI/CD**: GitHub Actions for Firebase rules deploy + daily Firestore backup (`e7b100a`).
+- **Phase 2 UX wins** (`21cfe68`, `effbcba`): fuzzy search (Arabic digits, typos, alef variants), quick note, WhatsApp templates, Excel export, print receipts.
+- **Phone normalization** (`a674343`, `91e2a9b`) — unified `normalizePhone` + `phonesMatch` utils across main students and Summer Club to prevent duplicates.
 
 ## Recent Changes (2026-04-12)
 - Added **accountant** role (read-only access to students, payments, courses)

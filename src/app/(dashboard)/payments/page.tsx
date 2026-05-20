@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useAuth } from "@/contexts/auth-context";
 import { PageHeader } from "@/components/layout/page-header";
+import { RoleGate } from "@/components/auth/role-gate";
 import { subscribeToStudents } from "@/lib/services/student-service";
 import { Student } from "@/lib/types";
 import { formatCurrency, formatDate, formatPhone } from "@/lib/utils/format";
@@ -39,7 +40,7 @@ function ps(student: Student) {
   };
 }
 
-export default function PaymentsPage() {
+function PaymentsContent() {
   const { role, firebaseUser } = useAuth();
   const [students, setStudents] = useState<Student[]>([]);
   const [filter, setFilter] = useState<"all" | "pending" | "partial" | "paid">("all");
@@ -174,5 +175,13 @@ export default function PaymentsPage() {
         </Table>
       </div>
     </div>
+  );
+}
+
+export default function PaymentsPage() {
+  return (
+    <RoleGate allowedRoles={["admin", "sales", "accountant"]}>
+      <PaymentsContent />
+    </RoleGate>
   );
 }

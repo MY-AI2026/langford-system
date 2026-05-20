@@ -3,6 +3,7 @@
 import { useEffect, useState, useMemo } from "react";
 import { useAuth } from "@/contexts/auth-context";
 import { PageHeader } from "@/components/layout/page-header";
+import { RoleGate } from "@/components/auth/role-gate";
 import { StudentListTable } from "@/components/students/student-list-table";
 import { StudentSearchBar } from "@/components/students/student-search-bar";
 import { subscribeToStudents } from "@/lib/services/student-service";
@@ -48,7 +49,7 @@ function downloadStudents(students: Student[]) {
   });
 }
 
-export default function StudentsPage() {
+function StudentsContent() {
   const { role, firebaseUser } = useAuth();
   const [students, setStudents] = useState<Student[]>([]);
   const [search, setSearch] = useState("");
@@ -153,5 +154,13 @@ export default function StudentsPage() {
         showSalesRep={role === "admin"}
       />
     </div>
+  );
+}
+
+export default function StudentsPage() {
+  return (
+    <RoleGate allowedRoles={["admin", "sales", "coordinator", "accountant"]}>
+      <StudentsContent />
+    </RoleGate>
   );
 }

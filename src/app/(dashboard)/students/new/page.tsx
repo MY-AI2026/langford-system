@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/contexts/auth-context";
 import { PageHeader } from "@/components/layout/page-header";
+import { RoleGate } from "@/components/auth/role-gate";
 import { StudentForm } from "@/components/students/student-form";
 import { createStudent } from "@/lib/services/student-service";
 import { getSalesUsers } from "@/lib/services/user-service";
@@ -10,15 +11,9 @@ import { StudentFormData } from "@/lib/utils/validators";
 import { Card, CardContent } from "@/components/ui/card";
 import { toast } from "sonner";
 
-export default function NewStudentPage() {
+function NewStudentContent() {
   const router = useRouter();
-  const { firebaseUser, userData, role } = useAuth();
-
-  // Accountant is read-only — redirect away from create page
-  if (role === "accountant") {
-    router.replace("/students");
-    return null;
-  }
+  const { firebaseUser, userData } = useAuth();
 
   async function handleSubmit(data: StudentFormData) {
     if (!firebaseUser || !userData) return;
@@ -71,5 +66,14 @@ export default function NewStudentPage() {
         </CardContent>
       </Card>
     </div>
+  );
+}
+
+export default function NewStudentPage() {
+  // accountant + instructor are blocked at the route level (defense-in-depth)
+  return (
+    <RoleGate allowedRoles={["admin", "sales", "coordinator"]}>
+      <NewStudentContent />
+    </RoleGate>
   );
 }

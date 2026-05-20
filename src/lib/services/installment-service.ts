@@ -133,16 +133,24 @@ export async function deleteInstallmentPlan(
       `students/${studentId}`
     )) as Array<{ id: string; amount: number; installmentNumber: number }>;
 
-    // Delete payments matching this plan's installment numbers
-    for (const inst of paidInstallments) {
-      const linkedPayment = payments.find(
-        (p) => p.installmentNumber === inst.installmentNumber
-      );
-      if (linkedPayment) {
-        totalPaidAmount += linkedPayment.amount;
-        await restDelete(`students/${studentId}/payments/${linkedPayment.id}`);
-      }
-    }
+    // Collect matching payments, then delete them in parallel.
+    // Previously this looped sequentially — O(N) round-trips for plans with
+    // many paid installments. Now it's a single parallel batch.
+    const toDelete = paidInstallments
+      .map((inst) =>
+        payments.find((p) => p.installmentNumber === inst.installmentNumber)
+      )
+      .filter((p): p is NonNullable<typeof p> => Boolean(p));
+
+    totalPaidAmount = toDelete.reduce((sum, p) => sum + p.amount, 0);
+
+    await Promise.all(
+      toDelete.map((p) =>
+        restDelete(`students/${studentId}/payments/${p.id}`).catch((e) =>
+          console.warn(`[installment-service] payment delete ${p.id} failed:`, e)
+        )
+      )
+    );
   }
 
   // 2. Delete the installment plan document

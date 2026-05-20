@@ -356,7 +356,9 @@ export async function deleteSummerClubStudent(
   userId: string,
   userName: string
 ): Promise<void> {
-  // Delete payments subcollection
+  // Delete payments subcollection. Per-payment deletes now run in parallel
+  // via Promise.all instead of sequentially — meaningful speed-up for
+  // students with many payment records.
   try {
     const token = await restGetToken();
     const payRes = await fetch(`${BASE}/${COLLECTION}/${id}:runQuery`, {
@@ -367,11 +369,18 @@ export async function deleteSummerClubStudent(
     });
     if (payRes.ok) {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const docs = (await payRes.json()).filter((r: any) => r.document);
-      for (const r of docs) {
-        const docId = (r.document.name as string).split("/").pop();
-        await restDelete(`${COLLECTION}/${id}/payments/${docId}`);
-      }
+      const docs = (await payRes.json()).filter((r: any) => r?.document);
+      const ids = docs
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        .map((r: any) => (r.document.name as string).split("/").pop() as string)
+        .filter(Boolean);
+      await Promise.all(
+        ids.map((docId: string) =>
+          restDelete(`${COLLECTION}/${id}/payments/${docId}`).catch((e) =>
+            console.warn(`[summer-club] payment delete ${docId} failed:`, e)
+          )
+        )
+      );
     }
   } catch (e) {
     console.warn("[summer-club] payments cleanup failed:", e);

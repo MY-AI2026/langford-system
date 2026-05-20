@@ -445,47 +445,48 @@ export async function getStudentCounts(role: UserRole, userId: string): Promise<
 }
 
 export async function deleteStudent(studentId: string, userId: string, userName: string) {
-  // Fetch subcollection docs via REST then delete via REST
+  // Fetch subcollection docs via REST then delete via REST.
+  // Subcollection scans (activityLog + payments) run in parallel, and the
+  // per-doc deletes within each subcollection also run in parallel via
+  // Promise.all — much faster than the original sequential loops on students
+  // with long histories.
   try {
     const token = await restGetToken();
+    const headers = { Authorization: `Bearer ${token}`, "Content-Type": "application/json" };
 
-    // Delete activity log subcollection
-    const activityQuery = {
-      structuredQuery: { from: [{ collectionId: "activityLog" }] },
-    };
-    const actRes = await fetch(`${BASE}/students/${studentId}:runQuery`, {
-      method: "POST",
-      headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
-      body: JSON.stringify(activityQuery),
-      cache: "no-store",
-    });
-    if (actRes.ok) {
+    const scanSubcollection = async (collectionId: string): Promise<string[]> => {
+      const res = await fetch(`${BASE}/students/${studentId}:runQuery`, {
+        method: "POST",
+        headers,
+        body: JSON.stringify({ structuredQuery: { from: [{ collectionId }] } }),
+        cache: "no-store",
+      });
+      if (!res.ok) return [];
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const actDocs = (await actRes.json()).filter((r: any) => r.document);
-      for (const r of actDocs) {
-        const docId = (r.document.name as string).split("/").pop();
-        await restDelete(`students/${studentId}/activityLog/${docId}`);
-      }
-    }
+      const docs = (await res.json()).filter((r: any) => r?.document);
+      return docs
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        .map((r: any) => (r.document.name as string).split("/").pop() as string)
+        .filter(Boolean);
+    };
 
-    // Delete payments subcollection
-    const payQuery = {
-      structuredQuery: { from: [{ collectionId: "payments" }] },
-    };
-    const payRes = await fetch(`${BASE}/students/${studentId}:runQuery`, {
-      method: "POST",
-      headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
-      body: JSON.stringify(payQuery),
-      cache: "no-store",
-    });
-    if (payRes.ok) {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const payDocs = (await payRes.json()).filter((r: any) => r.document);
-      for (const r of payDocs) {
-        const docId = (r.document.name as string).split("/").pop();
-        await restDelete(`students/${studentId}/payments/${docId}`);
-      }
-    }
+    const [activityIds, paymentIds] = await Promise.all([
+      scanSubcollection("activityLog"),
+      scanSubcollection("payments"),
+    ]);
+
+    await Promise.all([
+      ...activityIds.map((id) =>
+        restDelete(`students/${studentId}/activityLog/${id}`).catch((e) =>
+          console.warn(`[student-service] activityLog delete ${id} failed:`, e)
+        )
+      ),
+      ...paymentIds.map((id) =>
+        restDelete(`students/${studentId}/payments/${id}`).catch((e) =>
+          console.warn(`[student-service] payment delete ${id} failed:`, e)
+        )
+      ),
+    ]);
   } catch (e) {
     console.warn("[student-service] subcollection delete failed:", e);
   }

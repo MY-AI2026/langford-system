@@ -4,12 +4,13 @@ import { useEffect, useState } from "react";
 import { useAuth } from "@/contexts/auth-context";
 import { PageHeader } from "@/components/layout/page-header";
 import { PipelineBoard } from "@/components/pipeline/pipeline-board";
+import { RoleGate } from "@/components/auth/role-gate";
 import { subscribeToStudents, updateStudentStatus } from "@/lib/services/student-service";
 import { Student, StudentStatus } from "@/lib/types";
 import { STUDENT_STATUS_CONFIG } from "@/lib/utils/constants";
 import { toast } from "sonner";
 
-export default function PipelinePage() {
+function PipelineContent() {
   const { role, firebaseUser, userData } = useAuth();
   const [students, setStudents] = useState<Student[]>([]);
 
@@ -41,5 +42,13 @@ export default function PipelinePage() {
       />
       <PipelineBoard students={students} onStatusChange={handleStatusChange} />
     </div>
+  );
+}
+
+export default function PipelinePage() {
+  return (
+    <RoleGate allowedRoles={["admin", "sales"]}>
+      <PipelineContent />
+    </RoleGate>
   );
 }

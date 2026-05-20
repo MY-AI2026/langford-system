@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { useAuth } from "@/contexts/auth-context";
 import { PageHeader } from "@/components/layout/page-header";
+import { RoleGate } from "@/components/auth/role-gate";
 import { StudentForm } from "@/components/students/student-form";
 import { getStudent, updateStudent } from "@/lib/services/student-service";
 import { getSalesUsers } from "@/lib/services/user-service";
@@ -13,16 +14,11 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
 
-export default function EditStudentPage() {
+function EditStudentContent() {
   const params = useParams();
   const router = useRouter();
-  const { firebaseUser, userData, role } = useAuth();
+  const { firebaseUser, userData } = useAuth();
 
-  // Accountant is read-only — redirect away from edit page
-  if (role === "accountant") {
-    router.replace("/students");
-    return null;
-  }
   const studentId = params.studentId as string;
   const [student, setStudent] = useState<Student | null>(null);
   const [loading, setLoading] = useState(true);
@@ -110,5 +106,14 @@ export default function EditStudentPage() {
         </CardContent>
       </Card>
     </div>
+  );
+}
+
+export default function EditStudentPage() {
+  // accountant + instructor are blocked at the route level (defense-in-depth)
+  return (
+    <RoleGate allowedRoles={["admin", "sales", "coordinator"]}>
+      <EditStudentContent />
+    </RoleGate>
   );
 }
