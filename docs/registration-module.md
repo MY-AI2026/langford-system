@@ -94,10 +94,30 @@ firestore.indexes.json                    ← Composite indexes for the module's
 | **#3 Admin Console** | Dashboard, manage agents (Cloud Function for user creation), manage courses, all students | Cloud Functions (Blaze) |
 | **#4 Reports + Email** | Reports (PDF + Excel) + commission summary + Resend email notifications | Resend account |
 
+## Email config (lands in PR #4, defaults defined now)
+
+`src/lib/registration/constants.ts` already declares the defaults the
+Cloud Function will read on first run:
+
+| Constant | Value |
+|----------|-------|
+| `REG_DEFAULT_ADMIN_NOTIFICATION_EMAILS` | `["ahmedelsayed@langfordkw.com"]` |
+| `REG_EMAIL_REPLY_TO` | `ahmedelsayed@langfordkw.com` |
+| `REG_EMAIL_FROM` | `Langford × Acceptix <noreply@langford.website>` |
+
+These are bootstrap defaults — PR #3 lands a Settings UI that lets the
+admin add/remove recipients (e.g. add an Acceptix-side counterpart) and
+PR #4 wires the trigger to read the live settings doc first, falling
+back to the constants above.
+
+The `noreply@langford.website` sender requires the `langford.website`
+domain to be verified in Resend (TXT + MX/CNAME records). That step is
+part of PR #4 setup, not this PR.
+
 ## Open work captured for later PRs
 
 - **Cloud Function: `createAcceptixAgent`** — admin creates Firebase Auth user + `users/{uid}` doc atomically, sets `isActive: true`, role `acceptix_agent`. Strong password validated server-side (Zod schema already defined).
-- **Cloud Function: `onRegStudentCreated`** — Firestore trigger that writes the email through Resend and updates `regNotifications.emailSent`.
+- **Cloud Function: `onRegStudentCreated`** — Firestore trigger that writes the email through Resend and updates `regNotifications.emailSent`. Reads recipient list + sender from the settings doc (PR #3), falling back to `REG_DEFAULT_ADMIN_NOTIFICATION_EMAILS` etc.
 - **Custom claims** — once Cloud Functions land, mirror `role` to a custom claim so Firestore rules can skip the `get()` lookup (cheaper, more cacheable).
 - **UI "Seed default courses" button** — calls into `seed-courses.ts` from the admin courses page (in addition to the CLI script).
 - **Playwright smoke tests** — login as agent → create student → admin sees notification.

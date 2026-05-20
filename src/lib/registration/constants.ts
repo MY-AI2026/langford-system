@@ -14,6 +14,25 @@ export const REG_DEFAULT_CURRENCY = "KWD";
 /** Default source string stamped on every Acceptix-registered student. */
 export const REG_DEFAULT_SOURCE = "Acceptix";
 
+/**
+ * Default recipient(s) for the "new student registered" admin email — wired up
+ * in PR #4 via Resend + a Firestore-trigger Cloud Function. The admin can
+ * override this list at runtime from the settings page (PR #3 lands the UI).
+ */
+export const REG_DEFAULT_ADMIN_NOTIFICATION_EMAILS: string[] = [
+  "ahmedelsayed@langfordkw.com",
+];
+
+/** Reply-to address shown on outbound notification emails. */
+export const REG_EMAIL_REPLY_TO = "ahmedelsayed@langfordkw.com";
+
+/**
+ * "From" address used when Resend sends a new-student alert. Lives on the
+ * Langford domain (DKIM/SPF set up alongside the Resend domain verification
+ * in PR #4) so deliverability stays high.
+ */
+export const REG_EMAIL_FROM = "Langford × Acceptix <noreply@langford.website>";
+
 // ─── Display labels (UI consumes these via the lookups below) ────────────────
 
 export const REG_CATEGORY_LABELS: Record<RegCourseCategory, { en: string; ar: string }> = {
