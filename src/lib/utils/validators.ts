@@ -98,17 +98,16 @@ export const regStrongPasswordSchema = z
 export const regCourseSchema = z.object({
   name: z.string().min(2, "اسم الكورس لازم يكون حرفين على الأقل"),
   category: z.enum(REG_CATEGORIES),
-  description: z.string().optional().default(""),
+  description: z.string().optional(),
   fee: z.coerce
     .number()
     .nonnegative("الرسوم لازم تكون 0 أو أكتر")
-    .optional()
-    .default(0),
-  currency: z.string().min(2).default("KWD"),
+    .optional(),
+  currency: z.string().min(2).optional(),
   durationHours: z.coerce.number().int().nonnegative().nullable().optional(),
-  durationLabel: z.string().optional().default(""),
-  isExclusiveAcceptix: z.boolean().default(false),
-  isActive: z.boolean().default(true),
+  durationLabel: z.string().optional(),
+  isExclusiveAcceptix: z.boolean().optional(),
+  isActive: z.boolean().optional(),
 });
 
 /** Student registration (agent-submitted). */
@@ -122,20 +121,23 @@ export const regStudentSchema = z.object({
     ),
   email: z.string().email("الإيميل مش صحيح").optional().or(z.literal("")),
   courseId: z.string().min(1, "اختر الكورس"),
-  notes: z.string().optional().default(""),
+  // `.default("")` would create an input/output type mismatch under the
+  // current Zod + RHF resolver pairing; we set the empty default at the
+  // form layer via `useForm({ defaultValues })` instead.
+  notes: z.string().optional(),
 });
 
 /** Admin-side update (status + notes only — identity fields are immutable post-create). */
 export const regStudentUpdateSchema = z.object({
   status: z.enum(REG_STATUSES),
-  notes: z.string().optional().default(""),
+  notes: z.string().optional(),
 });
 
 /** Create a new Acceptix agent (admin action). */
 export const regAgentCreateSchema = z.object({
   fullName: z.string().min(2, "الاسم لازم يكون حرفين على الأقل"),
   email: z.string().email("الإيميل مش صحيح"),
-  phone: z.string().optional().default(""),
+  phone: z.string().optional(),
   password: regStrongPasswordSchema,
 });
 

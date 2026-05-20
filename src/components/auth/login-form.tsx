@@ -9,12 +9,37 @@ import { logUserLogin } from "@/lib/services/user-service";
 import { doc, getDoc } from "firebase/firestore";
 import { db } from "@/lib/firebase/config";
 import { loginSchema, LoginFormData } from "@/lib/utils/validators";
+import { REG_ROUTES } from "@/lib/registration/constants";
+import { UserRole } from "@/lib/types";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { AlertCircle, Loader2 } from "lucide-react";
 import Link from "next/link";
+
+/**
+ * Map a user's role to the landing page they should see after sign-in.
+ * Acceptix agents are confined to the registration module — they NEVER
+ * land on the main dashboard (which would show them sales/student data
+ * they have no business seeing).
+ */
+function landingRouteForRole(
+  role: UserRole | null,
+  isActive: boolean
+): { href: string; blocked: boolean; reason?: string } {
+  if (!isActive) {
+    return {
+      href: "/login",
+      blocked: true,
+      reason: "حسابك معطّل — تواصل مع الإدارة.",
+    };
+  }
+  if (role === "acceptix_agent") {
+    return { href: REG_ROUTES.registerStudent, blocked: false };
+  }
+  return { href: "/dashboard", blocked: false };
+}
 
 export function LoginForm() {
   const router = useRouter();
@@ -27,19 +52,35 @@ export function LoginForm() {
     resolver: zodResolver(loginSchema),
   });
 
+  async function postSignIn(uid: string, email: string, fallbackName: string) {
+    // Fetch the user doc once — we need role + isActive for the redirect
+    // decision AND displayName for the login log.
+    const userDoc = await getDoc(doc(db, "users", uid));
+    const data = userDoc.exists() ? userDoc.data() : null;
+    const userName = (data?.displayName as string) || fallbackName;
+    const role = (data?.role as UserRole) ?? null;
+    const isActive = (data?.isActive as boolean | undefined) ?? true;
+
+    // Log login (non-blocking — auth already succeeded).
+    try {
+      await logUserLogin(uid, userName, email);
+    } catch {
+      /* swallow — Firestore logging is best-effort */
+    }
+
+    const route = landingRouteForRole(role, isActive);
+    if (route.blocked) {
+      setError(route.reason ?? "Sign-in blocked.");
+      return;
+    }
+    router.push(route.href);
+  }
+
   async function onSubmit(data: LoginFormData) {
     try {
       setError("");
       const result = await signIn(data.email, data.password);
-      // Log login (non-blocking — won't prevent navigation if Firestore fails)
-      try {
-        const userDoc = await getDoc(doc(db, "users", result.user.uid));
-        const userName = userDoc.exists() ? userDoc.data().displayName : data.email;
-        await logUserLogin(result.user.uid, userName, data.email);
-      } catch {
-        // Firestore logging failed silently — auth still succeeded
-      }
-      router.push("/dashboard");
+      await postSignIn(result.user.uid, data.email, data.email);
     } catch {
       setError("Invalid email or password. Please try again.");
     }
@@ -49,10 +90,11 @@ export function LoginForm() {
     try {
       setError("");
       const result = await signInWithGoogle();
-      const userDoc = await getDoc(doc(db, "users", result.user.uid));
-      const userName = userDoc.exists() ? userDoc.data().displayName : result.user.displayName || result.user.email || "";
-      await logUserLogin(result.user.uid, userName, result.user.email || "");
-      router.push("/dashboard");
+      await postSignIn(
+        result.user.uid,
+        result.user.email || "",
+        result.user.displayName || result.user.email || ""
+      );
     } catch {
       setError("Google sign-in failed. Make sure your account has access.");
     }
