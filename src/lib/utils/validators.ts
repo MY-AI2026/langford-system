@@ -54,7 +54,14 @@ export const installmentPlanSchema = z.object({
 export const userSchema = z.object({
   email: z.string().email("Please enter a valid email"),
   displayName: z.string().min(2, "Name must be at least 2 characters"),
-  role: z.enum(["admin", "sales", "instructor", "coordinator", "accountant"]),
+  role: z.enum([
+    "admin",
+    "sales",
+    "instructor",
+    "coordinator",
+    "accountant",
+    "acceptix_agent",
+  ]),
   phone: z.string(),
   monthlyTarget: z.number().min(0),
   password: z.string().min(6, "Password must be at least 6 characters"),
@@ -72,6 +79,76 @@ export const settingsSchema = z.object({
   instituteAddress: z.string().optional().default(""),
   defaultCurrency: z.string().min(1, "Currency is required"),
 });
+
+// ─── Registration Module (Acceptix Referral Portal) ──────────────────────────
+
+const REG_CATEGORIES = ["esp", "exam_prep", "professional", "diploma", "other"] as const;
+const REG_STATUSES = ["new", "enrolled", "cancelled"] as const;
+
+/** Strong password — enforced on every new Acceptix-agent account. */
+export const regStrongPasswordSchema = z
+  .string()
+  .min(12, "كلمة المرور لازم تكون 12 حرف على الأقل")
+  .refine((v) => /[A-Z]/.test(v), "لازم يكون فيها حرف كبير (A-Z)")
+  .refine((v) => /[a-z]/.test(v), "لازم يكون فيها حرف صغير (a-z)")
+  .refine((v) => /\d/.test(v), "لازم يكون فيها رقم (0-9)")
+  .refine((v) => /[^A-Za-z0-9]/.test(v), "لازم يكون فيها رمز خاص (!@#$...)");
+
+/** Course (admin-managed). */
+export const regCourseSchema = z.object({
+  name: z.string().min(2, "اسم الكورس لازم يكون حرفين على الأقل"),
+  category: z.enum(REG_CATEGORIES),
+  description: z.string().optional().default(""),
+  fee: z.coerce
+    .number()
+    .nonnegative("الرسوم لازم تكون 0 أو أكتر")
+    .optional()
+    .default(0),
+  currency: z.string().min(2).default("KWD"),
+  durationHours: z.coerce.number().int().nonnegative().nullable().optional(),
+  durationLabel: z.string().optional().default(""),
+  isExclusiveAcceptix: z.boolean().default(false),
+  isActive: z.boolean().default(true),
+});
+
+/** Student registration (agent-submitted). */
+export const regStudentSchema = z.object({
+  fullName: z.string().min(2, "اسم الطالب لازم يكون حرفين على الأقل"),
+  phone: z
+    .string()
+    .refine(
+      (val) => normalizePhone(val).length >= 7,
+      "رقم التليفون مش صحيح — لازم يكون 7 أرقام على الأقل"
+    ),
+  email: z.string().email("الإيميل مش صحيح").optional().or(z.literal("")),
+  courseId: z.string().min(1, "اختر الكورس"),
+  notes: z.string().optional().default(""),
+});
+
+/** Admin-side update (status + notes only — identity fields are immutable post-create). */
+export const regStudentUpdateSchema = z.object({
+  status: z.enum(REG_STATUSES),
+  notes: z.string().optional().default(""),
+});
+
+/** Create a new Acceptix agent (admin action). */
+export const regAgentCreateSchema = z.object({
+  fullName: z.string().min(2, "الاسم لازم يكون حرفين على الأقل"),
+  email: z.string().email("الإيميل مش صحيح"),
+  phone: z.string().optional().default(""),
+  password: regStrongPasswordSchema,
+});
+
+/** Reset an agent's password. */
+export const regAgentResetPasswordSchema = z.object({
+  password: regStrongPasswordSchema,
+});
+
+export type RegCourseFormData = z.infer<typeof regCourseSchema>;
+export type RegStudentFormData = z.infer<typeof regStudentSchema>;
+export type RegStudentUpdateFormData = z.infer<typeof regStudentUpdateSchema>;
+export type RegAgentCreateFormData = z.infer<typeof regAgentCreateSchema>;
+export type RegAgentResetPasswordFormData = z.infer<typeof regAgentResetPasswordSchema>;
 
 export type LoginFormData = z.infer<typeof loginSchema>;
 export type ForgotPasswordFormData = z.infer<typeof forgotPasswordSchema>;

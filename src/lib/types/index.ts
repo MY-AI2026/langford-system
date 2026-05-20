@@ -1,6 +1,12 @@
 import { Timestamp } from "firebase/firestore";
 
-export type UserRole = "admin" | "sales" | "instructor" | "coordinator" | "accountant";
+export type UserRole =
+  | "admin"
+  | "sales"
+  | "instructor"
+  | "coordinator"
+  | "accountant"
+  | "acceptix_agent";
 
 export type StudentStatus =
   | "lead"
@@ -303,4 +309,151 @@ export interface Enrollment {
   createdBy: string;
   createdAt: Timestamp;
   updatedAt: Timestamp;
+}
+
+// ─── Registration Module (Acceptix Referral Portal) ──────────────────────────
+//
+// Self-contained module — collections prefixed `reg*`. Lives alongside the
+// main app but isolation is enforced at the Firestore rules layer (see
+// firestore.rules) and reinforced by service-level filters.
+// Only `admin` and `acceptix_agent` roles interact with this module.
+
+export type RegCourseCategory =
+  | "esp"            // English for Specific Purposes (Medical, Engineering, Aviation, Oil...)
+  | "exam_prep"      // IELTS, TOEFL, Cambridge, Duolingo
+  | "professional"   // Business, Management, IT, AI, Cybersecurity, Academic Writing
+  | "diploma"        // Speak Smart, BCD
+  | "other";
+
+export type RegStudentStatus = "new" | "enrolled" | "cancelled";
+
+export type RegAuditAction =
+  | "reg.course.create"
+  | "reg.course.update"
+  | "reg.course.delete"
+  | "reg.student.create"
+  | "reg.student.update"
+  | "reg.student.delete"
+  | "reg.student.restore"
+  | "reg.agent.create"
+  | "reg.agent.disable"
+  | "reg.agent.enable"
+  | "reg.agent.reset_password"
+  | "reg.notification.read";
+
+export type RegAuditEntityType =
+  | "regCourse"
+  | "regStudent"
+  | "regAgent"
+  | "regNotification";
+
+export type RegNotificationType =
+  | "new_student"
+  | "agent_created"
+  | "course_added";
+
+export interface RegCourse {
+  id: string;
+  name: string;
+  category: RegCourseCategory;
+  description: string;
+  fee: number;
+  currency: string;
+  /** Total contact hours (null when not applicable, e.g. exam preps). */
+  durationHours: number | null;
+  /** Human-readable duration, e.g. "3 months / 160 hours". */
+  durationLabel: string;
+  /** True if exclusive to Acceptix referrals (ESP catalog per the agreement). */
+  isExclusiveAcceptix: boolean;
+  isActive: boolean;
+  createdBy: string;
+  createdByName: string;
+  createdAt: Timestamp;
+  updatedAt: Timestamp;
+}
+
+export interface RegStudent {
+  id: string;
+
+  // Identity
+  fullName: string;
+  phone: string;
+  email: string | null;
+
+  // Course — reference + snapshot (denormalized for historical accuracy on reports)
+  courseId: string;
+  courseName: string;
+  courseCategory: RegCourseCategory;
+  courseFee: number;
+  currency: string;
+
+  // Commission snapshot (locked at registration time so report figures are immutable)
+  commissionRate: number;
+  commissionAmount: number;
+
+  // Source + creator (CRITICAL for isolation — Firestore rules enforce createdBy ownership)
+  source: string;          // default "Acceptix"
+  createdBy: string;       // agent's Firebase uid
+  createdByName: string;
+  createdByRole: UserRole;
+
+  // Workflow (admin manages)
+  status: RegStudentStatus;
+  notes: string;
+
+  // Soft delete — hard delete is disabled at the rules layer
+  isDeleted: boolean;
+  deletedAt: Timestamp | null;
+  deletedBy: string | null;
+
+  // Timestamps
+  createdAt: Timestamp;
+  updatedAt: Timestamp;
+
+  /** Optional idempotency key to dedupe accidental double-submits. */
+  idempotencyKey?: string;
+}
+
+export interface RegAuditLog {
+  id: string;
+  action: RegAuditAction;
+  entityType: RegAuditEntityType;
+  entityId: string;
+  userId: string;
+  userName: string;
+  userRole: UserRole;
+  changes: Record<string, { from: unknown; to: unknown }>;
+  /** Best-effort client diagnostics (may be null when not available). */
+  userAgent: string | null;
+  timestamp: Timestamp;
+}
+
+export interface RegNotification {
+  id: string;
+  type: RegNotificationType;
+
+  /** Either a role-wide broadcast or a specific uid. */
+  recipientRole: "admin" | UserRole;
+  recipientUid: string | null;
+
+  // Display
+  title: string;
+  body: string;
+  link: string;
+
+  // Source event
+  entityType: RegAuditEntityType;
+  entityId: string;
+
+  // State
+  isRead: boolean;
+  readAt: Timestamp | null;
+  readBy: string | null;
+
+  // Email delivery (populated by Cloud Function in PR #4 — not used in PR #1)
+  emailSent: boolean;
+  emailSentAt: Timestamp | null;
+  emailRecipients: string[];
+
+  createdAt: Timestamp;
 }
