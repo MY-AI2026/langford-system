@@ -471,7 +471,9 @@ export default function DashboardPage() {
       {/* Charts section */}
       <div className="grid gap-6 lg:grid-cols-2">
         <PipelineFunnel students={monthStudents} />
-        <RevenueTrendChart students={monthStudents} />
+        {/* Trend uses the full list so the 6-month history stays visible even
+            when the month filter resets the headline counters each month. */}
+        <RevenueTrendChart students={students} />
       </div>
 
       <div className="grid gap-6 lg:grid-cols-2">
