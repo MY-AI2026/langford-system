@@ -150,7 +150,9 @@ export async function updateEnrollment(
   }
   fields.updatedAt = { timestampValue: new Date().toISOString() };
 
-  const fieldPaths = Object.keys(fields).join(",");
+  const fieldPaths = Object.keys(fields)
+    .map(encodeURIComponent)
+    .join("&updateMask.fieldPaths=");
 
   const res = await fetch(`${url}?updateMask.fieldPaths=${fieldPaths}`, {
     method: "PATCH",

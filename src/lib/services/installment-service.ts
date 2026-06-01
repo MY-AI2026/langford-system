@@ -1,3 +1,4 @@
+import { addMonths } from "date-fns";
 import { InstallmentPlan, InstallmentItem, InstallmentStatus } from "@/lib/types";
 import { PaymentStatus } from "@/lib/types";
 import { writeAuditLog } from "./audit-service";
@@ -47,8 +48,8 @@ export async function createInstallmentPlan(
   const amountPerInstallment = Math.round((data.totalFees / data.numberOfInstallments) * 1000) / 1000;
 
   for (let i = 0; i < data.numberOfInstallments; i++) {
-    const dueDate = new Date(data.startDate);
-    dueDate.setMonth(dueDate.getMonth() + i);
+    // addMonths avoids JS month-overflow (e.g. Jan 31 + 1 month → Feb 28, not Mar 3).
+    const dueDate = addMonths(new Date(data.startDate), i);
 
     installments.push({
       installmentNumber: i + 1,
