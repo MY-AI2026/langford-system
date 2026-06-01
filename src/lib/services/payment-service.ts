@@ -1,5 +1,6 @@
 import { Payment, PaymentMethod, PaymentStatus } from "@/lib/types";
 import { writeAuditLog } from "./audit-service";
+import { computeStudentHasOverdue } from "./installment-service";
 import { generateReceiptNumber } from "@/lib/utils/format";
 import {
   runQuery,
@@ -92,7 +93,7 @@ export async function addPayment(
       amountPaid: newAmountPaid,
       remainingBalance: Math.max(0, newRemaining),
       paymentStatus: newPaymentStatus,
-      hasOverdue: Boolean(currentSummary.hasOverdue) || false,
+      hasOverdue: await computeStudentHasOverdue(studentId),
     },
     updatedAt: new Date(),
   });
@@ -322,7 +323,7 @@ export async function setTotalFees(
       amountPaid,
       remainingBalance: Math.max(0, remaining),
       paymentStatus,
-      hasOverdue: false,
+      hasOverdue: await computeStudentHasOverdue(studentId),
     },
     updatedAt: new Date(),
   });

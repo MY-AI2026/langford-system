@@ -35,6 +35,55 @@ export function subscribeToInstallmentPlans(
   );
 }
 
+/**
+ * Reads a student's installment plans and returns true when any unpaid
+ * installment is past its due date. Keeps the denormalized
+ * `paymentSummary.hasOverdue` flag (read by the dashboard) accurate at every
+ * write, instead of the old hardcoded `false`. Defensive: returns false on
+ * any read/parse error so it never blocks the surrounding operation.
+ */
+export async function computeStudentHasOverdue(
+  studentId: string
+): Promise<boolean> {
+  try {
+    const plans = (await runQuery(
+      { from: [{ collectionId: "installmentPlans" }] },
+      `students/${studentId}`
+    )) as InstallmentPlan[];
+    const now = new Date();
+    return plans.some((plan) =>
+      (plan.installments || []).some((item) => {
+        if (item.status === "paid") return false;
+        const due = item.dueDate?.toDate?.();
+        return due ? due < now : false;
+      })
+    );
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Recomputes and writes the student's `paymentSummary.hasOverdue` flag while
+ * preserving the other summary fields. Non-blocking — swallows its own errors.
+ */
+async function refreshStudentOverdueFlag(studentId: string): Promise<void> {
+  try {
+    const studentData = await fetchDoc(`students/${studentId}`);
+    if (!studentData) return;
+    const summary =
+      (studentData.paymentSummary as Record<string, unknown>) || {};
+    const hasOverdue = await computeStudentHasOverdue(studentId);
+    if (Boolean(summary.hasOverdue) === hasOverdue) return; // no change
+    await restUpdate(`students/${studentId}`, {
+      paymentSummary: { ...summary, hasOverdue },
+      updatedAt: new Date(),
+    });
+  } catch {
+    /* non-blocking */
+  }
+}
+
 export async function createInstallmentPlan(
   studentId: string,
   data: {
@@ -103,6 +152,9 @@ export async function markInstallmentPaid(
       updatedAt: now,
     }
   );
+
+  // Paying an installment may clear the student's overdue state.
+  await refreshStudentOverdueFlag(studentId);
 }
 
 export async function deleteInstallmentPlan(
@@ -171,7 +223,7 @@ export async function deleteInstallmentPlan(
           amountPaid: newAmountPaid,
           remainingBalance: Math.max(0, newRemaining),
           paymentStatus: newPaymentStatus,
-          hasOverdue: Boolean(currentSummary.hasOverdue) || false,
+          hasOverdue: await computeStudentHasOverdue(studentId),
         },
         updatedAt: new Date(),
       });
