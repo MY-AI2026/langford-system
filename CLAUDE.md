@@ -25,11 +25,12 @@ Student management and sales tracking system for Langford International Institut
 ## User Roles
 | Role | Access |
 |------|--------|
-| **admin** | Full access — all pages, all actions |
+| **admin** | Full access — all pages, all actions (incl. Registration module) |
 | **sales** | Students, pipeline, payments — can add/edit |
 | **instructor** | Dashboard, attendance, schedule (read-only schedule) |
 | **coordinator** | Students, courses, schedule management |
 | **accountant** | Students, payments, courses, student notes report — **view only** |
+| **acceptix_agent** | Registration module only — register a student + see only their own registrations |
 
 ## Key Architecture Decisions
 - **No Firestore SDK** — all Firestore ops via REST (`rest-helpers.ts`) to avoid WebSocket issues on Vercel
@@ -51,6 +52,10 @@ Student management and sales tracking system for Langford International Institut
 | `schedules` | Instructor weekly schedule entries |
 | `loginLogs` | Login audit trail |
 | `auditLog` | System audit log |
+| `regCourses` | **Registration module** — Acceptix-aware course catalogue (admin-managed) |
+| `regStudents` | **Registration module** — student registrations (agent-owned, creator-bound) |
+| `regAuditLog` | **Registration module** — append-only audit (rules-enforced immutable) |
+| `regNotifications` | **Registration module** — admin notification inbox (in-app; email lands in PR #4) |
 
 ## Important Files
 - `src/lib/firebase/rest-helpers.ts` — Core Firestore REST operations (restCreate, restUpdate, restDelete, runQuery, fetchCollection)
@@ -66,6 +71,9 @@ Student management and sales tracking system for Langford International Institut
 2. Push: `git push origin main` (may need token in URL for auth)
 3. Deploy: `npx vercel --prod --yes`
 4. If new Firestore collection added: `npx firebase deploy --only firestore:rules`
+
+## Recent Changes (2026-05-20)
+- **Registration module foundation (PR #1)** — new self-contained portal for Langford × Acceptix referrals. Adds collections `regCourses`, `regStudents`, `regAuditLog`, `regNotifications`; new role `acceptix_agent`; strict Firestore rules (creator-bound isolation, append-only audit, soft delete only, immutable identity fields); Zod schemas + strong-password validator; service layer + seed catalogue. UI lands in PR #2-#4. See `docs/registration-module.md`.
 
 ## Recent Changes (2026-04-12)
 - Added **accountant** role (read-only access to students, payments, courses)

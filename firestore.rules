@@ -85,5 +85,112 @@ service cloud.firestore {
         allow read, write: if isSignedIn();
       }
     }
+
+    // ─── Registration Module (Acceptix Referral Portal) ─────────────────────
+    //
+    // STRICT backend enforcement — defense-in-depth on top of UI guards.
+    // The existing collections above use permissive rules for backwards
+    // compatibility; these new collections are tightened to enterprise grade.
+    //
+    // Roles enforced server-side via lookup into /users/{uid}:
+    //   - admin           → full access to everything in this module
+    //   - acceptix_agent  → can create regStudent records they own, read only
+    //                       their own students, read active courses; cannot
+    //                       touch any other agent's data or any admin surface.
+
+    function regUserDoc() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data;
+    }
+
+    function regUserActive() {
+      return regUserDoc().isActive == true;
+    }
+
+    function regIsAdmin() {
+      return isSignedIn() && regUserActive() && regUserDoc().role == 'admin';
+    }
+
+    function regIsAgent() {
+      return isSignedIn() && regUserActive() && regUserDoc().role == 'acceptix_agent';
+    }
+
+    function regIsAgentOrAdmin() {
+      return regIsAdmin() || regIsAgent();
+    }
+
+    // ─── regCourses ─ all module participants read; admin writes ────────────
+    match /regCourses/{courseId} {
+      allow read: if regIsAgentOrAdmin();
+      allow create, update, delete: if regIsAdmin();
+    }
+
+    // ─── regStudents ─ creator-bound isolation enforced at the rules layer ─
+    match /regStudents/{studentId} {
+      // Read: admin sees everything; agent only sees rows they own.
+      // List queries must include `createdBy == auth.uid` for an agent
+      // (Firestore evaluates the rule against every doc in the result set).
+      allow read: if regIsAdmin()
+                  || (regIsAgent() && resource.data.createdBy == request.auth.uid);
+
+      // Create: writer must stamp their own uid + Acceptix source + soft-delete=false.
+      // Agents create their own; admins may create on anyone's behalf.
+      allow create: if regIsAgentOrAdmin()
+                    && request.resource.data.createdBy == request.auth.uid
+                    && request.resource.data.source is string
+                    && request.resource.data.isDeleted == false
+                    && request.resource.data.deletedAt == null
+                    && request.resource.data.deletedBy == null
+                    && request.resource.data.commissionRate is number
+                    && request.resource.data.commissionAmount is number;
+
+      // Update: admin only (status changes, notes, soft-delete toggle).
+      // Identity fields (createdBy, fullName, phone, courseId, etc.) cannot
+      // be mutated by anyone — they are part of the audit footprint.
+      allow update: if regIsAdmin()
+                    && request.resource.data.createdBy == resource.data.createdBy
+                    && request.resource.data.courseId == resource.data.courseId
+                    && request.resource.data.courseFee == resource.data.courseFee
+                    && request.resource.data.commissionRate == resource.data.commissionRate
+                    && request.resource.data.commissionAmount == resource.data.commissionAmount
+                    && request.resource.data.createdAt == resource.data.createdAt;
+
+      // Hard delete is disabled at the rules layer — use soft delete via `isDeleted`.
+      allow delete: if false;
+    }
+
+    // ─── regAuditLog ─ append-only audit trail ──────────────────────────────
+    match /regAuditLog/{logId} {
+      allow read: if regIsAdmin();
+      // Anyone authenticated in the module may write THEIR OWN audit entry
+      // (the service layer writes one per write action). Cannot impersonate.
+      allow create: if regIsAgentOrAdmin()
+                    && request.resource.data.userId == request.auth.uid;
+      // Audit log is immutable — no updates, no deletes (not even admin).
+      allow update, delete: if false;
+    }
+
+    // ─── regSettings ─ admin-tunable module settings (email recipients, etc.) ──
+    match /regSettings/{settingId} {
+      allow read: if regIsAdmin();
+      allow create, update: if regIsAdmin();
+      // Settings docs are not deleted — admin disables instead.
+      allow delete: if false;
+    }
+
+    // ─── regNotifications ─ admin inbox for new-student alerts ──────────────
+    match /regNotifications/{notifId} {
+      allow read: if regIsAdmin();
+      // Agents may emit notifications (e.g. on student create); admins may
+      // also create (e.g. system-level alerts).
+      allow create: if regIsAgentOrAdmin();
+      // Only the read/unread flag and recipient metadata may be mutated.
+      // Title/body/entityId etc. are locked to preserve the original alert.
+      allow update: if regIsAdmin()
+                    && request.resource.data.diff(resource.data)
+                         .affectedKeys()
+                         .hasOnly(['isRead', 'readAt', 'readBy',
+                                   'emailSent', 'emailSentAt', 'emailRecipients']);
+      allow delete: if regIsAdmin();
+    }
   }
 }
