@@ -11,6 +11,7 @@ import { REG_ROUTES } from "@/lib/registration/constants";
 import { UserRole } from "@/lib/types";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet";
+import { ThemeToggle } from "@/components/theme-toggle";
 import { LogOut, Menu, UserPlus, ListChecks } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 
@@ -129,6 +130,7 @@ export function RegistrationShell({ children }: { children: React.ReactNode }) {
                 {userData.displayName}
               </span>
             )}
+            <ThemeToggle />
             <Button variant="ghost" size="sm" onClick={handleLogout}>
               <LogOut className="mr-2 h-4 w-4" />
               <span className="hidden sm:inline">Sign Out</span>

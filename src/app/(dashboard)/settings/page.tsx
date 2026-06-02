@@ -39,8 +39,8 @@ export default function SettingsPage() {
           <Card className="opacity-60">
             <CardHeader>
               <div className="flex items-center gap-3">
-                <div className="rounded-lg bg-gray-50 p-2">
-                  <Settings2 className="h-5 w-5 text-gray-600" />
+                <div className="rounded-lg bg-muted p-2">
+                  <Settings2 className="h-5 w-5 text-muted-foreground" />
                 </div>
                 <CardTitle className="text-base">System Settings</CardTitle>
               </div>

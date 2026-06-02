@@ -17,6 +17,7 @@ import { Badge } from "@/components/ui/badge";
 import { Menu, LogOut, KeyRound, Search } from "lucide-react";
 import { GlobalSearch } from "@/components/layout/global-search";
 import { NotificationBell } from "@/components/registration/notification-bell";
+import { ThemeToggle } from "@/components/theme-toggle";
 import { useLanguage } from "@/contexts/language-context";
 
 interface TopbarProps {
@@ -99,6 +100,7 @@ export function Topbar({ onMenuClick }: TopbarProps) {
           >
             {language === "en" ? "AR" : "EN"}
           </Button>
+          <ThemeToggle />
           {userRole === "admin" && <NotificationBell />}
         <DropdownMenu>
           <DropdownMenuTrigger className="flex items-center gap-2 rounded-lg px-2 py-1.5 hover:bg-muted outline-none">

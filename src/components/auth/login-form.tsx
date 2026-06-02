@@ -15,7 +15,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { AlertCircle, Loader2 } from "lucide-react";
+import { AlertCircle, Loader2, Eye, EyeOff } from "lucide-react";
 import Link from "next/link";
 
 /**
@@ -44,6 +44,7 @@ function landingRouteForRole(
 export function LoginForm() {
   const router = useRouter();
   const [error, setError] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const {
     register,
     handleSubmit,
@@ -110,12 +111,14 @@ export function LoginForm() {
       )}
 
       <div className="space-y-2">
-        <Label htmlFor="email">Email</Label>
+        <Label htmlFor="email" className="text-gray-300">
+          Email
+        </Label>
         <Input
           id="email"
           type="email"
           placeholder="Enter your email"
-          className="border-gray-700 bg-gray-800 text-white placeholder:text-gray-500 focus-visible:ring-langford-red"
+          className="h-11 border-white/15 bg-white/[0.04] text-white placeholder:text-gray-500 focus-visible:border-langford-red focus-visible:ring-langford-red/40"
           {...register("email")}
         />
         {errors.email && (
@@ -124,20 +127,40 @@ export function LoginForm() {
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="password">Password</Label>
-        <Input
-          id="password"
-          type="password"
-          placeholder="Enter your password"
-          className="border-gray-700 bg-gray-800 text-white placeholder:text-gray-500 focus-visible:ring-langford-red"
-          {...register("password")}
-        />
+        <Label htmlFor="password" className="text-gray-300">
+          Password
+        </Label>
+        <div className="relative">
+          <Input
+            id="password"
+            type={showPassword ? "text" : "password"}
+            placeholder="Enter your password"
+            className="h-11 border-white/15 bg-white/[0.04] pr-11 text-white placeholder:text-gray-500 focus-visible:border-langford-red focus-visible:ring-langford-red/40"
+            {...register("password")}
+          />
+          <button
+            type="button"
+            onClick={() => setShowPassword((v) => !v)}
+            aria-label={showPassword ? "Hide password" : "Show password"}
+            className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 transition-colors hover:text-gray-200"
+          >
+            {showPassword ? (
+              <EyeOff className="h-5 w-5" />
+            ) : (
+              <Eye className="h-5 w-5" />
+            )}
+          </button>
+        </div>
         {errors.password && (
           <p className="text-sm text-destructive">{errors.password.message}</p>
         )}
       </div>
 
-      <Button type="submit" className="w-full" disabled={isSubmitting}>
+      <Button
+        type="submit"
+        className="h-11 w-full bg-langford-red text-white shadow-lg shadow-langford-red/30 hover:bg-langford-red/90"
+        disabled={isSubmitting}
+      >
         {isSubmitting ? (
           <>
             <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -150,17 +173,17 @@ export function LoginForm() {
 
       <div className="relative">
         <div className="absolute inset-0 flex items-center">
-          <span className="w-full border-t" />
+          <span className="w-full border-t border-white/10" />
         </div>
         <div className="relative flex justify-center text-xs uppercase">
-          <span className="bg-gray-900 px-2 text-gray-400">Or</span>
+          <span className="bg-[#141414] px-2 text-gray-400">Or</span>
         </div>
       </div>
 
       <Button
         type="button"
         variant="outline"
-        className="w-full"
+        className="h-11 w-full border-white/15 bg-white/[0.03] text-gray-100 hover:bg-white/[0.08] hover:text-white"
         onClick={handleGoogleSignIn}
       >
         <svg className="mr-2 h-4 w-4" viewBox="0 0 24 24">
@@ -187,7 +210,7 @@ export function LoginForm() {
       <div className="text-center">
         <Link
           href="/forgot-password"
-          className="text-sm text-muted-foreground hover:text-primary"
+          className="text-sm text-gray-400 transition-colors hover:text-langford-red"
         >
           Forgot your password?
         </Link>

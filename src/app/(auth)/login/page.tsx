@@ -1,31 +1,66 @@
 import Image from "next/image";
 import { LoginForm } from "@/components/auth/login-form";
 
+/**
+ * "Dark Premium" sign-in screen — always rendered in the branded dark look
+ * (black canvas + red glow + glass card), independent of the app theme,
+ * since it's the first brand impression and runs before a theme is resolved.
+ */
 export default function LoginPage() {
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-gray-950 via-gray-900 to-gray-950 p-4">
-      <div className="w-full max-w-md">
-        <div className="mb-8 text-center">
-          <div className="mx-auto mb-5 flex items-center justify-center">
-            <Image
-              src="/logo.png"
-              alt="Langford International Institute"
-              width={220}
-              height={90}
-              className="brightness-0 invert"
-              priority
-            />
-          </div>
-          <p className="mt-1 text-sm text-gray-400">
+    <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-[#080808] p-4">
+      {/* Red radial glow */}
+      <div
+        aria-hidden
+        className="pointer-events-none absolute left-1/2 top-1/2 h-[700px] w-[700px] -translate-x-1/2 -translate-y-[60%] rounded-full blur-2xl"
+        style={{
+          background:
+            "radial-gradient(circle, rgba(200,36,46,0.30) 0%, rgba(200,36,46,0) 70%)",
+        }}
+      />
+      {/* Faint grid */}
+      <div
+        aria-hidden
+        className="pointer-events-none absolute inset-0"
+        style={{
+          backgroundImage:
+            "linear-gradient(rgba(255,255,255,0.025) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.025) 1px, transparent 1px)",
+          backgroundSize: "48px 48px",
+          maskImage:
+            "radial-gradient(circle at center, black, transparent 75%)",
+          WebkitMaskImage:
+            "radial-gradient(circle at center, black, transparent 75%)",
+        }}
+      />
+
+      <div className="relative z-10 w-full max-w-md">
+        <div className="mb-7 flex flex-col items-center">
+          <Image
+            src="/logo.png"
+            alt="Langford International Institute"
+            width={200}
+            height={74}
+            className="h-[60px] w-auto brightness-0 invert"
+            priority
+          />
+          <p className="mt-3 text-xs uppercase tracking-[0.15em] text-gray-400">
             Student Management System
           </p>
         </div>
-        <div className="rounded-xl border border-gray-800 bg-gray-900/50 p-6 shadow-2xl backdrop-blur">
-          <h2 className="mb-6 text-center text-lg font-semibold text-white">
-            Sign In
-          </h2>
+
+        <div className="rounded-3xl border border-white/10 bg-white/[0.04] p-8 shadow-[0_30px_80px_rgba(0,0,0,0.6)] backdrop-blur-2xl">
+          <h1 className="text-center text-2xl font-bold text-gray-50">
+            Sign in
+          </h1>
+          <p className="mb-7 mt-1.5 text-center text-sm text-gray-400">
+            Welcome back — please enter your details.
+          </p>
           <LoginForm />
         </div>
+
+        <p className="mt-6 text-center text-xs text-gray-500">
+          Langford International Institute · In Kuwait
+        </p>
       </div>
     </div>
   );
