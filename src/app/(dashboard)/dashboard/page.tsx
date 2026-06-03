@@ -53,8 +53,10 @@ export default function DashboardPage() {
   const [embassyPayments, setEmbassyPayments] = useState<EmbassyPayment[]>([]);
   const [selectedMonth, setSelectedMonth] = useState<string>(currentMonthValue);
 
-  // Month filter only applies to sales + accountant; admin sees all-time as before.
-  const useMonthFilter = role === "sales" || role === "accountant";
+  // Month filter applies to admin + accountant only. Sales sees all-time
+  // figures so collected payments always show, regardless of when the
+  // student was first added (avoids confusion for the sales team).
+  const useMonthFilter = role === "admin" || role === "accountant";
   const isCurrentMonth = selectedMonth === currentMonthValue();
 
   useEffect(() => {
