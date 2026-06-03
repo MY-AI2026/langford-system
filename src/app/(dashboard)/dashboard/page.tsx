@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useAuth } from "@/contexts/auth-context";
 import { PageHeader } from "@/components/layout/page-header";
 import { StatsCards } from "@/components/dashboard/stats-cards";
@@ -51,13 +51,24 @@ export default function DashboardPage() {
   const [courses, setCourses] = useState<Course[]>([]);
   const [allCourses, setAllCourses] = useState<Course[]>([]);
   const [embassyPayments, setEmbassyPayments] = useState<EmbassyPayment[]>([]);
-  const [selectedMonth, setSelectedMonth] = useState<string>(currentMonthValue);
+  // "all" = all-time (no month scoping).
+  const [selectedMonth, setSelectedMonth] = useState<string>("all");
+  const didInitMonth = useRef(false);
 
-  // Month filter applies to admin + accountant only. Sales sees all-time
-  // figures so collected payments always show, regardless of when the
-  // student was first added (avoids confusion for the sales team).
+  // The month picker + scoped figures are available to admin and accountant
+  // only. Sales always sees all-time totals so every collected payment shows
+  // regardless of when the student was added (avoids sales-team confusion).
   const useMonthFilter = role === "admin" || role === "accountant";
+  const isAllTime = selectedMonth === "all";
   const isCurrentMonth = selectedMonth === currentMonthValue();
+
+  // Per-role default, set once role resolves: accountant → current month
+  // (monthly close); admin → all-time (full picture by default, can pick a month).
+  useEffect(() => {
+    if (!role || didInitMonth.current) return;
+    didInitMonth.current = true;
+    if (role === "accountant") setSelectedMonth(currentMonthValue());
+  }, [role]);
 
   useEffect(() => {
     if (!firebaseUser || !role) return;
@@ -112,7 +123,7 @@ export default function DashboardPage() {
 
   // ── Month-filtered students for sales/accountant scoped metrics ────────
   const monthStudents = useMemo<Student[]>(() => {
-    if (!useMonthFilter) return students;
+    if (!useMonthFilter || selectedMonth === "all") return students;
     const [year, month] = selectedMonth.split("-").map(Number);
     if (!year || !month) return students;
     const monthStart = new Date(year, month - 1, 1);
@@ -129,7 +140,7 @@ export default function DashboardPage() {
   }, [students, selectedMonth, useMonthFilter]);
 
   const monthEmbassyPayments = useMemo<EmbassyPayment[]>(() => {
-    if (!useMonthFilter) return embassyPayments;
+    if (!useMonthFilter || selectedMonth === "all") return embassyPayments;
     const [year, month] = selectedMonth.split("-").map(Number);
     if (!year || !month) return embassyPayments;
     const monthStart = new Date(year, month - 1, 1);
@@ -225,7 +236,7 @@ export default function DashboardPage() {
   // Monthly revenue progress: when a month filter is active, the month's
   // totalRevenue already represents the month-scoped figure; for admin
   // (no filter) we keep the legacy current-calendar-month calculation.
-  const monthlyRevenue = useMonthFilter
+  const monthlyRevenue = useMonthFilter && !isAllTime
     ? totalRevenue
     : (() => {
         const now = new Date();
@@ -428,25 +439,42 @@ export default function DashboardPage() {
             <Input
               id="dashboard-month"
               type="month"
-              value={selectedMonth}
+              value={isAllTime ? "" : selectedMonth}
               max={currentMonthValue()}
-              onChange={(e) => setSelectedMonth(e.target.value || currentMonthValue())}
+              onChange={(e) =>
+                setSelectedMonth(e.target.value ? e.target.value : "all")
+              }
               className="w-auto"
             />
-            <Badge variant={isCurrentMonth ? "secondary" : "default"}>
-              {isCurrentMonth ? "Current month" : formatMonthLabel(selectedMonth)}
+            <Badge variant={isAllTime ? "default" : "secondary"}>
+              {isAllTime
+                ? "All time (full)"
+                : isCurrentMonth
+                  ? "Current month"
+                  : formatMonthLabel(selectedMonth)}
             </Badge>
-            {!isCurrentMonth && (
+            {!isAllTime && (
+              <Button
+                size="sm"
+                variant="ghost"
+                onClick={() => setSelectedMonth("all")}
+              >
+                Show all (full amount)
+              </Button>
+            )}
+            {isAllTime && (
               <Button
                 size="sm"
                 variant="ghost"
                 onClick={() => setSelectedMonth(currentMonthValue())}
               >
-                Reset to current month
+                View current month
               </Button>
             )}
             <p className="text-xs text-muted-foreground w-full sm:w-auto sm:ml-auto">
-              Outstanding balances are always shown across all months.
+              {isAllTime
+                ? "Showing all-time totals. Pick a month to view it on its own."
+                : "Outstanding balances are always shown across all months."}
             </p>
           </CardContent>
         </Card>
