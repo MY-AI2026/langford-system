@@ -36,6 +36,61 @@ export function subscribeToPayments(
   );
 }
 
+/**
+ * Total amount collected by a specific user (`createdBy`) within a date
+ * range, across ALL students — a collection-group query over every
+ * `payments` subcollection.
+ *
+ * Powers each sales rep's monthly "collected this month" counter: it sums
+ * payments by the date they were actually recorded (`paymentDate`), so a
+ * payment taken this month for a student enrolled months ago still counts
+ * this month, and the figure naturally resets when the month rolls over.
+ *
+ * `end` is exclusive. Returns 0 on any error (e.g. a missing index) so the
+ * dashboard degrades gracefully rather than crashing.
+ */
+export async function getCollectedTotalByUser(
+  uid: string,
+  start: Date,
+  end: Date
+): Promise<number> {
+  if (!uid) return 0;
+  const structuredQuery = {
+    from: [{ collectionId: "payments", allDescendants: true }],
+    where: {
+      compositeFilter: {
+        op: "AND",
+        filters: [
+          {
+            fieldFilter: {
+              field: { fieldPath: "createdBy" },
+              op: "EQUAL",
+              value: { stringValue: uid },
+            },
+          },
+          {
+            fieldFilter: {
+              field: { fieldPath: "paymentDate" },
+              op: "GREATER_THAN_OR_EQUAL",
+              value: { timestampValue: start.toISOString() },
+            },
+          },
+          {
+            fieldFilter: {
+              field: { fieldPath: "paymentDate" },
+              op: "LESS_THAN",
+              value: { timestampValue: end.toISOString() },
+            },
+          },
+        ],
+      },
+    },
+  };
+
+  const payments = (await runQuery(structuredQuery)) as Payment[];
+  return payments.reduce((sum, p) => sum + (p.amount ?? 0), 0);
+}
+
 export async function addPayment(
   studentId: string,
   data: {

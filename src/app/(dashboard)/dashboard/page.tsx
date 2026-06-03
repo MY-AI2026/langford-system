@@ -20,6 +20,7 @@ import {
 import { getSalesUsers } from "@/lib/services/user-service";
 import { subscribeToCourses } from "@/lib/services/course-service";
 import { subscribeToEmbassyPayments } from "@/lib/services/embassy-payment-service";
+import { getCollectedTotalByUser } from "@/lib/services/payment-service";
 import { Student, ActivityLogEntry, User, Course, EmbassyPayment } from "@/lib/types";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -55,20 +56,48 @@ export default function DashboardPage() {
   const [selectedMonth, setSelectedMonth] = useState<string>("all");
   const didInitMonth = useRef(false);
 
-  // The month picker + scoped figures are available to admin and accountant
-  // only. Sales always sees all-time totals so every collected payment shows
-  // regardless of when the student was added (avoids sales-team confusion).
-  const useMonthFilter = role === "admin" || role === "accountant";
+  // The month picker + scoped figures apply to admin, accountant, and sales.
+  const useMonthFilter =
+    role === "admin" || role === "accountant" || role === "sales";
   const isAllTime = selectedMonth === "all";
   const isCurrentMonth = selectedMonth === currentMonthValue();
 
-  // Per-role default, set once role resolves: accountant → current month
-  // (monthly close); admin → all-time (full picture by default, can pick a month).
+  // Per-role default, set once role resolves: sales + accountant → current
+  // month (their dashboard is month-by-month and resets on the 1st); admin →
+  // all-time (full picture by default, can still pick a month).
   useEffect(() => {
     if (!role || didInitMonth.current) return;
     didInitMonth.current = true;
-    if (role === "accountant") setSelectedMonth(currentMonthValue());
+    if (role === "sales" || role === "accountant") {
+      setSelectedMonth(currentMonthValue());
+    }
   }, [role]);
+
+  // Sales: amount this rep actually COLLECTED in the selected month, summed by
+  // payment date (not by when the student was added). This is the figure that
+  // resets each month. Fetched via a collection-group query over payments.
+  const [collectedThisMonth, setCollectedThisMonth] = useState<number>(0);
+  useEffect(() => {
+    if (role !== "sales" || !firebaseUser || isAllTime) {
+      setCollectedThisMonth(0);
+      return;
+    }
+    const [year, month] = selectedMonth.split("-").map(Number);
+    if (!year || !month) return;
+    const start = new Date(year, month - 1, 1);
+    const end = new Date(year, month, 1);
+    let cancelled = false;
+    getCollectedTotalByUser(firebaseUser.uid, start, end)
+      .then((total) => {
+        if (!cancelled) setCollectedThisMonth(total);
+      })
+      .catch(() => {
+        if (!cancelled) setCollectedThisMonth(0);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [role, firebaseUser, selectedMonth, isAllTime]);
 
   useEffect(() => {
     if (!firebaseUser || !role) return;
@@ -217,10 +246,15 @@ export default function DashboardPage() {
     (sum, p) => sum + (p.amount ?? 0),
     0
   );
-  const totalRevenue = monthStudents.reduce(
-    (sum, s) => sum + (s.paymentSummary?.amountPaid ?? 0),
-    0
-  );
+  // Sales see what they actually collected this month (by payment date, via
+  // collectedThisMonth). Admin/accountant keep the student-creation-scoped sum.
+  const totalRevenue =
+    role === "sales" && !isAllTime
+      ? collectedThisMonth
+      : monthStudents.reduce(
+          (sum, s) => sum + (s.paymentSummary?.amountPaid ?? 0),
+          0
+        );
   // Pending balance is intentionally NOT month-filtered — sales must still see
   // outstanding amounts from prior months so they can collect them.
   const pendingPayments = students.reduce(
