@@ -46,7 +46,7 @@ This version has breaking changes — APIs, conventions, and file structure may 
 
 1. **ممنوع** تغيير كود شغّال بدون إذن صريح من أحمد
 2. **ممنوع** `rm -rf` أو `git reset --hard` بدون تأكيد
-3. **ممنوع** push للـ main مباشرة — دايماً feature branch + PR
+3. **الشغل مباشرة على `main`** (trunk-based) — أحمد طلب إن أي تعديل يتطبّق على طول. اعمل commit على `main` وارفعه، و Vercel بيـ deploy تلقائياً. **ممنوع** الرفع لـ production من فرع جانبي (بيمسح باقي المميزات). مصدر واحد للحقيقة = `main`.
 4. **ممنوع** passwords/API keys في أي `.md`
 5. **ممنوع** تعديل `~/Desktop/fahlawy_code/` مباشرة — محمي تماماً
 6. **ممنوع** خلط المشاريع — كل شغل في مجلده
@@ -57,16 +57,16 @@ This version has breaking changes — APIs, conventions, and file structure may 
 # 🔄 Git workflow
 
 ```bash
-git status
-git stash        # لو في شغل غير محفوظ
-git pull
+git checkout main
+git pull origin main          # دايماً ابدأ من أحدث main
 # بعد التعديل:
 git diff
-git add <ملفات محددة>   # مش git add -A
+git add <ملفات محددة>          # مش git add -A
 git commit -m "رسالة واضحة بالمصري أو الإنجليزي"
-git push origin feature/<اسم-الفرع>
-# ثم PR
+git push origin main          # Vercel بيـ deploy تلقائياً من main
 ```
+
+> **مهم:** الـ deploy لـ production يكون **من `main` بس**. متعملش `vercel --prod` من فرع جانبي — ده بيخلّي production يختلف عن main وبيمسح المميزات اللي اترفعت قبل كده.
 
 ---
 
