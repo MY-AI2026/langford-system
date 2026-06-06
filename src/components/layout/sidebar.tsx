@@ -84,6 +84,7 @@ export function Sidebar({ open, onClose }: SidebarProps) {
     { href: "/students", label: t("students"), icon: GraduationCap },
     { href: "/settings/courses", label: t("courses"), icon: BookOpen },
     { href: "/schedule", label: t("schedule"), icon: CalendarDays },
+    { href: "/attendance", label: t("attendance"), icon: ClipboardCheck },
     { href: "/summer-club", label: "النادي الصيفي", icon: Sun },
     { href: "/reports/summer-club", label: "تقرير النادي الصيفي", icon: Sun },
   ];

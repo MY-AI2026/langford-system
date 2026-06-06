@@ -48,6 +48,14 @@
   // ]
   "indexes": [
     {
+      "collectionGroup": "payments",
+      "queryScope": "COLLECTION_GROUP",
+      "fields": [
+        { "fieldPath": "createdBy", "order": "ASCENDING" },
+        { "fieldPath": "paymentDate", "order": "ASCENDING" }
+      ]
+    },
+    {
       "collectionGroup": "students",
       "queryScope": "COLLECTION",
       "fields": [

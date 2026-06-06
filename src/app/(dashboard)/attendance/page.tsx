@@ -15,10 +15,20 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
-import { ArrowLeft, Check, X, Clock, Save } from "lucide-react";
+import { ArrowLeft, Check, X, Clock, Save, Printer } from "lucide-react";
 import { toast } from "sonner";
 
 type AttendanceStatus = "present" | "absent" | "late";
+
+/** Escape user-provided text before injecting it into the print window HTML. */
+function escapeHtml(s: string): string {
+  return String(s)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
 
 interface StudentAttendanceRecord {
   studentId: string;
@@ -247,6 +257,115 @@ function AttendanceContent() {
     }
   }
 
+  function handlePrint() {
+    if (!selectedCourse || records.length === 0) {
+      toast.error("Nothing to print — select a course with students first.");
+      return;
+    }
+
+    const dateLabel = attendanceDate
+      ? new Date(attendanceDate).toLocaleDateString("en-GB", {
+          weekday: "long",
+          day: "2-digit",
+          month: "long",
+          year: "numeric",
+        })
+      : "—";
+
+    const presentCount = records.filter((r) => r.status === "present").length;
+    const absentCount = records.filter((r) => r.status === "absent").length;
+    const lateCount = records.filter((r) => r.status === "late").length;
+
+    const mark = (on: boolean) =>
+      on
+        ? '<span style="font-weight:700;color:#000">✓</span>'
+        : "";
+
+    const rows = records
+      .map(
+        (r, i) => `
+        <tr>
+          <td class="num">${i + 1}</td>
+          <td class="name">${escapeHtml(r.studentName)}</td>
+          <td class="mark">${mark(r.status === "present")}</td>
+          <td class="mark">${mark(r.status === "absent")}</td>
+          <td class="mark">${mark(r.status === "late")}</td>
+          <td class="sign"></td>
+        </tr>`
+      )
+      .join("");
+
+    const origin =
+      typeof window !== "undefined" ? window.location.origin : "";
+
+    const html = `<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8"><title>Attendance — ${escapeHtml(
+      selectedCourse.name
+    )}</title>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:-apple-system,'Segoe UI',Arial,sans-serif;color:#111;padding:32px 36px}
+  .head{display:flex;align-items:center;justify-content:space-between;border-bottom:3px solid #C8242E;padding-bottom:14px;margin-bottom:18px}
+  .head img{height:48px}
+  .head .t{text-align:right}
+  .head .t h1{font-size:20px;font-weight:800}
+  .head .t p{font-size:12px;color:#666;margin-top:2px}
+  .meta{display:flex;gap:28px;flex-wrap:wrap;margin-bottom:16px;font-size:13px}
+  .meta b{color:#000}
+  table{width:100%;border-collapse:collapse;font-size:13px}
+  th,td{border:1px solid #cfcfcf;padding:8px 10px}
+  th{background:#111;color:#fff;font-size:12px;text-transform:uppercase;letter-spacing:.03em}
+  td.num{width:36px;text-align:center;color:#666}
+  td.name{font-weight:600}
+  td.mark{width:70px;text-align:center;font-size:15px}
+  td.sign{width:150px}
+  tr:nth-child(even) td{background:#fafafa}
+  .totals{display:flex;gap:20px;margin-top:16px;font-size:13px}
+  .totals .box{border:1px solid #ddd;border-radius:6px;padding:8px 14px}
+  .totals .box b{display:block;font-size:18px}
+  .foot{display:flex;justify-content:space-between;margin-top:48px;font-size:13px;color:#333}
+  .foot .line{border-top:1px solid #999;width:220px;padding-top:6px;text-align:center}
+  @media print{body{padding:0}}
+</style></head>
+<body>
+  <div class="head">
+    <img src="${origin}/logo.png" alt="Langford">
+    <div class="t"><h1>Attendance Sheet</h1><p>Langford International Institute · Kuwait</p></div>
+  </div>
+  <div class="meta">
+    <div><b>Course:</b> ${escapeHtml(selectedCourse.name)}</div>
+    <div><b>Date:</b> ${dateLabel}</div>
+    <div><b>Students:</b> ${records.length}</div>
+  </div>
+  <table>
+    <thead><tr>
+      <th>#</th><th style="text-align:left">Student Name</th>
+      <th>Present</th><th>Absent</th><th>Late</th><th>Signature</th>
+    </tr></thead>
+    <tbody>${rows}</tbody>
+  </table>
+  <div class="totals">
+    <div class="box">Present <b>${presentCount}</b></div>
+    <div class="box">Absent <b>${absentCount}</b></div>
+    <div class="box">Late <b>${lateCount}</b></div>
+  </div>
+  <div class="foot">
+    <div class="line">Instructor / Coordinator</div>
+    <div class="line">Date &amp; Signature</div>
+  </div>
+  <script>window.onload=function(){window.print();}</script>
+</body></html>`;
+
+    const win = window.open("", "_blank", "width=900,height=700");
+    if (!win) {
+      toast.error("Allow pop-ups to print the attendance sheet.");
+      return;
+    }
+    win.document.open();
+    win.document.write(html);
+    win.document.close();
+  }
+
   if (loading) {
     return (
       <div className="space-y-2">
@@ -323,10 +442,18 @@ function AttendanceContent() {
             onChange={(e) => setAttendanceDate(e.target.value)}
           />
         </div>
-        <div className="pt-5">
+        <div className="flex gap-2 pt-5">
           <Button onClick={handleSaveAttendance} disabled={saving || records.length === 0}>
             <Save className="mr-2 h-4 w-4" />
             {saving ? "Saving..." : "Save Attendance"}
+          </Button>
+          <Button
+            variant="outline"
+            onClick={handlePrint}
+            disabled={records.length === 0}
+          >
+            <Printer className="mr-2 h-4 w-4" />
+            Print
           </Button>
         </div>
       </div>
@@ -390,7 +517,7 @@ function AttendanceContent() {
 
 export default function AttendancePage() {
   return (
-    <RoleGate allowedRoles={["admin", "instructor"]}>
+    <RoleGate allowedRoles={["admin", "instructor", "coordinator"]}>
       <div className="space-y-6">
         <PageHeader
           title="Take Attendance"
