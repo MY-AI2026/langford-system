@@ -6,6 +6,7 @@ import {
   SummerClubPayment,
   SummerClubStudent,
   PaymentMethod,
+  Payment,
 } from "@/lib/types";
 import {
   subscribeToSummerClubPayments,
@@ -34,7 +35,7 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Plus, Trash2, Printer } from "lucide-react";
 import { formatDate, formatCurrency } from "@/lib/utils/format";
-import { printReceipt } from "@/lib/utils/receipt";
+import { PaymentReceiptDialog } from "@/components/payments/payment-receipt-dialog";
 import { toast } from "sonner";
 
 interface Props {
@@ -55,6 +56,30 @@ export function SummerClubPayments({ student, canEdit, onChanged }: Props) {
     new Date().toISOString().slice(0, 10)
   );
   const [notes, setNotes] = useState("");
+
+  // Receipt — reuses the same branded dialog as the main payments module.
+  const [receiptPayment, setReceiptPayment] = useState<Payment | null>(null);
+  const [receiptOpen, setReceiptOpen] = useState(false);
+
+  function openReceipt(p: SummerClubPayment) {
+    // Map a SummerClubPayment onto the shared Payment shape so the receipt
+    // looks identical to the main system (course shown as "النادي الصيفي").
+    setReceiptPayment({
+      id: p.id,
+      amount: p.amount,
+      paymentDate: p.paymentDate,
+      method: p.method,
+      receiptNumber: p.receiptNumber,
+      notes: p.notes,
+      isInstallment: false,
+      installmentNumber: null,
+      courseName: "النادي الصيفي",
+      category: "main",
+      createdBy: p.createdBy,
+      createdAt: p.createdAt,
+    });
+    setReceiptOpen(true);
+  }
 
   useEffect(() => {
     const unsub = subscribeToSummerClubPayments(student.id, setPayments);
@@ -216,24 +241,8 @@ export function SummerClubPayments({ student, canEdit, onChanged }: Props) {
                         <Button
                           variant="ghost"
                           size="icon"
-                          title="طباعة الإيصال"
-                          onClick={() =>
-                            printReceipt({
-                              payment: {
-                                receiptNumber: p.receiptNumber,
-                                amount: p.amount,
-                                paymentDate: p.paymentDate as unknown as Date,
-                                method: p.method,
-                                notes: p.notes,
-                                courseName: "النادي الصيفي",
-                              },
-                              student: {
-                                fullName: student.fullName,
-                                phone: student.phone,
-                              },
-                              cashierName: userData?.displayName,
-                            })
-                          }
+                          title="الإيصال"
+                          onClick={() => openReceipt(p)}
                         >
                           <Printer className="h-4 w-4" />
                         </Button>
@@ -252,6 +261,14 @@ export function SummerClubPayments({ student, canEdit, onChanged }: Props) {
             </TableBody>
           </Table>
         )}
+
+        <PaymentReceiptDialog
+          open={receiptOpen}
+          onOpenChange={setReceiptOpen}
+          payment={receiptPayment}
+          studentName={student.fullName}
+          studentPhone={student.phone}
+        />
       </CardContent>
     </Card>
   );
