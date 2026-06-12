@@ -8,6 +8,12 @@ service cloud.firestore {
       return request.auth != null;
     }
 
+    // ── Helper: is the caller an admin? (server-side role lookup) ────────────
+    function isAdmin() {
+      return isSignedIn()
+        && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+    }
+
     // ── Helper: user role check ──────────────────────────────────────────────
     // Note: Firestore rules don't have direct access to user roles from the users collection
     // All authenticated users can read/write. Application-level filtering handles role-based access.
@@ -16,9 +22,12 @@ service cloud.firestore {
     // Data isolation is enforced at the APPLICATION level (query filters).
     // This ensures onSnapshot / list queries always succeed for signed-in users.
 
+    // Users: readable by any signed-in user (login/role lookups), but only an
+    // admin may create/modify/delete accounts — closes the self-escalation
+    // hole where a user could set their own role to "admin".
     match /users/{userId} {
       allow read: if isSignedIn();
-      allow write: if isSignedIn();
+      allow create, update, delete: if isAdmin();
     }
 
     match /students/{studentId} {
@@ -58,16 +67,22 @@ service cloud.firestore {
       allow read: if isSignedIn();
     }
 
+    // Login audit trail — append-only; only admins may read it.
     match /loginLogs/{logId} {
-      allow read, write: if isSignedIn();
+      allow read: if isAdmin();
+      allow create: if isSignedIn();
+      allow update, delete: if false;
     }
 
     match /courses/{courseId} {
       allow read, write: if isSignedIn();
     }
 
+    // System audit trail — append-only (can't be edited/forged); admin-read.
     match /auditLog/{logId} {
-      allow read, write: if isSignedIn();
+      allow read: if isAdmin();
+      allow create: if isSignedIn();
+      allow update, delete: if false;
     }
 
     match /schedules/{scheduleId} {
