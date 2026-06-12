@@ -5,7 +5,7 @@ import { useSearchParams } from "next/navigation";
 import { useAuth } from "@/contexts/auth-context";
 import { subscribeToCourses } from "@/lib/services/course-service";
 import { subscribeToEnrollments } from "@/lib/services/enrollment-service";
-import { addSession } from "@/lib/services/attendance-service";
+import { recordAttendance } from "@/lib/services/attendance-service";
 import { RoleGate } from "@/components/auth/role-gate";
 import { PageHeader } from "@/components/layout/page-header";
 import { Course, Enrollment } from "@/lib/types";
@@ -242,14 +242,24 @@ function AttendanceContent() {
     setSaving(true);
     try {
       const date = new Date(attendanceDate);
-      for (const record of records) {
-        await addSession(
-          record.studentId,
-          date,
-          record.status === "present" || record.status === "late"
+      const results = await Promise.allSettled(
+        records.map((record) =>
+          recordAttendance(
+            record.studentId,
+            date,
+            record.status,
+            selectedCourse?.id
+          )
+        )
+      );
+      const failed = results.filter((r) => r.status === "rejected").length;
+      if (failed === 0) {
+        toast.success("Attendance saved for all students");
+      } else {
+        toast.warning(
+          `Saved ${records.length - failed} of ${records.length}. ${failed} failed — try again.`
         );
       }
-      toast.success("Attendance saved for all students");
     } catch {
       toast.error("Failed to save attendance");
     } finally {

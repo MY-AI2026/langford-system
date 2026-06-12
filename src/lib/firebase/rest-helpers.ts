@@ -319,34 +319,52 @@ export async function fetchDoc(path: string): Promise<any | null> {
   return { id: json.name.split("/").pop(), ...parseFields(json.fields) };
 }
 
-// Create a polling subscription (replaces onSnapshot)
+// Create a polling subscription (replaces onSnapshot).
+// - Keeps last-good data on a transient error (no empty-flash).
+// - Pauses while the tab is hidden and refreshes the moment it's visible
+//   again — cuts Firestore read cost dramatically for backgrounded tabs.
 export function createSubscription<T>(
   fetchFn: () => Promise<T[]>,
   callback: (data: T[]) => void,
-  intervalMs: number = 10000
+  intervalMs: number = 15000
 ): () => void {
   let active = true;
+  let delivered = false; // have we ever pushed real data to the callback?
   let timer: ReturnType<typeof setInterval> | null = null;
 
   async function poll() {
     if (!active) return;
+    // Don't burn reads while the tab is in the background.
+    if (typeof document !== "undefined" && document.hidden) return;
     try {
       const data = await fetchFn();
-      if (active) callback(data);
+      if (active) {
+        delivered = true;
+        callback(data);
+      }
     } catch (e) {
       console.error("[REST subscription] poll error:", e);
-      // Return empty array on error to prevent crashes
-      if (active) callback([] as T[]);
+      // Keep the last good data; only emit [] on a first-load failure so
+      // loading skeletons can resolve instead of spinning forever.
+      if (active && !delivered) callback([] as T[]);
     }
   }
 
-  // Initial fetch
+  function onVisibility() {
+    if (typeof document !== "undefined" && !document.hidden) poll();
+  }
+
   poll();
-  // Poll every intervalMs
   timer = setInterval(poll, intervalMs);
+  if (typeof document !== "undefined") {
+    document.addEventListener("visibilitychange", onVisibility);
+  }
 
   return () => {
     active = false;
     if (timer) clearInterval(timer);
+    if (typeof document !== "undefined") {
+      document.removeEventListener("visibilitychange", onVisibility);
+    }
   };
 }

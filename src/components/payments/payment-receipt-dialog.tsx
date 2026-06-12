@@ -32,6 +32,16 @@ export function PaymentReceiptDialog({
 }: PaymentReceiptDialogProps) {
   if (!payment) return null;
 
+  // Escape every user-controlled value before injecting into the print window
+  // HTML — student name/notes/etc. are attacker-controllable (stored XSS).
+  const esc = (v: unknown) =>
+    String(v ?? "")
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;")
+      .replace(/'/g, "&#39;");
+
   function handlePrint() {
     const printWindow = window.open("", "_blank", "width=460,height=720");
     if (!printWindow) return;
@@ -43,7 +53,7 @@ export function PaymentReceiptDialog({
 <html>
 <head>
   <meta charset="utf-8" />
-  <title>Receipt ${payment!.receiptNumber}</title>
+  <title>Receipt ${esc(payment!.receiptNumber)}</title>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body {
@@ -112,7 +122,7 @@ export function PaymentReceiptDialog({
 
   <div class="row">
     <span class="label">Receipt No:</span>
-    <span class="value">${payment!.receiptNumber}</span>
+    <span class="value">${esc(payment!.receiptNumber)}</span>
   </div>
   <div class="row">
     <span class="label">Date:</span>
@@ -123,30 +133,30 @@ export function PaymentReceiptDialog({
 
   <div class="row">
     <span class="label">Student Name:</span>
-    <span class="value">${studentName}</span>
+    <span class="value">${esc(studentName)}</span>
   </div>
   <div class="row">
     <span class="label">Phone:</span>
-    <span class="value">${studentPhone}</span>
+    <span class="value">${esc(studentPhone)}</span>
   </div>
   ${studentCivilId
-    ? `<div class="row"><span class="label">Civil ID:</span><span class="value">${studentCivilId}</span></div>`
+    ? `<div class="row"><span class="label">Civil ID:</span><span class="value">${esc(studentCivilId)}</span></div>`
     : ""}
 
   <div class="divider"></div>
 
   <div class="row">
     <span class="label">Payment Method:</span>
-    <span class="value">${PAYMENT_METHOD_LABELS[payment!.method] ?? payment!.method}</span>
+    <span class="value">${esc(PAYMENT_METHOD_LABELS[payment!.method] ?? payment!.method)}</span>
   </div>
   ${payment!.courseName
-    ? `<div class="row"><span class="label">Course:</span><span class="value">${payment!.courseName}</span></div>`
+    ? `<div class="row"><span class="label">Course:</span><span class="value">${esc(payment!.courseName)}</span></div>`
     : ""}
   ${payment!.isInstallment && payment!.installmentNumber
     ? `<div class="row"><span class="label">Installment #:</span><span class="value">${payment!.installmentNumber}</span></div>`
     : ""}
   ${payment!.notes
-    ? `<div class="row"><span class="label">Notes:</span><span class="value">${payment!.notes}</span></div>`
+    ? `<div class="row"><span class="label">Notes:</span><span class="value">${esc(payment!.notes)}</span></div>`
     : ""}
 
   <div class="total-box">
