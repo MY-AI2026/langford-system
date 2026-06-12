@@ -17,6 +17,7 @@
 import {
   RegStudent,
   RegStudentStatus,
+  RegCommissionStatus,
   RegCourse,
   UserRole,
 } from "@/lib/types";
@@ -493,6 +494,94 @@ export function commissionFor(student: RegStudent): number {
   if (typeof student.commissionAmount === "number") return student.commissionAmount;
   const rate = student.commissionRate ?? ACCEPTIX_COMMISSION_RATE;
   return computeCommission(student.courseFee ?? 0, rate);
+}
+
+// ─── Commission disbursement (payout tracking) ───────────────────────────────
+//
+// The commission AMOUNT is snapshotted and never changes. Disbursement only
+// records whether that amount has been paid out to the agent. Admin-only — the
+// Firestore rules already gate `regStudents` updates to admins, and the new
+// fields aren't part of the frozen identity set, so no rules change is needed.
+
+/** Resolve a student's payout state, treating legacy rows (no field) as pending. */
+export function commissionStatusOf(student: RegStudent): RegCommissionStatus {
+  return student.commissionStatus === "disbursed" ? "disbursed" : "pending";
+}
+
+/** Mark a single student's commission as paid out to the agent. */
+export async function markCommissionDisbursed(
+  studentId: string,
+  input: { reference?: string },
+  actor: { uid: string; displayName: string; role: UserRole }
+): Promise<void> {
+  const now = new Date();
+  await restUpdate(`${COLLECTION}/${studentId}`, {
+    commissionStatus: "disbursed" satisfies RegCommissionStatus,
+    disbursedAt: now,
+    disbursedBy: actor.uid,
+    disbursedByName: actor.displayName,
+    disbursementRef:
+      input.reference && input.reference.trim().length > 0
+        ? input.reference.trim()
+        : null,
+    updatedAt: now,
+  });
+
+  await writeRegAuditLog({
+    action: "reg.student.disburse",
+    entityType: "regStudent",
+    entityId: studentId,
+    userId: actor.uid,
+    userName: actor.displayName,
+    userRole: actor.role,
+    changes: {
+      commissionStatus: { from: "pending", to: "disbursed" },
+      disbursementRef: { from: null, to: input.reference?.trim() ?? null },
+    },
+  });
+}
+
+/** Revert a disbursement back to pending (e.g. a payout was logged by mistake). */
+export async function unmarkCommissionDisbursed(
+  studentId: string,
+  actor: { uid: string; displayName: string; role: UserRole }
+): Promise<void> {
+  const now = new Date();
+  await restUpdate(`${COLLECTION}/${studentId}`, {
+    commissionStatus: "pending" satisfies RegCommissionStatus,
+    disbursedAt: null,
+    disbursedBy: null,
+    disbursedByName: null,
+    disbursementRef: null,
+    updatedAt: now,
+  });
+
+  await writeRegAuditLog({
+    action: "reg.student.undisburse",
+    entityType: "regStudent",
+    entityId: studentId,
+    userId: actor.uid,
+    userName: actor.displayName,
+    userRole: actor.role,
+    changes: { commissionStatus: { from: "disbursed", to: "pending" } },
+  });
+}
+
+/**
+ * Bulk-mark several students disbursed in one action (e.g. "settle everything
+ * shown for this agent this month"). Runs writes in parallel and reports how
+ * many succeeded so the UI can surface partial failures honestly.
+ */
+export async function markManyCommissionsDisbursed(
+  studentIds: string[],
+  input: { reference?: string },
+  actor: { uid: string; displayName: string; role: UserRole }
+): Promise<{ ok: number; failed: number }> {
+  const results = await Promise.allSettled(
+    studentIds.map((id) => markCommissionDisbursed(id, input, actor))
+  );
+  const ok = results.filter((r) => r.status === "fulfilled").length;
+  return { ok, failed: results.length - ok };
 }
 
 /** Re-exported here to keep registration-related course lookups close. */

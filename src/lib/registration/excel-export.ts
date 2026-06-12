@@ -13,6 +13,7 @@
 
 import * as XLSX from "xlsx";
 import { ReportResult } from "@/lib/services/reg-report-service";
+import { commissionStatusOf } from "@/lib/services/reg-student-service";
 import { REG_STUDENT_STATUS_LABELS } from "@/lib/registration/constants";
 
 function sheetFromAOA(data: (string | number)[][], colWidths: number[]) {
@@ -58,6 +59,8 @@ export function exportReportToExcel(report: ReportResult, filenameBase = "accept
     "Status",
     "Fee",
     "Commission",
+    "Payout",
+    "Disbursement Ref",
     "Currency",
     "Registration Date",
   ];
@@ -70,6 +73,8 @@ export function exportReportToExcel(report: ReportResult, filenameBase = "accept
     REG_STUDENT_STATUS_LABELS[s.status]?.en ?? s.status,
     s.courseFee ?? 0,
     s.commissionAmount ?? 0,
+    commissionStatusOf(s) === "disbursed" ? "Disbursed" : "Pending",
+    s.disbursementRef ?? "",
     s.currency ?? "",
     formatDate(s.createdAt),
   ]);
@@ -83,27 +88,48 @@ export function exportReportToExcel(report: ReportResult, filenameBase = "accept
     "",
     report.totals.totalFees,
     report.totals.totalCommission,
+    "",
+    "",
     report.totals.currency,
     "",
   ];
   const ws1 = sheetFromAOA(
     [studentHeader, ...studentRows, [], studentFooter],
-    [22, 14, 24, 24, 18, 12, 12, 12, 8, 14]
+    [22, 14, 24, 24, 18, 12, 12, 12, 12, 18, 8, 14]
   );
   XLSX.utils.book_append_sheet(wb, ws1, "Student Details");
 
   // ── Sheet 2: Agent breakdown ────────────────────────────────────────────
-  const agentHeader = ["Agent", "Students", "Total Fees", "Total Commission", "Currency"];
+  const agentHeader = [
+    "Agent",
+    "Students",
+    "Total Fees",
+    "Total Commission",
+    "Disbursed",
+    "Outstanding",
+    "Currency",
+  ];
   const agentRows = report.byAgent.map((a) => [
     a.agentName,
     a.studentCount,
     a.totalFees,
     a.totalCommission,
+    a.disbursedCommission,
+    a.outstandingCommission,
     a.currency,
   ]);
+  const agentFooter = [
+    "Total",
+    report.totals.studentCount,
+    report.totals.totalFees,
+    report.totals.totalCommission,
+    report.totals.disbursedCommission,
+    report.totals.outstandingCommission,
+    report.totals.currency,
+  ];
   const ws2 = sheetFromAOA(
-    [agentHeader, ...agentRows],
-    [22, 12, 16, 16, 8]
+    [agentHeader, ...agentRows, [], agentFooter],
+    [22, 12, 16, 16, 14, 14, 8]
   );
   XLSX.utils.book_append_sheet(wb, ws2, "Agent Summary");
 

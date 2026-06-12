@@ -17,6 +17,7 @@ import {
   REG_DEFAULT_CURRENCY,
   computeCommission,
 } from "@/lib/registration/constants";
+import { commissionStatusOf } from "./reg-student-service";
 
 export interface ReportFilters {
   /** Start of range — inclusive. */
@@ -37,6 +38,10 @@ export interface AgentBreakdownRow {
   studentCount: number;
   totalFees: number;
   totalCommission: number;
+  /** Commission already paid out to the agent (snapshot sum of disbursed rows). */
+  disbursedCommission: number;
+  /** Commission still owed = totalCommission - disbursedCommission. */
+  outstandingCommission: number;
   currency: string;
 }
 
@@ -57,6 +62,10 @@ export interface ReportResult {
     studentCount: number;
     totalFees: number;
     totalCommission: number;
+    /** Sum of commission on rows marked disbursed. */
+    disbursedCommission: number;
+    /** Sum of commission still owed (pending). */
+    outstandingCommission: number;
     currency: string;
   };
   range: { from: Date; to: Date };
@@ -127,14 +136,18 @@ export async function buildReport(filters: ReportFilters): Promise<ReportResult>
   const courseMap = new Map<string, CourseBreakdownRow>();
   let totalFees = 0;
   let totalCommission = 0;
+  let disbursedCommission = 0;
 
   for (const s of students) {
     const fee = s.courseFee ?? 0;
     const commission = commissionAmount(s);
+    const isDisbursed = commissionStatusOf(s) === "disbursed";
+    const disbursed = isDisbursed ? commission : 0;
     const currency = s.currency || REG_DEFAULT_CURRENCY;
 
     totalFees += fee;
     totalCommission += commission;
+    disbursedCommission += disbursed;
 
     // Agent
     const aRow = agentMap.get(s.createdBy);
@@ -142,6 +155,8 @@ export async function buildReport(filters: ReportFilters): Promise<ReportResult>
       aRow.studentCount++;
       aRow.totalFees += fee;
       aRow.totalCommission += commission;
+      aRow.disbursedCommission += disbursed;
+      aRow.outstandingCommission += commission - disbursed;
     } else {
       agentMap.set(s.createdBy, {
         agentUid: s.createdBy,
@@ -149,6 +164,8 @@ export async function buildReport(filters: ReportFilters): Promise<ReportResult>
         studentCount: 1,
         totalFees: fee,
         totalCommission: commission,
+        disbursedCommission: disbursed,
+        outstandingCommission: commission - disbursed,
         currency,
       });
     }
@@ -190,6 +207,8 @@ export async function buildReport(filters: ReportFilters): Promise<ReportResult>
       studentCount: students.length,
       totalFees,
       totalCommission,
+      disbursedCommission,
+      outstandingCommission: totalCommission - disbursedCommission,
       currency,
     },
     range: { from: filters.from, to: filters.to },

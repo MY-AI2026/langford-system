@@ -327,6 +327,14 @@ export type RegCourseCategory =
 
 export type RegStudentStatus = "new" | "enrolled" | "cancelled";
 
+/**
+ * Commission payout state for a registered student. "pending" = commission is
+ * owed to the agent but not yet paid out; "disbursed" = it has been paid.
+ * Legacy rows created before this feature have no field and are treated as
+ * "pending" everywhere (see `commissionStatusOf`).
+ */
+export type RegCommissionStatus = "pending" | "disbursed";
+
 export type RegAuditAction =
   | "reg.course.create"
   | "reg.course.update"
@@ -335,6 +343,8 @@ export type RegAuditAction =
   | "reg.student.update"
   | "reg.student.delete"
   | "reg.student.restore"
+  | "reg.student.disburse"
+  | "reg.student.undisburse"
   | "reg.agent.create"
   | "reg.agent.disable"
   | "reg.agent.enable"
@@ -390,6 +400,15 @@ export interface RegStudent {
   // Commission snapshot (locked at registration time so report figures are immutable)
   commissionRate: number;
   commissionAmount: number;
+
+  // Commission disbursement (payout to the agent) — additive; rows predating
+  // this feature omit these fields and are treated as "pending". Only an admin
+  // toggles them; the snapshot amount above is never mutated.
+  commissionStatus?: RegCommissionStatus;
+  disbursedAt?: Timestamp | null;
+  disbursedBy?: string | null;       // admin uid who marked it paid
+  disbursedByName?: string | null;
+  disbursementRef?: string | null;   // transfer ref / cheque no / free-text note
 
   // Source + creator (CRITICAL for isolation — Firestore rules enforce createdBy ownership)
   source: string;          // default "Acceptix"

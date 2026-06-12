@@ -2,16 +2,24 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { RoleGate } from "@/components/auth/role-gate";
+import { useAuth } from "@/contexts/auth-context";
 import {
   buildReport,
   ReportResult,
   REPORT_PRESETS,
 } from "@/lib/services/reg-report-service";
+import {
+  commissionFor,
+  commissionStatusOf,
+  markCommissionDisbursed,
+  unmarkCommissionDisbursed,
+  markManyCommissionsDisbursed,
+} from "@/lib/services/reg-student-service";
 import { subscribeToActiveCourses } from "@/lib/services/reg-course-service";
 import { subscribeToAcceptixAgents } from "@/lib/services/reg-agent-service";
 import { exportReportToExcel } from "@/lib/registration/excel-export";
 import { exportReportToPdf } from "@/lib/registration/pdf-export";
-import { RegCourse, User } from "@/lib/types";
+import { RegCourse, RegStudent, User } from "@/lib/types";
 import { REG_DEFAULT_CURRENCY } from "@/lib/registration/constants";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -40,9 +48,13 @@ import {
   Printer,
   Loader2,
   Filter,
+  BadgeCheck,
+  RotateCcw,
+  Wallet,
 } from "lucide-react";
 
 function ReportsContent() {
+  const { userData } = useAuth();
   const [courses, setCourses] = useState<RegCourse[]>([]);
   const [agents, setAgents] = useState<User[]>([]);
 
@@ -56,6 +68,12 @@ function ReportsContent() {
 
   const [report, setReport] = useState<ReportResult | null>(null);
   const [loading, setLoading] = useState(false);
+  /** Set of student ids currently being written, so we can disable their row. */
+  const [busyIds, setBusyIds] = useState<Set<string>>(new Set());
+
+  const actor = userData
+    ? { uid: userData.uid, displayName: userData.displayName, role: userData.role }
+    : null;
 
   useEffect(() => {
     const u1 = subscribeToActiveCourses(setCourses);
@@ -110,6 +128,70 @@ function ReportsContent() {
     runReport();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // ── Commission disbursement actions ────────────────────────────────────────
+  function withBusy(id: string, on: boolean) {
+    setBusyIds((prev) => {
+      const next = new Set(prev);
+      if (on) next.add(id);
+      else next.delete(id);
+      return next;
+    });
+  }
+
+  async function handleToggleDisbursed(studentId: string, currentlyDisbursed: boolean) {
+    if (!actor) {
+      toast.error("Session not ready — try again in a moment");
+      return;
+    }
+    withBusy(studentId, true);
+    try {
+      if (currentlyDisbursed) {
+        await unmarkCommissionDisbursed(studentId, actor);
+        toast.success("Reverted to pending");
+      } else {
+        await markCommissionDisbursed(studentId, {}, actor);
+        toast.success("Commission marked as disbursed");
+      }
+      await runReport();
+    } catch (e) {
+      console.error("[reports] toggle disbursed failed:", e);
+      toast.error("Couldn't update — please retry");
+    } finally {
+      withBusy(studentId, false);
+    }
+  }
+
+  async function handleSettleAllPending() {
+    if (!actor || !report) return;
+    const pendingIds = report.students
+      .filter((s) => commissionStatusOf(s) === "pending" && commissionFor(s) > 0)
+      .map((s) => s.id);
+    if (pendingIds.length === 0) {
+      toast.info("Nothing pending in this view");
+      return;
+    }
+    if (
+      typeof window !== "undefined" &&
+      !window.confirm(
+        `Mark ${pendingIds.length} commission(s) as disbursed? This records a payout for every pending student currently shown.`
+      )
+    ) {
+      return;
+    }
+    setLoading(true);
+    try {
+      const { ok, failed } = await markManyCommissionsDisbursed(pendingIds, {}, actor);
+      if (failed === 0) toast.success(`${ok} commission(s) marked disbursed`);
+      else toast.warning(`${ok} done, ${failed} failed — retry the rest`);
+      await runReport();
+    } catch (e) {
+      console.error("[reports] settle all failed:", e);
+      toast.error("Bulk disbursement failed");
+    } finally {
+      setLoading(false);
+    }
+  }
 
   function handleExcel() {
     if (!report) {
@@ -311,16 +393,48 @@ function ReportsContent() {
         </Card>
       </div>
 
+      {/* Disbursement split */}
+      <div className="grid gap-3 sm:grid-cols-2">
+        <Card className="border-emerald-500/30 bg-emerald-500/5">
+          <CardContent className="flex items-center justify-between p-4">
+            <div>
+              <p className="text-xs text-muted-foreground">Commission Disbursed</p>
+              <p className="mt-1 text-2xl font-bold text-emerald-600 dark:text-emerald-400" dir="ltr">
+                {loading
+                  ? "—"
+                  : `${(totals?.disbursedCommission ?? 0).toLocaleString("en-US")} ${currency}`}
+              </p>
+            </div>
+            <BadgeCheck className="h-8 w-8 text-emerald-500/60" />
+          </CardContent>
+        </Card>
+        <Card className="border-amber-500/30 bg-amber-500/5">
+          <CardContent className="flex items-center justify-between p-4">
+            <div>
+              <p className="text-xs text-muted-foreground">Commission Outstanding</p>
+              <p className="mt-1 text-2xl font-bold text-amber-600 dark:text-amber-400" dir="ltr">
+                {loading
+                  ? "—"
+                  : `${(totals?.outstandingCommission ?? 0).toLocaleString("en-US")} ${currency}`}
+              </p>
+            </div>
+            <Wallet className="h-8 w-8 text-amber-500/60" />
+          </CardContent>
+        </Card>
+      </div>
+
       {/* Breakdowns */}
       <div className="grid gap-4 lg:grid-cols-2">
         <BreakdownTable
           title="Agent Summary"
           loading={loading}
+          showOutstanding
           rows={memoAgents.map((a) => ({
             name: a.agentName,
             count: a.studentCount,
             fees: a.totalFees,
             commission: a.totalCommission,
+            outstanding: a.outstandingCommission,
             currency: a.currency,
           }))}
         />
@@ -336,7 +450,137 @@ function ReportsContent() {
           }))}
         />
       </div>
+
+      {/* Per-student commission disbursement */}
+      <DisbursementTable
+        students={report?.students ?? []}
+        loading={loading}
+        busyIds={busyIds}
+        currency={currency}
+        onToggle={handleToggleDisbursed}
+        onSettleAll={handleSettleAllPending}
+      />
     </div>
+  );
+}
+
+function DisbursementTable({
+  students,
+  loading,
+  busyIds,
+  currency,
+  onToggle,
+  onSettleAll,
+}: {
+  students: RegStudent[];
+  loading: boolean;
+  busyIds: Set<string>;
+  currency: string;
+  onToggle: (studentId: string, currentlyDisbursed: boolean) => void;
+  onSettleAll: () => void;
+}) {
+  const pendingCount = students.filter(
+    (s) => commissionStatusOf(s) === "pending" && commissionFor(s) > 0
+  ).length;
+
+  return (
+    <Card>
+      <CardHeader className="flex flex-row items-center justify-between gap-2 pb-3">
+        <CardTitle className="flex items-center gap-2 text-base">
+          <Wallet className="h-4 w-4" />
+          Commission Disbursement
+        </CardTitle>
+        <Button
+          size="sm"
+          variant="outline"
+          onClick={onSettleAll}
+          disabled={loading || pendingCount === 0}
+        >
+          <BadgeCheck className="ml-2 h-4 w-4" />
+          Settle all pending ({pendingCount})
+        </Button>
+      </CardHeader>
+      <CardContent className="p-0">
+        {loading ? (
+          <div className="space-y-2 p-4">
+            {Array.from({ length: 4 }).map((_, i) => (
+              <Skeleton key={i} className="h-10 w-full" />
+            ))}
+          </div>
+        ) : students.length === 0 ? (
+          <p className="py-8 text-center text-sm text-muted-foreground">
+            No students in this range
+          </p>
+        ) : (
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Student</TableHead>
+                <TableHead>Agent</TableHead>
+                <TableHead>Course</TableHead>
+                <TableHead className="text-right">Commission</TableHead>
+                <TableHead>Payout</TableHead>
+                <TableHead className="text-right">Action</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {students.map((s) => {
+                const disbursed = commissionStatusOf(s) === "disbursed";
+                const busy = busyIds.has(s.id);
+                return (
+                  <TableRow key={s.id}>
+                    <TableCell className="font-medium">{s.fullName}</TableCell>
+                    <TableCell className="text-muted-foreground">
+                      {s.createdByName || "—"}
+                    </TableCell>
+                    <TableCell className="text-muted-foreground">
+                      {s.courseName || "—"}
+                    </TableCell>
+                    <TableCell dir="ltr" className="text-right font-medium text-primary">
+                      {commissionFor(s).toLocaleString("en-US")} {s.currency || currency}
+                    </TableCell>
+                    <TableCell>
+                      {disbursed ? (
+                        <span className="inline-flex items-center gap-1 rounded-full bg-emerald-100 px-2 py-0.5 text-xs font-medium text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-400">
+                          <BadgeCheck className="h-3 w-3" />
+                          Disbursed
+                        </span>
+                      ) : (
+                        <span className="inline-flex items-center gap-1 rounded-full bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-700 dark:bg-amber-500/15 dark:text-amber-400">
+                          Pending
+                        </span>
+                      )}
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <Button
+                        size="sm"
+                        variant={disbursed ? "ghost" : "outline"}
+                        disabled={busy}
+                        onClick={() => onToggle(s.id, disbursed)}
+                      >
+                        {busy ? (
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                        ) : disbursed ? (
+                          <>
+                            <RotateCcw className="ml-1 h-3.5 w-3.5" />
+                            Undo
+                          </>
+                        ) : (
+                          <>
+                            <BadgeCheck className="ml-1 h-3.5 w-3.5" />
+                            Mark paid
+                          </>
+                        )}
+                      </Button>
+                    </TableCell>
+                  </TableRow>
+                );
+              })}
+            </TableBody>
+          </Table>
+        )}
+      </CardContent>
+    </Card>
   );
 }
 
@@ -345,6 +589,7 @@ interface BreakdownRow {
   count: number;
   fees: number;
   commission: number;
+  outstanding?: number;
   currency: string;
 }
 
@@ -352,10 +597,12 @@ function BreakdownTable({
   title,
   rows,
   loading,
+  showOutstanding = false,
 }: {
   title: string;
   rows: BreakdownRow[];
   loading: boolean;
+  showOutstanding?: boolean;
 }) {
   return (
     <Card>
@@ -379,6 +626,7 @@ function BreakdownTable({
                 <TableHead>Count</TableHead>
                 <TableHead>Fee</TableHead>
                 <TableHead>Commission</TableHead>
+                {showOutstanding && <TableHead>Outstanding</TableHead>}
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -392,6 +640,18 @@ function BreakdownTable({
                   <TableCell dir="ltr" className="font-medium text-primary">
                     {r.commission.toLocaleString("en-US")} {r.currency}
                   </TableCell>
+                  {showOutstanding && (
+                    <TableCell
+                      dir="ltr"
+                      className={
+                        (r.outstanding ?? 0) > 0
+                          ? "font-medium text-amber-600 dark:text-amber-400"
+                          : "text-muted-foreground"
+                      }
+                    >
+                      {(r.outstanding ?? 0).toLocaleString("en-US")} {r.currency}
+                    </TableCell>
+                  )}
                 </TableRow>
               ))}
             </TableBody>
