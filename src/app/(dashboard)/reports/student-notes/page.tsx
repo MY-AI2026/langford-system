@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { RoleGate } from "@/components/auth/role-gate";
 import { PageHeader } from "@/components/layout/page-header";
-import { fetchCollection, runQuery } from "@/lib/firebase/rest-helpers";
+import { fetchCollection, runQueryWithPath } from "@/lib/firebase/rest-helpers";
 import { ActivityLogEntry, ActivityLogType, Student } from "@/lib/types";
 import { formatDateTime } from "@/lib/utils/format";
 import { Timestamp } from "firebase/firestore";
@@ -65,6 +65,14 @@ function toDate(val: unknown): Date | null {
     return (val as { toDate: () => Date }).toDate();
   }
   return null;
+}
+
+/** Extract the owning student id from an activityLog document path:
+ *  ".../documents/students/{studentId}/activityLog/{logId}". */
+function studentIdFromPath(path: string): string | null {
+  const segments = path.split("/");
+  const idx = segments.indexOf("students");
+  return idx >= 0 && idx + 1 < segments.length ? segments[idx + 1] : null;
 }
 
 function csvEscape(value: unknown): string {
@@ -132,44 +140,35 @@ function StudentNotesContent() {
   async function load() {
     setLoading(true);
     try {
-      // 1. Fetch all students (just id, fullName, phone)
+      // 1. Fetch all students (for the name/phone lookup).
       const students = (await fetchCollection("students")) as Student[];
+      const studentById = new Map(students.map((s) => [s.id, s]));
 
-      // 2. For each student, fetch their activityLog in parallel
+      // 2. One collection-group query over every activityLog subcollection,
+      //    instead of one query per student (was 1 + N/10 round-trips). The
+      //    owning student id is recovered from each document's path.
+      const entries = await runQueryWithPath({
+        from: [{ collectionId: "activityLog", allDescendants: true }],
+        orderBy: [
+          { field: { fieldPath: "createdAt" }, direction: "DESCENDING" },
+        ],
+      });
+
       const allRows: NoteRow[] = [];
-      const batchSize = 10;
-      for (let i = 0; i < students.length; i += batchSize) {
-        const batch = students.slice(i, i + batchSize);
-        const results = await Promise.all(
-          batch.map(async (s) => {
-            try {
-              const entries = (await runQuery(
-                {
-                  from: [{ collectionId: "activityLog" }],
-                  orderBy: [
-                    {
-                      field: { fieldPath: "createdAt" },
-                      direction: "DESCENDING",
-                    },
-                  ],
-                },
-                `students/${s.id}`
-              )) as ActivityLogEntry[];
-              return entries.map<NoteRow>((e) => ({
-                ...e,
-                studentId: s.id,
-                studentName: s.fullName,
-                studentPhone: s.phone,
-              }));
-            } catch {
-              return [] as NoteRow[];
-            }
-          })
-        );
-        for (const r of results) allRows.push(...r);
+      for (const e of entries) {
+        const studentId = studentIdFromPath(e._path);
+        if (!studentId) continue;
+        const s = studentById.get(studentId);
+        allRows.push({
+          ...(e as unknown as ActivityLogEntry),
+          studentId,
+          studentName: s?.fullName ?? "—",
+          studentPhone: s?.phone ?? "",
+        });
       }
 
-      // Sort by createdAt descending
+      // Sort by createdAt descending (the query orders within each group; the
+      // merged cross-student set needs a final sort).
       allRows.sort((a, b) => {
         const da = toDate(a.createdAt)?.getTime() ?? 0;
         const db = toDate(b.createdAt)?.getTime() ?? 0;
