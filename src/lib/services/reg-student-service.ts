@@ -218,6 +218,12 @@ export async function createStudent(
     }
   }
 
+  // ── Phone uniqueness (across all agents) — blocks double-referral / double
+  //    commission for the same person.
+  if (await phoneAlreadyRegistered(normalizedPhone)) {
+    throw new Error("PHONE_DUPLICATE");
+  }
+
   // ── Load course + snapshot pricing ────────────────────────────────────────
   const course = await getCourse(input.courseId);
   if (!course) throw new Error("COURSE_NOT_FOUND");
@@ -305,6 +311,34 @@ export async function createStudent(
  * Look up a prior submission with the same idempotency key under the same
  * agent. Returns null if none — service then proceeds to create.
  */
+/**
+ * Returns true if an active (non-deleted) Acceptix student already exists with
+ * this normalized phone — across ALL agents. Prevents the same person being
+ * referred twice (which would pay the 10% commission twice). Queries by phone
+ * (single-field, auto-indexed) and filters isDeleted client-side.
+ */
+async function phoneAlreadyRegistered(
+  normalizedPhone: string
+): Promise<boolean> {
+  try {
+    const rows = (await runQuery({
+      from: [{ collectionId: COLLECTION }],
+      where: {
+        fieldFilter: {
+          field: { fieldPath: "phone" },
+          op: "EQUAL",
+          value: { stringValue: normalizedPhone },
+        },
+      },
+    })) as RegStudent[];
+    return rows.some((r) => !r.isDeleted);
+  } catch {
+    // On query failure, don't block registration (fail open) — the admin can
+    // still catch duplicates in reports.
+    return false;
+  }
+}
+
 async function findByIdempotencyKey(
   agentUid: string,
   idempotencyKey: string

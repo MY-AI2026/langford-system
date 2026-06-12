@@ -52,6 +52,11 @@ function RegisterStudentContent() {
           case "PHONE_INVALID":
             toast.error("Invalid phone number — must be at least 7 digits.");
             return;
+          case "PHONE_DUPLICATE":
+            toast.error(
+              "This phone number is already registered — the student can only be referred once."
+            );
+            return;
           case "COURSE_NOT_FOUND":
             toast.error("Course not found — please refresh and try again.");
             return;

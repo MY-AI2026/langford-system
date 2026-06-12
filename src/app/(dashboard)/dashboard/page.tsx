@@ -84,8 +84,11 @@ export default function DashboardPage() {
     }
     const [year, month] = selectedMonth.split("-").map(Number);
     if (!year || !month) return;
-    const start = new Date(year, month - 1, 1);
-    const end = new Date(year, month, 1);
+    // Build the range in UTC so it lines up with how paymentDate is stored
+    // (date-only inputs are saved as UTC midnight); avoids off-by-3h drift in
+    // Kuwait near month boundaries.
+    const start = new Date(Date.UTC(year, month - 1, 1));
+    const end = new Date(Date.UTC(year, month, 1));
     let cancelled = false;
     getCollectedTotalByUser(firebaseUser.uid, start, end)
       .then((total) => {

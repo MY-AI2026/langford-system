@@ -88,7 +88,51 @@ export async function getCollectedTotalByUser(
   };
 
   const payments = (await runQuery(structuredQuery)) as Payment[];
-  return payments.reduce((sum, p) => sum + (p.amount ?? 0), 0);
+  // Exclude IELTS exam payments — they're tracked separately (ieltsSummary)
+  // and shown in their own card, so they must not inflate the sales counter.
+  return payments
+    .filter((p) => p.category !== "ielts")
+    .reduce((sum, p) => sum + (Number(p.amount) || 0), 0);
+}
+
+/**
+ * Recompute a student's MAIN payment summary by summing the actual payments
+ * subcollection (excluding IELTS). This is the source of truth and is immune
+ * to lost-update races — two concurrent payments can't clobber each other,
+ * because we always derive the total from the stored payment docs rather than
+ * from a cached counter. Also fixes the "totalFees = 0 → paid" edge case.
+ */
+async function recomputeStudentPaymentSummary(studentId: string): Promise<void> {
+  const studentData = await fetchDoc(`students/${studentId}`);
+  if (!studentData) return;
+
+  const totalFees =
+    ((studentData.paymentSummary as Record<string, number>)?.totalFees as number) || 0;
+
+  const payments = (await runQuery(
+    { from: [{ collectionId: "payments" }] },
+    `students/${studentId}`
+  )) as Payment[];
+
+  const amountPaid = payments
+    .filter((p) => p.category !== "ielts")
+    .reduce((sum, p) => sum + (Number(p.amount) || 0), 0);
+
+  const remaining = totalFees - amountPaid;
+  let status: PaymentStatus = "pending";
+  if (amountPaid > 0) status = "partial";
+  if (remaining <= 0 && totalFees > 0) status = "paid";
+
+  await restUpdate(`students/${studentId}`, {
+    paymentSummary: {
+      totalFees,
+      amountPaid,
+      remainingBalance: Math.max(0, remaining),
+      paymentStatus: status,
+      hasOverdue: await computeStudentHasOverdue(studentId),
+    },
+    updatedAt: new Date(),
+  });
 }
 
 export async function addPayment(
@@ -112,17 +156,6 @@ export async function addPayment(
   const studentData = await fetchDoc(`students/${studentId}`);
   if (!studentData) throw new Error("Student not found");
 
-  const currentSummary = (studentData.paymentSummary as Record<string, number | string>) || {
-    totalFees: 0, amountPaid: 0, remainingBalance: 0, paymentStatus: "pending",
-  };
-
-  const newAmountPaid = ((currentSummary.amountPaid as number) || 0) + data.amount;
-  const newRemaining = ((currentSummary.totalFees as number) || 0) - newAmountPaid;
-
-  let newPaymentStatus: PaymentStatus = "partial";
-  if (newRemaining <= 0) newPaymentStatus = "paid";
-  else if (newAmountPaid === 0) newPaymentStatus = "pending";
-
   const paymentData: Record<string, unknown> = {
     amount: data.amount,
     paymentDate: data.paymentDate,
@@ -142,16 +175,8 @@ export async function addPayment(
     paymentData
   );
 
-  await restUpdate(`students/${studentId}`, {
-    paymentSummary: {
-      totalFees: (currentSummary.totalFees as number) || 0,
-      amountPaid: newAmountPaid,
-      remainingBalance: Math.max(0, newRemaining),
-      paymentStatus: newPaymentStatus,
-      hasOverdue: await computeStudentHasOverdue(studentId),
-    },
-    updatedAt: new Date(),
-  });
+  // Derive the summary from the actual payment docs (race-safe).
+  await recomputeStudentPaymentSummary(studentId);
 
   // Activity log
   const { addActivityLogEntry } = await import("./student-service");
@@ -205,29 +230,9 @@ export async function deletePayment(
       updatedAt: new Date(),
     });
   } else {
-    // 2b. Main payment - recalculate paymentSummary
-    const currentSummary = (studentData.paymentSummary as Record<string, number | string | boolean>) || {
-      totalFees: 0, amountPaid: 0, remainingBalance: 0, paymentStatus: "pending",
-    };
-
-    const newAmountPaid = Math.max(0, ((currentSummary.amountPaid as number) || 0) - payment.amount);
-    const totalFees = (currentSummary.totalFees as number) || 0;
-    const newRemaining = totalFees - newAmountPaid;
-
-    let newPaymentStatus: PaymentStatus = "pending";
-    if (newRemaining <= 0 && totalFees > 0) newPaymentStatus = "paid";
-    else if (newAmountPaid > 0) newPaymentStatus = "partial";
-
-    await restUpdate(`students/${studentId}`, {
-      paymentSummary: {
-        totalFees,
-        amountPaid: newAmountPaid,
-        remainingBalance: Math.max(0, newRemaining),
-        paymentStatus: newPaymentStatus,
-        hasOverdue: Boolean(currentSummary.hasOverdue) || false,
-      },
-      updatedAt: new Date(),
-    });
+    // 2b. Main payment — recompute the summary from the remaining payment docs
+    // (race-safe; the deleted doc is already gone so the sum is correct).
+    await recomputeStudentPaymentSummary(studentId);
   }
 
   // 3. If installment payment, reset the installment item

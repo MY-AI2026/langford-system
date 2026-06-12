@@ -163,7 +163,12 @@ export function parseValue(val: any): any {
   if (val === undefined || val === null) return null;
   if ("stringValue" in val) return val.stringValue;
   if ("integerValue" in val) return Number(val.integerValue);
-  if ("doubleValue" in val) return val.doubleValue;
+  // Firestore may encode integral or special doubles as strings ("33", "1.5",
+  // "NaN"); coerce so money reducers never accidentally string-concatenate.
+  if ("doubleValue" in val) {
+    const n = Number(val.doubleValue);
+    return Number.isFinite(n) ? n : 0;
+  }
   if ("booleanValue" in val) return val.booleanValue;
   if ("nullValue" in val) return null;
   if ("timestampValue" in val)

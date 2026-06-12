@@ -94,15 +94,20 @@ export async function createInstallmentPlan(
   userId: string
 ): Promise<string> {
   const installments: Record<string, unknown>[] = [];
-  const amountPerInstallment = Math.round((data.totalFees / data.numberOfInstallments) * 1000) / 1000;
+  const n = data.numberOfInstallments;
+  const amountPerInstallment = Math.round((data.totalFees / n) * 1000) / 1000;
+  // The last installment absorbs the rounding remainder so the plan sums
+  // exactly to totalFees (e.g. 100/3 → 33.333, 33.333, 33.334).
+  const lastAmount =
+    Math.round((data.totalFees - amountPerInstallment * (n - 1)) * 1000) / 1000;
 
-  for (let i = 0; i < data.numberOfInstallments; i++) {
+  for (let i = 0; i < n; i++) {
     // addMonths avoids JS month-overflow (e.g. Jan 31 + 1 month → Feb 28, not Mar 3).
     const dueDate = addMonths(new Date(data.startDate), i);
 
     installments.push({
       installmentNumber: i + 1,
-      amount: amountPerInstallment,
+      amount: i === n - 1 ? lastAmount : amountPerInstallment,
       dueDate,
       status: "pending" as InstallmentStatus,
       paidDate: null,
