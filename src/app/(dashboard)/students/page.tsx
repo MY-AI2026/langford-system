@@ -5,6 +5,7 @@ import { useAuth } from "@/contexts/auth-context";
 import { PageHeader } from "@/components/layout/page-header";
 import { StudentListTable } from "@/components/students/student-list-table";
 import { StudentSearchBar } from "@/components/students/student-search-bar";
+import { StudentImportDialog } from "@/components/students/student-import-dialog";
 import { subscribeToStudents } from "@/lib/services/student-service";
 import { Student, StudentStatus } from "@/lib/types";
 import { Button } from "@/components/ui/button";
@@ -49,7 +50,7 @@ function downloadStudents(students: Student[]) {
 }
 
 export default function StudentsPage() {
-  const { role, firebaseUser } = useAuth();
+  const { role, firebaseUser, userData } = useAuth();
   const [students, setStudents] = useState<Student[]>([]);
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<StudentStatus | "all">("all");
@@ -122,6 +123,12 @@ export default function StudentsPage() {
               <Download className="mr-2 h-4 w-4" />
               تنزيل Excel
             </Button>
+            {role !== "accountant" && userData && (
+              <StudentImportDialog
+                currentUser={{ uid: userData.uid, displayName: userData.displayName }}
+                role={role!}
+              />
+            )}
             {role !== "accountant" && (
               <Link href="/students/new">
                 <Button>
