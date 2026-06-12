@@ -66,6 +66,25 @@ function MyStudentsContent() {
     return out;
   }, [students]);
 
+  // Commission: earned = enrolled students (the ones that actually pay out);
+  // pending = still "new". Data is already snapshotted on each student.
+  const commission = useMemo(() => {
+    let earned = 0;
+    let pending = 0;
+    for (const s of students) {
+      if (s.status === "enrolled") earned += s.commissionAmount || 0;
+      else if (s.status === "new") pending += s.commissionAmount || 0;
+    }
+    return {
+      earned,
+      pending,
+      currency: students[0]?.currency || "KWD",
+    };
+  }, [students]);
+
+  const fmtMoney = (n: number) =>
+    `${n.toLocaleString("en-US", { minimumFractionDigits: 0, maximumFractionDigits: 3 })} ${commission.currency}`;
+
   return (
     <div className="space-y-6" dir="ltr">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
@@ -102,6 +121,26 @@ function MyStudentsContent() {
           value={stats.cancelled}
           tone="red"
         />
+      </div>
+
+      {/* Commission earned — the agent's headline number */}
+      <div className="grid gap-3 sm:grid-cols-2">
+        <div className="rounded-lg border border-green-200 bg-green-50 p-4 dark:border-green-900 dark:bg-green-950">
+          <p className="text-xs text-green-700 dark:text-green-300">
+            Commission earned (enrolled)
+          </p>
+          <p className="mt-1 text-2xl font-bold text-green-700 dark:text-green-300">
+            {fmtMoney(commission.earned)}
+          </p>
+        </div>
+        <div className="rounded-lg border border-amber-200 bg-amber-50 p-4 dark:border-amber-900 dark:bg-amber-950">
+          <p className="text-xs text-amber-700 dark:text-amber-300">
+            Pending (still new)
+          </p>
+          <p className="mt-1 text-2xl font-bold text-amber-700 dark:text-amber-300">
+            {fmtMoney(commission.pending)}
+          </p>
+        </div>
       </div>
 
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
@@ -148,6 +187,7 @@ function MyStudentsContent() {
                 <TableHead>Course</TableHead>
                 <TableHead>Phone</TableHead>
                 <TableHead>Status</TableHead>
+                <TableHead>Commission</TableHead>
                 <TableHead>Registered</TableHead>
               </TableRow>
             </TableHeader>
@@ -176,6 +216,17 @@ function MyStudentsContent() {
                     >
                       {REG_STUDENT_STATUS_LABELS[s.status].en}
                     </Badge>
+                  </TableCell>
+                  <TableCell
+                    className={
+                      s.status === "enrolled"
+                        ? "font-medium text-green-600 dark:text-green-400"
+                        : "text-muted-foreground"
+                    }
+                  >
+                    {s.commissionAmount > 0
+                      ? `${s.commissionAmount.toLocaleString("en-US")} ${s.currency}`
+                      : "—"}
                   </TableCell>
                   <TableCell>{formatDate(s.createdAt)}</TableCell>
                 </TableRow>
