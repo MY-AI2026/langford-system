@@ -76,35 +76,40 @@ export function PaymentReceiptDialog({
   <meta charset="utf-8" />
   <title>Receipt ${esc(payment!.receiptNumber)}</title>
   <style>
-    @page { size: A4; margin: 0; }
+    @page { size: A4; margin: 10mm; }
     * { box-sizing: border-box; margin: 0; padding: 0; }
     html, body { background: #fff; color: #111; font-family: Arial, sans-serif; }
 
-    .page { width: 210mm; min-height: 297mm; padding: 20mm 18mm; }
-    .page.front { display: flex; flex-direction: column; }
+    /* Each .page fills the full printable A4 area (A4 minus the 10mm @page
+       margins => 190mm x 277mm). No print-scale adjustment needed. */
+    .page { width: 100%; min-height: 277mm; }
+    .page.front { display: flex; }
 
     .invoice {
-      max-width: 160mm;
       width: 100%;
-      margin: 0 auto;
-      border: 1px solid #e2e2e2;
-      border-radius: 10px;
-      padding: 16mm 14mm;
+      min-height: 277mm;
+      border: 1px solid #d9d9d9;
+      border-radius: 8px;
+      padding: 12mm 12mm 10mm;
+      display: flex;
+      flex-direction: column;
     }
+    /* Pushes signatures + footer to the very bottom so the sheet is filled. */
+    .inv-spacer { flex: 1 1 auto; }
 
-    .header { text-align: center; margin-bottom: 18px; }
-    .logo { width: 300px; max-width: 75%; height: auto; display: block; margin: 0 auto; }
+    .header { text-align: center; margin-bottom: 10mm; }
+    .logo { width: 340px; max-width: 80%; height: auto; display: block; margin: 0 auto; }
 
     .receipt-title {
-      font-size: 14px;
+      font-size: 15px;
       font-weight: bold;
       text-transform: uppercase;
       letter-spacing: 2px;
       color: #fff;
       background: #1a1a1a;
       text-align: center;
-      padding: 8px 0;
-      margin: 14px 0 18px;
+      padding: 9px 0;
+      margin: 0 0 9mm;
       border-radius: 4px;
     }
 
@@ -112,27 +117,27 @@ export function PaymentReceiptDialog({
       display: flex;
       justify-content: space-between;
       gap: 16px;
-      padding: 9px 2px;
+      padding: 12px 4px;
       border-bottom: 1px dashed #e0e0e0;
     }
-    .label { color: #666; font-size: 13px; }
-    .value { font-size: 13px; font-weight: 600; text-align: right; max-width: 60%; }
+    .label { color: #666; font-size: 13.5px; }
+    .value { font-size: 13.5px; font-weight: 600; text-align: right; max-width: 60%; }
 
     .total-box {
       background: #f9f9f9;
       border: 2px solid #1a1a1a;
       border-radius: 6px;
-      padding: 14px 16px;
-      margin: 20px 0;
+      padding: 16px 18px;
+      margin: 9mm 0 0;
     }
-    .total-row { display: flex; justify-content: space-between; font-size: 20px; font-weight: 900; }
+    .total-row { display: flex; justify-content: space-between; font-size: 22px; font-weight: 900; }
     .total-amount { color: #E31E24; }
 
-    .signatures { display: flex; justify-content: space-between; gap: 40px; margin-top: 30px; }
+    .signatures { display: flex; justify-content: space-between; gap: 40px; margin-bottom: 9mm; }
     .sign { flex: 1; text-align: center; font-size: 12px; color: #555; }
-    .sign .line { border-top: 1px solid #999; margin-bottom: 6px; padding-top: 28px; }
+    .sign .line { border-top: 1px solid #999; margin-bottom: 6px; padding-top: 32px; }
 
-    .footer { text-align: center; font-size: 12px; color: #888; margin-top: 18px; border-top: 1px dashed #bbb; padding-top: 10px; }
+    .footer { text-align: center; font-size: 12px; color: #888; border-top: 1px dashed #bbb; padding-top: 10px; }
     .terms-note { margin-top: 6px; font-size: 11px; color: #E31E24; font-weight: 600; }
 
     ${TERMS_PRINT_CSS}
@@ -141,30 +146,36 @@ export function PaymentReceiptDialog({
 <body>
   <div class="page front">
     <div class="invoice">
-      <div class="header">
-        <img src="${logoUrl}" class="logo" alt="Langford International Institute" crossorigin="anonymous" />
-      </div>
+      <div class="inv-top">
+        <div class="header">
+          <img src="${logoUrl}" class="logo" alt="Langford International Institute" crossorigin="anonymous" />
+        </div>
 
-      <div class="receipt-title">✦ Official Payment Receipt — إيصال دفع رسمي ✦</div>
+        <div class="receipt-title">✦ Official Payment Receipt — إيصال دفع رسمي ✦</div>
 
-      ${frontRows}
+        ${frontRows}
 
-      <div class="total-box">
-        <div class="total-row">
-          <span>AMOUNT PAID</span>
-          <span class="total-amount">${formatCurrency(payment!.amount)}</span>
+        <div class="total-box">
+          <div class="total-row">
+            <span>AMOUNT PAID</span>
+            <span class="total-amount">${formatCurrency(payment!.amount)}</span>
+          </div>
         </div>
       </div>
 
-      <div class="signatures">
-        <div class="sign"><div class="line"></div>توقيع المحصِّل / Cashier</div>
-        <div class="sign"><div class="line"></div>توقيع الطالب / Student</div>
-      </div>
+      <div class="inv-spacer"></div>
 
-      <div class="footer">
-        <p>✔ Thank you for choosing Langford!</p>
-        <p style="margin-top:4px; font-size:11px;">This is an official receipt. Please keep it for your records.</p>
-        <p class="terms-note">الشروط والأحكام مطبوعة في ظهر هذا الإيصال — Terms &amp; Conditions are printed on the back.</p>
+      <div class="inv-bottom">
+        <div class="signatures">
+          <div class="sign"><div class="line"></div>توقيع المحصِّل / Cashier</div>
+          <div class="sign"><div class="line"></div>توقيع الطالب / Student</div>
+        </div>
+
+        <div class="footer">
+          <p>✔ Thank you for choosing Langford!</p>
+          <p style="margin-top:4px; font-size:11px;">This is an official receipt. Please keep it for your records.</p>
+          <p class="terms-note">الشروط والأحكام مطبوعة في ظهر هذا الإيصال — Terms &amp; Conditions are printed on the back.</p>
+        </div>
       </div>
     </div>
   </div>

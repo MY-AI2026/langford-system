@@ -146,6 +146,7 @@ export function renderTermsPageHtml(): string {
 
 /** CSS الخاص بصفحة الشروط (يُدمج داخل &lt;style&gt; نافذة الطباعة). */
 export const TERMS_PRINT_CSS = `
+  /* Fills the whole printable A4 page (A4 minus the @page 10mm margins). */
   .page.terms {
     page-break-before: always;
     break-before: page;
@@ -153,23 +154,29 @@ export const TERMS_PRINT_CSS = `
     text-align: right;
     font-family: "Tahoma", "Segoe UI", "Arial", sans-serif;
     color: #1a1a1a;
-    padding: 14mm 14mm 12mm;
-    font-size: 9.5px;
-    line-height: 1.45;
+    width: 100%;
+    min-height: 277mm;
+    border: 1px solid #d9d9d9;
+    border-radius: 8px;
+    padding: 11mm 11mm 9mm;
+    display: flex;
+    flex-direction: column;
+    font-size: 10px;
+    line-height: 1.5;
   }
-  .page.terms .t-header { text-align: center; border-bottom: 2px solid #E31E24; padding-bottom: 6px; margin-bottom: 8px; }
-  .page.terms .t-header h2 { font-size: 13px; margin: 0; color: #1a1a1a; }
-  .page.terms .t-header h1 { font-size: 16px; margin: 2px 0 4px; color: #E31E24; font-weight: 900; }
-  .page.terms .t-intro { font-size: 9px; color: #444; margin: 0; }
-  .page.terms .t-body-wrap { column-count: 2; column-gap: 8mm; }
-  .page.terms .t-section { break-inside: avoid; margin-bottom: 6px; }
-  .page.terms .t-h { font-size: 10px; font-weight: 700; margin: 0 0 2px; color: #1a1a1a; }
+  .page.terms .t-header { text-align: center; border-bottom: 2px solid #E31E24; padding-bottom: 7px; margin-bottom: 9px; }
+  .page.terms .t-header h2 { font-size: 14px; margin: 0; color: #1a1a1a; }
+  .page.terms .t-header h1 { font-size: 18px; margin: 2px 0 5px; color: #E31E24; font-weight: 900; }
+  .page.terms .t-intro { font-size: 9.5px; color: #444; margin: 0; }
+  .page.terms .t-body-wrap { flex: 1 1 auto; column-count: 2; column-gap: 9mm; }
+  .page.terms .t-section { break-inside: avoid; margin-bottom: 7px; }
+  .page.terms .t-h { font-size: 10.5px; font-weight: 700; margin: 0 0 2px; color: #1a1a1a; }
   .page.terms .t-h .t-n { color: #E31E24; }
   .page.terms .t-body { margin: 0; }
   .page.terms .t-list { margin: 2px 0 0; padding-right: 14px; }
-  .page.terms .t-list li { margin-bottom: 1px; }
+  .page.terms .t-list li { margin-bottom: 1.5px; }
   .page.terms .t-foot {
-    margin-top: 8px; padding-top: 6px; border-top: 1px dashed #bbb;
-    font-size: 8.5px; color: #666; text-align: center; column-span: all;
+    margin-top: 9px; padding-top: 6px; border-top: 1px dashed #bbb;
+    font-size: 9px; color: #666; text-align: center;
   }
 `;
