@@ -84,47 +84,45 @@ export function subscribeToStudents(
   },
   callback: (students: Student[]) => void
 ): () => void {
-  // SECURITY + RELIABILITY: a sales rep must only ever read their own students,
-  // and that filter has to run on the SERVER (otherwise a rep could read every
-  // student via the REST API directly). We query by a SINGLE field
-  // (assignedSalesRepId) and filter `isArchived` on the client.
+  // Single-field server query only — NO composite filters, NO server-side
+  // isArchived filter:
+  //   - sales: scoped to their own students (security) via assignedSalesRepId
+  //   - everyone else: fetch the collection; archived is filtered on the client
   //
-  // Why single-field: a two-equality query (isArchived AND assignedSalesRepId)
-  // needs a composite index. That index isn't deployed (the project avoids
-  // composite indexes — see CLAUDE.md), so the combined query was failing and
-  // returning an EMPTY list — reps couldn't see students they'd just created,
-  // yet the phone-uniqueness check (single-field) still flagged them as
-  // "already registered". A single-field query uses the automatic index and
-  // always works.
+  // Two bugs this avoids:
+  //   1. A two-equality query (isArchived AND assignedSalesRepId) needs a
+  //      composite index that isn't deployed (the project avoids composite
+  //      indexes — see CLAUDE.md), so the sales list came back EMPTY.
+  //   2. A server `isArchived == false` filter silently DROPS any document
+  //      whose `isArchived` is missing/null (Firestore equality only matches
+  //      an exact boolean). Those students existed — the phone-uniqueness
+  //      check still flagged them as "already registered" — but never showed
+  //      in the list, not even for admins.
+  // So we filter archived on the client and treat missing/null as "not archived".
   const isSales = filters.role === "sales";
 
-  const structuredQuery = {
+  const structuredQuery: Record<string, unknown> = {
     from: [{ collectionId: "students" }],
-    where: {
-      fieldFilter: isSales
-        ? {
-            field: { fieldPath: "assignedSalesRepId" },
-            op: "EQUAL",
-            value: { stringValue: filters.userId },
-          }
-        : {
-            field: { fieldPath: "isArchived" },
-            op: "EQUAL",
-            value: { booleanValue: filters.showArchived === true },
-          },
-    },
   };
+  if (isSales) {
+    structuredQuery.where = {
+      fieldFilter: {
+        field: { fieldPath: "assignedSalesRepId" },
+        op: "EQUAL",
+        value: { stringValue: filters.userId },
+      },
+    };
+  }
 
   return createSubscription<Student>(
     async () => {
       try {
         let students = (await runQuery(structuredQuery)) as Student[];
 
-        // Sales reps query by rep id, so apply the archived filter client-side.
-        if (isSales) {
-          const wantArchived = filters.showArchived === true;
-          students = students.filter((s) => (s.isArchived === true) === wantArchived);
-        }
+        // Archived filter — client-side for every role; a missing/null
+        // isArchived counts as NOT archived (so it shows in the default view).
+        const wantArchived = filters.showArchived === true;
+        students = students.filter((s) => (s.isArchived === true) === wantArchived);
 
         // Apply status filter client-side
         if (filters.status) {
@@ -407,33 +405,27 @@ export async function restoreStudent(studentId: string, userId: string, userName
 }
 
 export async function getStudentCounts(role: UserRole, userId: string): Promise<Record<StudentStatus, number>> {
-  // Single-field query (see subscribeToStudents) — sales filter by their own
-  // rep id, everyone else by isArchived; the archived filter for sales is
-  // applied client-side. Avoids an undeployed composite index.
+  // Single-field query (see subscribeToStudents): sales scope by their rep id,
+  // everyone else fetches the collection. Archived is dropped client-side and
+  // a missing/null isArchived counts as NOT archived — avoids both the
+  // undeployed composite index and the silent drop of field-less docs.
   const isSales = role === "sales";
 
-  const structuredQuery = {
+  const structuredQuery: Record<string, unknown> = {
     from: [{ collectionId: "students" }],
-    where: {
-      fieldFilter: isSales
-        ? {
-            field: { fieldPath: "assignedSalesRepId" },
-            op: "EQUAL",
-            value: { stringValue: userId },
-          }
-        : {
-            field: { fieldPath: "isArchived" },
-            op: "EQUAL",
-            value: { booleanValue: false },
-          },
-    },
   };
+  if (isSales) {
+    structuredQuery.where = {
+      fieldFilter: {
+        field: { fieldPath: "assignedSalesRepId" },
+        op: "EQUAL",
+        value: { stringValue: userId },
+      },
+    };
+  }
 
   let students = await runQuery(structuredQuery);
-  // Sales queried by rep id → drop archived rows client-side.
-  if (isSales) {
-    students = students.filter((s) => s.isArchived !== true);
-  }
+  students = students.filter((s) => s.isArchived !== true);
 
   const counts: Record<string, number> = { lead: 0, contacted: 0, evaluated: 0, enrolled: 0, paid: 0, lost: 0 };
   students.forEach((s) => {
