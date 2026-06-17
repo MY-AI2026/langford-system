@@ -10,6 +10,7 @@
  */
 
 import { ReportResult } from "@/lib/services/reg-report-service";
+import { commissionStatusOf } from "@/lib/services/reg-student-service";
 import { REG_STUDENT_STATUS_LABELS } from "@/lib/registration/constants";
 
 function formatNumber(n: number): string {
@@ -65,8 +66,9 @@ function buildHtml(report: ReportResult, origin: string): string {
   const langfordLogo = `${origin}/logo.png`;
 
   const studentRows = report.students
-    .map(
-      (s) => `
+    .map((s) => {
+      const disbursed = commissionStatusOf(s) === "disbursed";
+      return `
       <tr>
         <td>${escapeHtml(s.fullName)}</td>
         <td>${escapeHtml(s.phone)}</td>
@@ -75,10 +77,11 @@ function buildHtml(report: ReportResult, origin: string): string {
         <td>${escapeHtml(REG_STUDENT_STATUS_LABELS[s.status]?.en ?? s.status)}</td>
         <td class="num">${formatNumber(s.courseFee ?? 0)} ${escapeHtml(s.currency)}</td>
         <td class="num"><strong>${formatNumber(s.commissionAmount ?? 0)} ${escapeHtml(s.currency)}</strong></td>
+        <td><span class="${disbursed ? "pill paid" : "pill due"}">${disbursed ? "Disbursed" : "Pending"}</span></td>
         <td>${formatDate(s.createdAt)}</td>
       </tr>
-    `
-    )
+    `;
+    })
     .join("");
 
   const agentRows = report.byAgent
@@ -89,6 +92,8 @@ function buildHtml(report: ReportResult, origin: string): string {
         <td class="num">${a.studentCount}</td>
         <td class="num">${formatNumber(a.totalFees)} ${escapeHtml(a.currency)}</td>
         <td class="num"><strong>${formatNumber(a.totalCommission)} ${escapeHtml(a.currency)}</strong></td>
+        <td class="num">${formatNumber(a.disbursedCommission)} ${escapeHtml(a.currency)}</td>
+        <td class="num"><strong>${formatNumber(a.outstandingCommission)} ${escapeHtml(a.currency)}</strong></td>
       </tr>
     `
     )
@@ -224,6 +229,20 @@ function buildHtml(report: ReportResult, origin: string): string {
     font-weight: 700;
   }
   .summary .card.primary .value { color: #1e40af; }
+  .summary .card.disbursed { background: #ecfdf5; border-color: #a7f3d0; }
+  .summary .card.disbursed .value { color: #047857; }
+  .summary .card.outstanding { background: #fffbeb; border-color: #fde68a; }
+  .summary .card.outstanding .value { color: #b45309; }
+
+  .pill {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 999px;
+    font-size: 10px;
+    font-weight: 600;
+  }
+  .pill.paid { background: #ecfdf5; color: #047857; }
+  .pill.due { background: #fffbeb; color: #b45309; }
 
   section { margin-bottom: 28px; page-break-inside: avoid; }
   section h2 {
@@ -313,6 +332,14 @@ function buildHtml(report: ReportResult, origin: string): string {
     <div class="label">Total Commission (10%)</div>
     <div class="value">${formatNumber(report.totals.totalCommission)} ${currency}</div>
   </div>
+  <div class="card disbursed">
+    <div class="label">Commission Disbursed</div>
+    <div class="value">${formatNumber(report.totals.disbursedCommission)} ${currency}</div>
+  </div>
+  <div class="card outstanding">
+    <div class="label">Commission Outstanding</div>
+    <div class="value">${formatNumber(report.totals.outstandingCommission)} ${currency}</div>
+  </div>
 </div>
 
 <section>
@@ -324,9 +351,11 @@ function buildHtml(report: ReportResult, origin: string): string {
         <th class="num">Students</th>
         <th class="num">Total Fees</th>
         <th class="num">Total Commission</th>
+        <th class="num">Disbursed</th>
+        <th class="num">Outstanding</th>
       </tr>
     </thead>
-    <tbody>${agentRows || `<tr><td colspan="4" style="text-align:center;color:#6b7280;">No data</td></tr>`}</tbody>
+    <tbody>${agentRows || `<tr><td colspan="6" style="text-align:center;color:#6b7280;">No data</td></tr>`}</tbody>
   </table>
 </section>
 
@@ -357,10 +386,11 @@ function buildHtml(report: ReportResult, origin: string): string {
         <th>Status</th>
         <th class="num">Fee</th>
         <th class="num">Commission</th>
+        <th>Payout</th>
         <th>Date</th>
       </tr>
     </thead>
-    <tbody>${studentRows || `<tr><td colspan="8" style="text-align:center;color:#6b7280;">No data</td></tr>`}</tbody>
+    <tbody>${studentRows || `<tr><td colspan="9" style="text-align:center;color:#6b7280;">No data</td></tr>`}</tbody>
   </table>
 </section>
 

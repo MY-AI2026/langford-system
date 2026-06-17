@@ -305,6 +305,90 @@ export async function runQuery(
   }
 }
 
+// Run a structuredQuery and keep each document's FULL resource path on a
+// `_path` field. Needed for collection-group queries where the parent id
+// (e.g. which student an activityLog entry belongs to) is only recoverable
+// from the document path. Avoids the N+1 of querying each subcollection.
+export async function runQueryWithPath(
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  structuredQuery: any,
+  parentPath: string = ""
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+): Promise<Array<Record<string, any> & { id: string; _path: string }>> {
+  const token = await getToken();
+  const url = parentPath ? `${BASE}/${parentPath}:runQuery` : `${BASE}:runQuery`;
+  const res = await fetch(url, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${token}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ structuredQuery }),
+    cache: "no-store",
+  });
+
+  if (!res.ok) {
+    const errorText = await res.text().catch(() => "");
+    console.error(`[REST] runQueryWithPath failed:`, res.status, errorText);
+    return [];
+  }
+  const results = await res.json();
+  if (!Array.isArray(results)) return [];
+  return results
+    .filter((r: { document?: unknown }) => r?.document)
+    .map((r: { document: { name: string; fields?: Record<string, unknown> } }) => ({
+      id: r.document.name.split("/").pop() as string,
+      _path: r.document.name,
+      ...parseFields(r.document.fields || {}),
+    }));
+}
+
+/**
+ * Fetch many documents by path in as few round-trips as possible using
+ * Firestore's `:batchGet` (chunked at 100). Collapses an N-document fan-out
+ * into ceil(N/100) requests instead of N individual GETs. Missing docs are
+ * silently dropped. Returns rows shaped like the other helpers ({ id, ...fields }).
+ */
+export async function batchGetDocs(
+  paths: string[]
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+): Promise<Array<Record<string, any> & { id: string }>> {
+  if (paths.length === 0) return [];
+  const token = await getToken();
+  const prefix = `projects/${PROJECT_ID}/databases/(default)/documents`;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const out: Array<Record<string, any> & { id: string }> = [];
+  const CHUNK = 100;
+
+  for (let i = 0; i < paths.length; i += CHUNK) {
+    const documents = paths.slice(i, i + CHUNK).map((p) => `${prefix}/${p}`);
+    const res = await fetch(`${BASE}:batchGet`, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ documents }),
+      cache: "no-store",
+    });
+    if (!res.ok) {
+      console.error(`[REST] batchGet failed:`, res.status);
+      continue;
+    }
+    const results = await res.json();
+    if (!Array.isArray(results)) continue;
+    for (const r of results) {
+      if (r?.found) {
+        out.push({
+          id: (r.found.name as string).split("/").pop() as string,
+          ...parseFields(r.found.fields || {}),
+        });
+      }
+    }
+  }
+  return out;
+}
+
 // Fetch a single document
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export async function fetchDoc(path: string): Promise<any | null> {

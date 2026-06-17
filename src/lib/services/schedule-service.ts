@@ -6,7 +6,7 @@ import {
   restCreate,
   restUpdate,
   restDelete,
-  fetchDoc,
+  batchGetDocs,
 } from "@/lib/firebase/rest-helpers";
 
 export type ScheduleEntryInput = Omit<ScheduleEntry, "id" | "createdAt" | "updatedAt">;
@@ -180,29 +180,23 @@ export async function fetchStudentsForCourse(courseId: string): Promise<Schedule
 
     const studentIds = [...enrollmentByStudentId.keys()];
 
-    // Fetch student details in parallel
-    const students: ScheduleStudent[] = [];
-    const results = await Promise.all(
-      studentIds.map(async (sid) => {
-        try {
-          const student = await fetchDoc(`students/${sid}`) as Student | null;
-          if (student) {
-            return {
-              studentId: sid,
-              studentName: student.fullName || "Unknown Student",
-              level: student.evaluation?.finalLevel || null,
-              enrollmentId: enrollmentByStudentId.get(sid)!.enrollmentId,
-            };
-          }
-        } catch (err) {
-          console.error(`[schedule] Error fetching student ${sid}:`, err);
-        }
-        return null;
-      })
-    );
+    // Fetch all student docs in one (chunked) batchGet instead of one GET per
+    // student — collapses the N+1 fan-out into ceil(N/100) requests.
+    const studentDocs = (await batchGetDocs(
+      studentIds.map((sid) => `students/${sid}`)
+    )) as Student[];
+    const studentById = new Map(studentDocs.map((s) => [s.id, s]));
 
-    for (const r of results) {
-      if (r) students.push(r);
+    const students: ScheduleStudent[] = [];
+    for (const sid of studentIds) {
+      const student = studentById.get(sid);
+      if (!student) continue; // doc missing/deleted — skip silently
+      students.push({
+        studentId: sid,
+        studentName: student.fullName || "Unknown Student",
+        level: student.evaluation?.finalLevel || null,
+        enrollmentId: enrollmentByStudentId.get(sid)!.enrollmentId,
+      });
     }
 
     return students;
