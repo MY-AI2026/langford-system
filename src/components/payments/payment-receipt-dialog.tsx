@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Payment } from "@/lib/types";
 import { formatDate, formatCurrency } from "@/lib/utils/format";
 import { PAYMENT_METHOD_LABELS } from "@/lib/utils/constants";
+import { renderTermsPageHtml, TERMS_PRINT_CSS } from "@/lib/utils/terms";
 import { Printer, X } from "lucide-react";
 import Image from "next/image";
 
@@ -43,10 +44,30 @@ export function PaymentReceiptDialog({
       .replace(/'/g, "&#39;");
 
   function handlePrint() {
-    const printWindow = window.open("", "_blank", "width=460,height=720");
+    const printWindow = window.open("", "_blank", "width=794,height=1123");
     if (!printWindow) return;
 
     const logoUrl = `${window.location.origin}/logo.png`;
+
+    const detailRow = (label: string, value: string) =>
+      `<div class="row"><span class="label">${esc(label)}</span><span class="value">${value}</span></div>`;
+
+    const frontRows = [
+      detailRow("Receipt No / رقم الإيصال", esc(payment!.receiptNumber)),
+      detailRow("Date / التاريخ", formatDate(payment!.paymentDate)),
+      detailRow("Student Name / اسم الطالب", esc(studentName)),
+      detailRow("Phone / التليفون", esc(studentPhone)),
+      studentCivilId ? detailRow("Civil ID / الرقم المدني", esc(studentCivilId)) : "",
+      detailRow(
+        "Payment Method / طريقة الدفع",
+        esc(PAYMENT_METHOD_LABELS[payment!.method] ?? payment!.method)
+      ),
+      payment!.courseName ? detailRow("Course / الدورة", esc(payment!.courseName)) : "",
+      payment!.isInstallment && payment!.installmentNumber
+        ? detailRow("Installment # / رقم القسط", String(payment!.installmentNumber))
+        : "",
+      payment!.notes ? detailRow("Notes / ملاحظات", esc(payment!.notes)) : "",
+    ].join("");
 
     printWindow.document.write(`
 <!DOCTYPE html>
@@ -55,121 +76,104 @@ export function PaymentReceiptDialog({
   <meta charset="utf-8" />
   <title>Receipt ${esc(payment!.receiptNumber)}</title>
   <style>
+    @page { size: A4; margin: 0; }
     * { box-sizing: border-box; margin: 0; padding: 0; }
-    body {
-      font-family: Arial, sans-serif;
-      font-size: 13px;
-      color: #111;
-      max-width: 360px;
+    html, body { background: #fff; color: #111; font-family: Arial, sans-serif; }
+
+    .page { width: 210mm; min-height: 297mm; padding: 20mm 18mm; }
+    .page.front { display: flex; flex-direction: column; }
+
+    .invoice {
+      max-width: 160mm;
+      width: 100%;
       margin: 0 auto;
-      padding: 24px 20px;
-      background: #fff;
+      border: 1px solid #e2e2e2;
+      border-radius: 10px;
+      padding: 16mm 14mm;
     }
-    .header { text-align: center; margin-bottom: 12px; }
-    .logo { width: 90px; height: 90px; object-fit: contain; margin-bottom: 6px; }
-    .institute-name { font-size: 20px; font-weight: 900; letter-spacing: 3px; color: #E31E24; }
-    .institute-sub { font-size: 11px; color: #555; margin-top: 2px; }
+
+    .header { text-align: center; margin-bottom: 16px; }
+    .logo { width: 120px; height: 120px; object-fit: contain; margin-bottom: 8px; }
+    .institute-name { font-size: 30px; font-weight: 900; letter-spacing: 5px; color: #E31E24; }
+    .institute-sub { font-size: 13px; color: #555; margin-top: 4px; }
+
     .receipt-title {
-      font-size: 12px;
+      font-size: 14px;
       font-weight: bold;
       text-transform: uppercase;
-      letter-spacing: 1px;
+      letter-spacing: 2px;
       color: #fff;
       background: #1a1a1a;
       text-align: center;
-      padding: 5px 0;
-      margin: 10px 0;
+      padding: 8px 0;
+      margin: 14px 0 18px;
+      border-radius: 4px;
     }
-    .divider { border-top: 1px dashed #bbb; margin: 10px 0; }
-    .row { display: flex; justify-content: space-between; margin: 6px 0; }
-    .label { color: #666; font-size: 12px; }
-    .value { font-size: 12px; font-weight: 600; text-align: right; max-width: 200px; }
+
+    .row {
+      display: flex;
+      justify-content: space-between;
+      gap: 16px;
+      padding: 9px 2px;
+      border-bottom: 1px dashed #e0e0e0;
+    }
+    .label { color: #666; font-size: 13px; }
+    .value { font-size: 13px; font-weight: 600; text-align: right; max-width: 60%; }
+
     .total-box {
       background: #f9f9f9;
       border: 2px solid #1a1a1a;
-      border-radius: 4px;
-      padding: 10px 12px;
-      margin: 12px 0;
+      border-radius: 6px;
+      padding: 14px 16px;
+      margin: 20px 0;
     }
-    .total-row {
-      display: flex;
-      justify-content: space-between;
-      font-size: 16px;
-      font-weight: 900;
-    }
+    .total-row { display: flex; justify-content: space-between; font-size: 20px; font-weight: 900; }
     .total-amount { color: #E31E24; }
-    .footer {
-      text-align: center;
-      font-size: 11px;
-      color: #888;
-      margin-top: 10px;
-      border-top: 1px dashed #bbb;
-      padding-top: 10px;
-    }
-    @media print {
-      body { padding: 8px; }
-    }
+
+    .signatures { display: flex; justify-content: space-between; gap: 40px; margin-top: 30px; }
+    .sign { flex: 1; text-align: center; font-size: 12px; color: #555; }
+    .sign .line { border-top: 1px solid #999; margin-bottom: 6px; padding-top: 28px; }
+
+    .footer { text-align: center; font-size: 12px; color: #888; margin-top: 18px; border-top: 1px dashed #bbb; padding-top: 10px; }
+    .terms-note { margin-top: 6px; font-size: 11px; color: #E31E24; font-weight: 600; }
+
+    ${TERMS_PRINT_CSS}
   </style>
 </head>
 <body>
-  <div class="header">
-    <img src="${logoUrl}" class="logo" alt="Langford Logo" crossorigin="anonymous" />
-    <div class="institute-name">LANGFORD</div>
-    <div class="institute-sub">International Language Institute – Kuwait</div>
-  </div>
+  <div class="page front">
+    <div class="invoice">
+      <div class="header">
+        <img src="${logoUrl}" class="logo" alt="Langford Logo" crossorigin="anonymous" />
+        <div class="institute-name">LANGFORD</div>
+        <div class="institute-sub">International Language Institute – Kuwait</div>
+      </div>
 
-  <div class="receipt-title">✦ Official Payment Receipt ✦</div>
+      <div class="receipt-title">✦ Official Payment Receipt — إيصال دفع رسمي ✦</div>
 
-  <div class="row">
-    <span class="label">Receipt No:</span>
-    <span class="value">${esc(payment!.receiptNumber)}</span>
-  </div>
-  <div class="row">
-    <span class="label">Date:</span>
-    <span class="value">${formatDate(payment!.paymentDate)}</span>
-  </div>
+      ${frontRows}
 
-  <div class="divider"></div>
+      <div class="total-box">
+        <div class="total-row">
+          <span>AMOUNT PAID</span>
+          <span class="total-amount">${formatCurrency(payment!.amount)}</span>
+        </div>
+      </div>
 
-  <div class="row">
-    <span class="label">Student Name:</span>
-    <span class="value">${esc(studentName)}</span>
-  </div>
-  <div class="row">
-    <span class="label">Phone:</span>
-    <span class="value">${esc(studentPhone)}</span>
-  </div>
-  ${studentCivilId
-    ? `<div class="row"><span class="label">Civil ID:</span><span class="value">${esc(studentCivilId)}</span></div>`
-    : ""}
+      <div class="signatures">
+        <div class="sign"><div class="line"></div>توقيع المحصِّل / Cashier</div>
+        <div class="sign"><div class="line"></div>توقيع الطالب / Student</div>
+      </div>
 
-  <div class="divider"></div>
-
-  <div class="row">
-    <span class="label">Payment Method:</span>
-    <span class="value">${esc(PAYMENT_METHOD_LABELS[payment!.method] ?? payment!.method)}</span>
-  </div>
-  ${payment!.courseName
-    ? `<div class="row"><span class="label">Course:</span><span class="value">${esc(payment!.courseName)}</span></div>`
-    : ""}
-  ${payment!.isInstallment && payment!.installmentNumber
-    ? `<div class="row"><span class="label">Installment #:</span><span class="value">${payment!.installmentNumber}</span></div>`
-    : ""}
-  ${payment!.notes
-    ? `<div class="row"><span class="label">Notes:</span><span class="value">${esc(payment!.notes)}</span></div>`
-    : ""}
-
-  <div class="total-box">
-    <div class="total-row">
-      <span>AMOUNT PAID</span>
-      <span class="total-amount">${formatCurrency(payment!.amount)}</span>
+      <div class="footer">
+        <p>✔ Thank you for choosing Langford!</p>
+        <p style="margin-top:4px; font-size:11px;">This is an official receipt. Please keep it for your records.</p>
+        <p class="terms-note">الشروط والأحكام مطبوعة في ظهر هذا الإيصال — Terms &amp; Conditions are printed on the back.</p>
+      </div>
     </div>
   </div>
 
-  <div class="footer">
-    <p>✔ Thank you for choosing Langford!</p>
-    <p style="margin-top:4px; font-size:10px;">This is an official receipt. Please keep it for your records.</p>
-  </div>
+  ${renderTermsPageHtml()}
 </body>
 </html>`);
 
@@ -266,6 +270,11 @@ export function PaymentReceiptDialog({
             <p>✔ Thank you for choosing Langford!</p>
           </div>
         </div>
+
+        <p className="rounded-md bg-muted/50 px-3 py-2 text-center text-[11px] leading-relaxed text-muted-foreground">
+          يُطبع على ورق <b>A4</b>، والشروط والأحكام في <b>ظهر الإيصال</b>. فعّل
+          الطباعة على الوجهين (Double-sided / Print on both sides) عشان تطلع في الضهر.
+        </p>
 
         <div className="flex gap-2">
           <Button
