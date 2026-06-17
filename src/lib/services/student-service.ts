@@ -84,36 +84,35 @@ export function subscribeToStudents(
   },
   callback: (students: Student[]) => void
 ): () => void {
-  // SECURITY: sales reps must filter by assignedSalesRepId on the SERVER side,
-  // not just in the client. Otherwise any sales user could read all students
-  // by hitting the Firestore REST API directly. Composite index covers
-  // (isArchived, assignedSalesRepId, createdAt) so this query is fast.
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const whereFilters: any[] = [
-    {
-      fieldFilter: {
-        field: { fieldPath: "isArchived" },
-        op: "EQUAL",
-        value: { booleanValue: filters.showArchived === true },
-      },
-    },
-  ];
-  if (filters.role === "sales") {
-    whereFilters.push({
-      fieldFilter: {
-        field: { fieldPath: "assignedSalesRepId" },
-        op: "EQUAL",
-        value: { stringValue: filters.userId },
-      },
-    });
-  }
+  // SECURITY + RELIABILITY: a sales rep must only ever read their own students,
+  // and that filter has to run on the SERVER (otherwise a rep could read every
+  // student via the REST API directly). We query by a SINGLE field
+  // (assignedSalesRepId) and filter `isArchived` on the client.
+  //
+  // Why single-field: a two-equality query (isArchived AND assignedSalesRepId)
+  // needs a composite index. That index isn't deployed (the project avoids
+  // composite indexes — see CLAUDE.md), so the combined query was failing and
+  // returning an EMPTY list — reps couldn't see students they'd just created,
+  // yet the phone-uniqueness check (single-field) still flagged them as
+  // "already registered". A single-field query uses the automatic index and
+  // always works.
+  const isSales = filters.role === "sales";
 
   const structuredQuery = {
     from: [{ collectionId: "students" }],
-    where:
-      whereFilters.length === 1
-        ? whereFilters[0]
-        : { compositeFilter: { op: "AND", filters: whereFilters } },
+    where: {
+      fieldFilter: isSales
+        ? {
+            field: { fieldPath: "assignedSalesRepId" },
+            op: "EQUAL",
+            value: { stringValue: filters.userId },
+          }
+        : {
+            field: { fieldPath: "isArchived" },
+            op: "EQUAL",
+            value: { booleanValue: filters.showArchived === true },
+          },
+    },
   };
 
   return createSubscription<Student>(
@@ -121,7 +120,11 @@ export function subscribeToStudents(
       try {
         let students = (await runQuery(structuredQuery)) as Student[];
 
-        // (Sales role filter is now applied at the Firestore layer above.)
+        // Sales reps query by rep id, so apply the archived filter client-side.
+        if (isSales) {
+          const wantArchived = filters.showArchived === true;
+          students = students.filter((s) => (s.isArchived === true) === wantArchived);
+        }
 
         // Apply status filter client-side
         if (filters.status) {
@@ -404,38 +407,34 @@ export async function restoreStudent(studentId: string, userId: string, userName
 }
 
 export async function getStudentCounts(role: UserRole, userId: string): Promise<Record<StudentStatus, number>> {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const filtersArr: any[] = [
-    {
-      fieldFilter: {
-        field: { fieldPath: "isArchived" },
-        op: "EQUAL",
-        value: { booleanValue: false },
-      },
-    },
-  ];
-
-  if (role === "sales") {
-    filtersArr.push({
-      fieldFilter: {
-        field: { fieldPath: "assignedSalesRepId" },
-        op: "EQUAL",
-        value: { stringValue: userId },
-      },
-    });
-  }
-
-  const where =
-    filtersArr.length === 1
-      ? filtersArr[0]
-      : { compositeFilter: { op: "AND", filters: filtersArr } };
+  // Single-field query (see subscribeToStudents) — sales filter by their own
+  // rep id, everyone else by isArchived; the archived filter for sales is
+  // applied client-side. Avoids an undeployed composite index.
+  const isSales = role === "sales";
 
   const structuredQuery = {
     from: [{ collectionId: "students" }],
-    where,
+    where: {
+      fieldFilter: isSales
+        ? {
+            field: { fieldPath: "assignedSalesRepId" },
+            op: "EQUAL",
+            value: { stringValue: userId },
+          }
+        : {
+            field: { fieldPath: "isArchived" },
+            op: "EQUAL",
+            value: { booleanValue: false },
+          },
+    },
   };
 
-  const students = await runQuery(structuredQuery);
+  let students = await runQuery(structuredQuery);
+  // Sales queried by rep id → drop archived rows client-side.
+  if (isSales) {
+    students = students.filter((s) => s.isArchived !== true);
+  }
+
   const counts: Record<string, number> = { lead: 0, contacted: 0, evaluated: 0, enrolled: 0, paid: 0, lost: 0 };
   students.forEach((s) => {
     const status = s.status as string;
