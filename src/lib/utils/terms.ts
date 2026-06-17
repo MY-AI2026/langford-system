@@ -140,7 +140,7 @@ export function renderTermsPageHtml(): string {
       <p class="t-intro">${esc(TERMS_INTRO)}</p>
     </div>
     <div class="t-body-wrap">${sections}</div>
-    <div class="t-foot">بتسجيلك ودفعك للرسوم فأنت تقر بأنك اطّلعت على هذه الشروط والأحكام ووافقت عليها.</div>
+    <div class="t-foot">بتسجيلك ودفعك للرسوم فأنت تقر بأنك اطّلعت على هذه الشروط والأحكام.</div>
   </div>`;
 }
 
