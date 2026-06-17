@@ -92,10 +92,8 @@ export function PaymentReceiptDialog({
       padding: 16mm 14mm;
     }
 
-    .header { text-align: center; margin-bottom: 16px; }
-    .logo { width: 120px; height: 120px; object-fit: contain; margin-bottom: 8px; }
-    .institute-name { font-size: 30px; font-weight: 900; letter-spacing: 5px; color: #E31E24; }
-    .institute-sub { font-size: 13px; color: #555; margin-top: 4px; }
+    .header { text-align: center; margin-bottom: 18px; }
+    .logo { width: 300px; max-width: 75%; height: auto; display: block; margin: 0 auto; }
 
     .receipt-title {
       font-size: 14px;
@@ -144,9 +142,7 @@ export function PaymentReceiptDialog({
   <div class="page front">
     <div class="invoice">
       <div class="header">
-        <img src="${logoUrl}" class="logo" alt="Langford Logo" crossorigin="anonymous" />
-        <div class="institute-name">LANGFORD</div>
-        <div class="institute-sub">International Language Institute – Kuwait</div>
+        <img src="${logoUrl}" class="logo" alt="Langford International Institute" crossorigin="anonymous" />
       </div>
 
       <div class="receipt-title">✦ Official Payment Receipt — إيصال دفع رسمي ✦</div>
@@ -194,13 +190,17 @@ export function PaymentReceiptDialog({
 
         {/* Receipt Preview */}
         <div className="rounded-lg border bg-white p-4 text-sm space-y-3">
-          {/* Header with logo */}
-          <div className="text-center space-y-1">
+          {/* Header with logo (the logo already carries the institute name) */}
+          <div className="text-center space-y-2">
             <div className="flex justify-center">
-              <Image src="/logo.png" alt="Langford Logo" width={60} height={60} className="object-contain" />
+              <Image
+                src="/logo.png"
+                alt="Langford International Institute"
+                width={200}
+                height={74}
+                className="h-auto w-44 object-contain"
+              />
             </div>
-            <p className="font-black text-base tracking-widest text-[#E31E24]">LANGFORD</p>
-            <p className="text-xs text-muted-foreground">International Language Institute – Kuwait</p>
             <div className="bg-[#1a1a1a] text-white text-[10px] font-bold tracking-wider py-1 rounded">
               OFFICIAL PAYMENT RECEIPT
             </div>
