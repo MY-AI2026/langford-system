@@ -133,8 +133,8 @@ export function PaymentReceiptDialog({
     .total-row { display: flex; justify-content: space-between; font-size: 22px; font-weight: 900; }
     .total-amount { color: #E31E24; }
 
-    .signatures { display: flex; justify-content: space-between; gap: 40px; margin-bottom: 9mm; }
-    .sign { flex: 1; text-align: center; font-size: 12px; color: #555; }
+    .signatures { display: flex; justify-content: flex-start; gap: 40px; margin-bottom: 9mm; }
+    .sign { flex: 0 0 75mm; max-width: 75mm; text-align: center; font-size: 12px; color: #555; }
     .sign .line { border-top: 1px solid #999; margin-bottom: 6px; padding-top: 32px; }
 
     .footer { text-align: center; font-size: 12px; color: #888; border-top: 1px dashed #bbb; padding-top: 10px; }
@@ -168,7 +168,6 @@ export function PaymentReceiptDialog({
       <div class="inv-bottom">
         <div class="signatures">
           <div class="sign"><div class="line"></div>توقيع المحصِّل / Cashier</div>
-          <div class="sign"><div class="line"></div>توقيع الطالب / Student</div>
         </div>
 
         <div class="footer">
