@@ -133,7 +133,7 @@ export default function StudentDetailPage() {
   if (!student) {
     return (
       <div className="flex h-64 items-center justify-center">
-        <p className="text-muted-foreground">Student not found</p>
+        <p className="text-muted-foreground">{t("studentNotFound")}</p>
       </div>
     );
   }
@@ -338,10 +338,10 @@ export default function StudentDetailPage() {
     if (!firebaseUser || !userData) return;
     try {
       await deleteStudent(studentId, firebaseUser.uid, userData.displayName);
-      toast.success("Student deleted permanently");
+      toast.success(t("studentDeletedPermanently"));
       router.push("/students");
     } catch {
-      toast.error("Failed to delete student");
+      toast.error(t("failedToDeleteStudent"));
     }
   }
 
@@ -349,7 +349,7 @@ export default function StudentDetailPage() {
     <div className="space-y-6">
       <PageHeader
         title={student.fullName}
-        description={student.isArchived ? "Archived" : undefined}
+        description={student.isArchived ? t("archived") : undefined}
         action={
           role !== "accountant" ? (
           <div className="flex gap-2">

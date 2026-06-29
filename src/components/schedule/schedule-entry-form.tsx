@@ -431,9 +431,9 @@ export function ScheduleEntryForm({
 
           {/* Notes */}
           <div className="space-y-1.5">
-            <Label>Notes</Label>
+            <Label>{t("notes")}</Label>
             <Textarea
-              placeholder="Optional notes..."
+              placeholder={t("optionalNotes")}
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
               rows={2}
@@ -443,10 +443,10 @@ export function ScheduleEntryForm({
 
         <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)}>
-            Cancel
+            {t("cancel")}
           </Button>
           <Button onClick={handleSubmit} disabled={saving}>
-            {saving ? "Saving..." : isEdit ? "Update" : "Add to Schedule"}
+            {saving ? t("saving") : isEdit ? t("update") : t("addToSchedule")}
           </Button>
         </DialogFooter>
       </DialogContent>
