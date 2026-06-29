@@ -122,7 +122,7 @@ export default function StudentsPage() {
               disabled={filtered.length === 0}
               title={t("downloadExcelFile")}
             >
-              <Download className="mr-2 h-4 w-4" />
+              <Download className="me-2 h-4 w-4" />
               {t("downloadExcel")}
             </Button>
             {role !== "accountant" && userData && (
@@ -134,7 +134,7 @@ export default function StudentsPage() {
             {role !== "accountant" && (
               <Link href="/students/new">
                 <Button>
-                  <Plus className="mr-2 h-4 w-4" />
+                  <Plus className="me-2 h-4 w-4" />
                   {t("addStudent")}
                 </Button>
               </Link>

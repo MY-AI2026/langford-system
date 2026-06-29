@@ -267,14 +267,14 @@ function StudentNotesContent() {
         action={
           <div className="flex gap-2">
             <Button variant="outline" onClick={load} disabled={loading}>
-              <RefreshCw className="mr-2 h-4 w-4" />
+              <RefreshCw className="me-2 h-4 w-4" />
               {t("refresh")}
             </Button>
             <Button
               onClick={() => exportToCSV(filtered)}
               disabled={filtered.length === 0}
             >
-              <Download className="mr-2 h-4 w-4" />
+              <Download className="me-2 h-4 w-4" />
               {t("exportCSV")}
             </Button>
           </div>
@@ -475,7 +475,7 @@ function StudentNotesContent() {
                   {g.entries.map((e) => (
                     <div
                       key={e.id}
-                      className="rounded border-l-2 border-langford-red bg-muted/30 p-2 text-sm"
+                      className="rounded border-s-2 border-langford-red bg-muted/30 p-2 text-sm"
                     >
                       <div className="mb-1 flex flex-wrap items-center gap-2">
                         <Badge

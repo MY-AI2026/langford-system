@@ -104,7 +104,7 @@ export function AttendanceTracker({ studentId }: AttendanceTrackerProps) {
               </p>
             </div>
             <Button size="sm" variant="outline" onClick={() => setAddDialogOpen(true)}>
-              <Plus className="mr-2 h-4 w-4" />
+              <Plus className="me-2 h-4 w-4" />
               {t("addSession")}
             </Button>
           </div>

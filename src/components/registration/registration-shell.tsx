@@ -133,7 +133,7 @@ export function RegistrationShell({ children }: { children: React.ReactNode }) {
             )}
             <ThemeToggle />
             <Button variant="ghost" size="sm" onClick={handleLogout}>
-              <LogOut className="mr-2 h-4 w-4" />
+              <LogOut className="me-2 h-4 w-4" />
               <span className="hidden sm:inline">Sign Out</span>
             </Button>
           </div>
@@ -143,7 +143,7 @@ export function RegistrationShell({ children }: { children: React.ReactNode }) {
       {/* ── Body: sidebar (desktop) + content ──────────────────────────────── */}
       <div className="mx-auto flex w-full max-w-7xl flex-1">
         {links.length > 0 && (
-          <aside className="sticky top-16 hidden h-[calc(100vh-4rem)] w-60 shrink-0 border-r lg:block">
+          <aside className="sticky top-16 hidden h-[calc(100vh-4rem)] w-60 shrink-0 border-e lg:block">
             <SidebarBody links={links} pathname={pathname} />
           </aside>
         )}

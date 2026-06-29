@@ -45,7 +45,7 @@ function UsersContent() {
         action={
           <Link href="/settings/users/new">
             <Button>
-              <Plus className="mr-2 h-4 w-4" />
+              <Plus className="me-2 h-4 w-4" />
               {t("addUser")}
             </Button>
           </Link>

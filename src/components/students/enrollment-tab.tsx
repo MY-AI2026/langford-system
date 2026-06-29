@@ -119,7 +119,7 @@ export function EnrollmentTab({ studentId, studentName, studentCivilId, readOnly
         <h3 className="text-lg font-semibold">{t("courseEnrollments")}</h3>
         {!readOnly && (
           <Button size="sm" onClick={() => setEnrollDialogOpen(true)}>
-            <Plus className="mr-2 h-4 w-4" />
+            <Plus className="me-2 h-4 w-4" />
             {t("enrollInCourse")}
           </Button>
         )}
@@ -206,7 +206,7 @@ export function EnrollmentTab({ studentId, studentName, studentCivilId, readOnly
                         disabled={completing === enrollment.id}
                         onClick={() => handleComplete(enrollment)}
                       >
-                        <CheckCircle2 className="mr-1 h-3 w-3" />
+                        <CheckCircle2 className="me-1 h-3 w-3" />
                         {completing === enrollment.id ? "..." : t("complete")}
                       </Button>
                     )}
@@ -216,7 +216,7 @@ export function EnrollmentTab({ studentId, studentName, studentCivilId, readOnly
                         variant="outline"
                         onClick={() => handleCertificate(enrollment)}
                       >
-                        <Award className="mr-1 h-3 w-3" />
+                        <Award className="me-1 h-3 w-3" />
                         {t("certificate")}
                       </Button>
                     )}
@@ -228,7 +228,7 @@ export function EnrollmentTab({ studentId, studentName, studentCivilId, readOnly
                         disabled={deleting === enrollment.id}
                         onClick={() => handleDelete(enrollment)}
                       >
-                        <Trash2 className="mr-1 h-3 w-3" />
+                        <Trash2 className="me-1 h-3 w-3" />
                         {deleting === enrollment.id ? "..." : t("remove")}
                       </Button>
                     )}

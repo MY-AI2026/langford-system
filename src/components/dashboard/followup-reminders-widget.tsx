@@ -61,7 +61,7 @@ export function FollowUpRemindersWidget({ items }: FollowUpRemindersWidgetProps)
                 )}
               </div>
             )}
-            <div className="space-y-1 max-h-48 overflow-y-auto pr-1">
+            <div className="space-y-1 max-h-48 overflow-y-auto pe-1">
               {items.slice(0, 8).map((item) => (
                 <Link
                   key={item.id}

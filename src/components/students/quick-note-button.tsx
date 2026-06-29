@@ -98,7 +98,7 @@ export function QuickNoteButton({ studentId, studentName, variant = "icon" }: Pr
         </Button>
       ) : (
         <Button variant="outline" onClick={() => setOpen(true)}>
-          <StickyNote className="mr-2 h-4 w-4" />
+          <StickyNote className="me-2 h-4 w-4" />
           {t("quickNote")}
         </Button>
       )}
@@ -154,7 +154,7 @@ export function QuickNoteButton({ studentId, studentName, variant = "icon" }: Pr
               {t("cancel")}
             </Button>
             <Button onClick={save} disabled={saving}>
-              {saving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              {saving && <Loader2 className="me-2 h-4 w-4 animate-spin" />}
               {t("save")}
             </Button>
           </DialogFooter>

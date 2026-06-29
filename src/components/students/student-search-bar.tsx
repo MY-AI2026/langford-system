@@ -95,18 +95,18 @@ export function StudentSearchBar({
       {/* Row 1: search + status + archived */}
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
         <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+          <Search className="absolute start-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <Input
             placeholder={t("searchByNameOrPhone")}
             value={search}
             onChange={(e) => onSearchChange(e.target.value)}
-            className="pl-9"
+            className="ps-9"
           />
           {search && (
             <Button
               variant="ghost"
               size="icon"
-              className="absolute right-1 top-1/2 h-7 w-7 -translate-y-1/2"
+              className="absolute end-1 top-1/2 h-7 w-7 -translate-y-1/2"
               onClick={() => onSearchChange("")}
             >
               <X className="h-3 w-3" />

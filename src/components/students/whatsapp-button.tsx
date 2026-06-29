@@ -90,7 +90,7 @@ export function WhatsAppButton({ phone, fullName, context, variant = "icon" }: P
         </Button>
       ) : (
         <Button onClick={() => handleOpenChange(true)} disabled={!phone}>
-          <MessageCircle className="mr-2 h-4 w-4" />
+          <MessageCircle className="me-2 h-4 w-4" />
           WhatsApp
         </Button>
       )}

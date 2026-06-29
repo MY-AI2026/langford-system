@@ -99,7 +99,7 @@ function MyStudentsContent() {
         </div>
 
         <Button onClick={() => router.push(REG_ROUTES.registerStudent)}>
-          <UserPlus className="mr-2 h-4 w-4" />
+          <UserPlus className="me-2 h-4 w-4" />
           Register a New Student
         </Button>
       </div>
@@ -150,7 +150,7 @@ function MyStudentsContent() {
             placeholder="Search by name, phone, or email"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="pl-9"
+            className="ps-9"
             aria-label="Search"
           />
         </div>
@@ -284,7 +284,7 @@ function EmptyState({ onAdd }: { onAdd: () => void }) {
           Register your first student and it will appear here right away.
         </p>
         <Button className="mt-4" onClick={onAdd}>
-          <UserPlus className="mr-2 h-4 w-4" />
+          <UserPlus className="me-2 h-4 w-4" />
           Register a New Student
         </Button>
       </CardContent>

@@ -113,7 +113,7 @@ export function DocumentUpload({ studentId, readOnly = false }: DocumentUploadPr
               onClick={() => fileInputRef.current?.click()}
               disabled={uploading}
             >
-              <Upload className="mr-2 h-4 w-4" />
+              <Upload className="me-2 h-4 w-4" />
               {uploading ? t("uploading") : t("uploadDocument")}
             </Button>
           </div>

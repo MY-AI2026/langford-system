@@ -148,7 +148,7 @@ function SettingsContent() {
                 onChange={(e) => setNewEmail(e.target.value)}
                 placeholder="email@langfordkw.com"
                 dir="ltr"
-                className="text-left"
+                className="text-start"
                 onKeyDown={(e) => {
                   if (e.key === "Enter") {
                     e.preventDefault();
@@ -157,7 +157,7 @@ function SettingsContent() {
                 }}
               />
               <Button type="button" variant="outline" onClick={addRecipient}>
-                <Plus className="ml-2 h-4 w-4" />
+                <Plus className="ms-2 h-4 w-4" />
                 {t("add")}
               </Button>
             </div>
@@ -199,7 +199,7 @@ function SettingsContent() {
                 value={from}
                 onChange={(e) => setFrom(e.target.value)}
                 dir="ltr"
-                className="text-left"
+                className="text-start"
                 placeholder="Name <noreply@your-domain.com>"
               />
               <p className="text-xs text-muted-foreground">
@@ -215,7 +215,7 @@ function SettingsContent() {
                 value={replyTo}
                 onChange={(e) => setReplyTo(e.target.value)}
                 dir="ltr"
-                className="text-left"
+                className="text-start"
                 placeholder="reply@langfordkw.com"
               />
             </div>
@@ -223,7 +223,7 @@ function SettingsContent() {
 
           <div className="flex justify-start pt-2">
             <Button onClick={handleSave} disabled={saving} size="lg">
-              {saving && <Loader2 className="ml-2 h-4 w-4 animate-spin" />}
+              {saving && <Loader2 className="ms-2 h-4 w-4 animate-spin" />}
               {t("saveSettings")}
             </Button>
           </div>

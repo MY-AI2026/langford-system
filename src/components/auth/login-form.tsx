@@ -141,14 +141,14 @@ export function LoginForm() {
             id="password"
             type={showPassword ? "text" : "password"}
             placeholder={t("enterYourPassword")}
-            className="h-11 border-white/15 bg-white/[0.04] pr-11 text-white placeholder:text-gray-500 focus-visible:border-langford-red focus-visible:ring-langford-red/40"
+            className="h-11 border-white/15 bg-white/[0.04] pe-11 text-white placeholder:text-gray-500 focus-visible:border-langford-red focus-visible:ring-langford-red/40"
             {...register("password")}
           />
           <button
             type="button"
             onClick={() => setShowPassword((v) => !v)}
             aria-label={showPassword ? t("hidePassword") : t("showPassword")}
-            className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 transition-colors hover:text-gray-200"
+            className="absolute end-3 top-1/2 -translate-y-1/2 text-gray-400 transition-colors hover:text-gray-200"
           >
             {showPassword ? (
               <EyeOff className="h-5 w-5" />
@@ -169,7 +169,7 @@ export function LoginForm() {
       >
         {isSubmitting ? (
           <>
-            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+            <Loader2 className="me-2 h-4 w-4 animate-spin" />
             {t("signingIn")}
           </>
         ) : (
@@ -192,7 +192,7 @@ export function LoginForm() {
         className="h-11 w-full border-white/15 bg-white/[0.03] text-gray-100 hover:bg-white/[0.08] hover:text-white"
         onClick={handleGoogleSignIn}
       >
-        <svg className="mr-2 h-4 w-4" viewBox="0 0 24 24">
+        <svg className="me-2 h-4 w-4" viewBox="0 0 24 24">
           <path
             d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z"
             fill="#4285F4"

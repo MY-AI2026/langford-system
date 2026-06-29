@@ -64,7 +64,7 @@ export function SalesLeaderboard({ students, salesUsers }: SalesLeaderboardProps
                     </span>
                   </div>
                 </div>
-                <div className="text-right">
+                <div className="text-end">
                   <p className="font-semibold text-sm">{formatCurrency(revenue)}</p>
                   {user.monthlyTarget > 0 && (
                     <p className="text-xs text-muted-foreground">
@@ -76,7 +76,7 @@ export function SalesLeaderboard({ students, salesUsers }: SalesLeaderboardProps
               {user.monthlyTarget > 0 && (
                 <div className="flex items-center gap-2">
                   <Progress value={targetPct} className="h-1.5" />
-                  <span className="text-xs text-muted-foreground w-8 text-right shrink-0">
+                  <span className="text-xs text-muted-foreground w-8 text-end shrink-0">
                     {targetPct.toFixed(0)}%
                   </span>
                 </div>

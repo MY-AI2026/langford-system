@@ -584,7 +584,7 @@ export default function DashboardPage() {
                 {t("viewCurrentMonth")}
               </Button>
             )}
-            <p className="text-xs text-muted-foreground w-full sm:w-auto sm:ml-auto">
+            <p className="text-xs text-muted-foreground w-full sm:w-auto sm:ms-auto">
               {isAllTime
                 ? t("allTimeTotalsHint")
                 : t("outstandingAcrossMonthsHint")}

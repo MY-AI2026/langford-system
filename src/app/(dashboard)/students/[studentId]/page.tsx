@@ -355,18 +355,18 @@ export default function StudentDetailPage() {
           <div className="flex gap-2">
             <Link href={`/students/${studentId}/edit`}>
               <Button variant="outline" size="sm">
-                <Pencil className="mr-2 h-4 w-4" />
+                <Pencil className="me-2 h-4 w-4" />
                 {t("edit")}
               </Button>
             </Link>
             {student.isArchived ? (
               <Button variant="outline" size="sm" onClick={handleRestore}>
-                <RotateCcw className="mr-2 h-4 w-4" />
+                <RotateCcw className="me-2 h-4 w-4" />
                 {t("restore")}
               </Button>
             ) : (
               <Button variant="outline" size="sm" onClick={handleArchive}>
-                <Archive className="mr-2 h-4 w-4" />
+                <Archive className="me-2 h-4 w-4" />
                 {t("archive")}
               </Button>
             )}
@@ -376,7 +376,7 @@ export default function StudentDetailPage() {
                 size="sm"
                 onClick={() => setDeleteDialogOpen(true)}
               >
-                <Trash2 className="mr-2 h-4 w-4" />
+                <Trash2 className="me-2 h-4 w-4" />
                 {t("delete")}
               </Button>
             )}
@@ -542,7 +542,7 @@ export default function StudentDetailPage() {
                       size="sm"
                       onClick={() => setIeltsDialogOpen(true)}
                     >
-                      <Plus className="mr-1 h-3 w-3" />
+                      <Plus className="me-1 h-3 w-3" />
                       {t("add")}
                     </Button>
                   )}
@@ -669,12 +669,12 @@ export default function StudentDetailPage() {
                   onClick={() => setIeltsDialogOpen(true)}
                   className="border-blue-200 text-blue-700 hover:bg-blue-50 dark:border-blue-800 dark:text-blue-300 dark:hover:bg-blue-950"
                 >
-                  <Plus className="mr-2 h-4 w-4" />
+                  <Plus className="me-2 h-4 w-4" />
                   {t("recordIeltsPayment")}
                 </Button>
               )}
               <Button onClick={() => setPaymentDialogOpen(true)}>
-                <Plus className="mr-2 h-4 w-4" />
+                <Plus className="me-2 h-4 w-4" />
                 {t("recordPayment")}
               </Button>
             </div>

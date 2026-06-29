@@ -254,14 +254,14 @@ function OutstandingBalancesContent() {
         action={
           <div className="flex gap-2">
             <Button variant="outline" onClick={load} disabled={loading}>
-              <RefreshCw className="mr-2 h-4 w-4" />
+              <RefreshCw className="me-2 h-4 w-4" />
               {t("refresh")}
             </Button>
             <Button
               onClick={() => exportToCSV(filtered)}
               disabled={filtered.length === 0}
             >
-              <Download className="mr-2 h-4 w-4" />
+              <Download className="me-2 h-4 w-4" />
               {t("exportCsv")}
             </Button>
           </div>

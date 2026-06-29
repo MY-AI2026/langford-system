@@ -120,7 +120,7 @@ export function Topbar({ onMenuClick }: TopbarProps) {
           >
             <Search className="h-4 w-4" />
             <span className="text-sm">{t("search")}</span>
-            <kbd className="pointer-events-none ml-2 hidden h-5 select-none items-center gap-1 rounded border bg-muted px-1.5 font-mono text-[10px] font-medium opacity-100 sm:flex">
+            <kbd className="pointer-events-none ms-2 hidden h-5 select-none items-center gap-1 rounded border bg-muted px-1.5 font-mono text-[10px] font-medium opacity-100 sm:flex">
               <span className="text-xs">⌘</span>K
             </kbd>
           </Button>
@@ -150,7 +150,7 @@ export function Topbar({ onMenuClick }: TopbarProps) {
                 {initials}
               </AvatarFallback>
             </Avatar>
-            <div className="hidden text-left md:block">
+            <div className="hidden text-start md:block">
               <p className="text-sm font-medium">
                 {userData?.displayName || "User"}
               </p>
@@ -173,12 +173,12 @@ export function Topbar({ onMenuClick }: TopbarProps) {
             </div>
             <DropdownMenuSeparator />
             <DropdownMenuItem onClick={() => router.push("/profile")}>
-              <KeyRound className="mr-2 h-4 w-4" />
+              <KeyRound className="me-2 h-4 w-4" />
               Change Password
             </DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem onClick={handleSignOut} className="text-red-600">
-              <LogOut className="mr-2 h-4 w-4" />
+              <LogOut className="me-2 h-4 w-4" />
               Sign Out
             </DropdownMenuItem>
           </DropdownMenuContent>

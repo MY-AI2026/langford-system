@@ -232,7 +232,7 @@ function EmbassyPaymentsContent() {
       {canEdit && (
         <div className="flex justify-end">
           <Button onClick={() => setDialogOpen(true)}>
-            <Plus className="mr-2 h-4 w-4" />
+            <Plus className="me-2 h-4 w-4" />
             {t("recordEmbassyTransfer")}
           </Button>
           <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>

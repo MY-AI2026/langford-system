@@ -217,7 +217,7 @@ function AcceptixAdminDashboardContent() {
                   className="text-sm text-primary hover:underline"
                 >
                   {t("manageCoursesLink")}
-                  <ArrowRight className="ml-1 inline h-3 w-3" />
+                  <ArrowRight className="ms-1 inline h-3 w-3" />
                 </Link>
               </>
             )}
@@ -234,7 +234,7 @@ function AcceptixAdminDashboardContent() {
               className="text-sm text-primary hover:underline"
             >
               {t("viewAll")}
-              <ArrowRight className="ml-1 inline h-3 w-3" />
+              <ArrowRight className="ms-1 inline h-3 w-3" />
             </Link>
           </div>
         </CardHeader>
@@ -255,7 +255,7 @@ function AcceptixAdminDashboardContent() {
                 <button
                   key={s.id}
                   onClick={() => router.push(REG_ROUTES.adminStudents)}
-                  className="flex w-full items-center justify-between gap-3 py-3 text-left hover:bg-muted/50"
+                  className="flex w-full items-center justify-between gap-3 py-3 text-start hover:bg-muted/50"
                 >
                   <div className="min-w-0">
                     <p className="truncate font-medium">{s.fullName}</p>

@@ -205,7 +205,7 @@ export function StudentImportDialog({
       <DialogTrigger
         render={
           <Button variant="outline">
-            <Upload className="mr-2 h-4 w-4" />
+            <Upload className="me-2 h-4 w-4" />
             استيراد Excel
           </Button>
         }
@@ -237,9 +237,9 @@ export function StudentImportDialog({
                 <table className="w-full text-sm">
                   <thead className="bg-muted/50 text-muted-foreground">
                     <tr>
-                      <th className="px-3 py-2 text-right">صف</th>
-                      <th className="px-3 py-2 text-right">الاسم</th>
-                      <th className="px-3 py-2 text-right">السبب</th>
+                      <th className="px-3 py-2 text-end">صف</th>
+                      <th className="px-3 py-2 text-end">الاسم</th>
+                      <th className="px-3 py-2 text-end">السبب</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -271,7 +271,7 @@ export function StudentImportDialog({
                 accept=".xlsx,.xls,.csv"
                 onChange={handleFile}
                 disabled={parsing || importing}
-                className="block w-full text-sm text-muted-foreground file:mr-3 file:rounded-md file:border-0 file:bg-primary file:px-4 file:py-2 file:text-sm file:font-medium file:text-primary-foreground hover:file:bg-primary/90"
+                className="block w-full text-sm text-muted-foreground file:me-3 file:rounded-md file:border-0 file:bg-primary file:px-4 file:py-2 file:text-sm file:font-medium file:text-primary-foreground hover:file:bg-primary/90"
               />
               {fileName && (
                 <p className="mt-1 text-xs text-muted-foreground">{fileName}</p>
@@ -327,10 +327,10 @@ export function StudentImportDialog({
                   <table className="w-full text-sm">
                     <thead className="sticky top-0 bg-muted/50 text-muted-foreground">
                       <tr>
-                        <th className="px-3 py-2 text-right">صف</th>
-                        <th className="px-3 py-2 text-right">الاسم</th>
-                        <th className="px-3 py-2 text-right">التليفون</th>
-                        <th className="px-3 py-2 text-right">الحالة</th>
+                        <th className="px-3 py-2 text-end">صف</th>
+                        <th className="px-3 py-2 text-end">الاسم</th>
+                        <th className="px-3 py-2 text-end">التليفون</th>
+                        <th className="px-3 py-2 text-end">الحالة</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -373,7 +373,7 @@ export function StudentImportDialog({
                 onClick={handleImport}
                 disabled={importing || parsing || validRows.length === 0}
               >
-                {importing && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                {importing && <Loader2 className="me-2 h-4 w-4 animate-spin" />}
                 إضافة {validRows.length > 0 ? `(${validRows.length})` : ""}
               </Button>
             </DialogFooter>

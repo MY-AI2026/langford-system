@@ -71,7 +71,7 @@ function NewAgentContent() {
         </div>
 
         <Button variant="ghost" size="sm" onClick={() => router.push(REG_ROUTES.adminAgents)}>
-          <ArrowRight className="ml-2 h-4 w-4" />
+          <ArrowRight className="ms-2 h-4 w-4" />
           {t("backToList")}
         </Button>
       </div>
@@ -109,7 +109,7 @@ function NewAgentContent() {
                   placeholder="agent@acceptix.com"
                   autoComplete="off"
                   dir="ltr"
-                  className="text-left"
+                  className="text-start"
                   {...register("email")}
                   aria-invalid={!!errors.email}
                 />
@@ -127,7 +127,7 @@ function NewAgentContent() {
                   placeholder={t("phonePlaceholderExample")}
                   autoComplete="off"
                   dir="ltr"
-                  className="text-left"
+                  className="text-start"
                   {...register("phone")}
                 />
               </div>
@@ -142,7 +142,7 @@ function NewAgentContent() {
                   placeholder={t("passwordPlaceholderMin")}
                   autoComplete="new-password"
                   dir="ltr"
-                  className="text-left"
+                  className="text-start"
                   {...register("password")}
                   aria-invalid={!!errors.password}
                 />
@@ -157,7 +157,7 @@ function NewAgentContent() {
 
             <div className="flex justify-start gap-2 pt-2">
               <Button type="submit" disabled={isSubmitting} size="lg">
-                {isSubmitting && <Loader2 className="ml-2 h-4 w-4 animate-spin" />}
+                {isSubmitting && <Loader2 className="ms-2 h-4 w-4 animate-spin" />}
                 {t("createAccount")}
               </Button>
               <Button

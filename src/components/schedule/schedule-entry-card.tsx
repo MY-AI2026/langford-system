@@ -67,7 +67,7 @@ export function ScheduleEntryCard({
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger
-        className={`group w-full cursor-pointer rounded-lg border p-2 text-left transition-all hover:shadow-md ${colorClass}`}
+        className={`group w-full cursor-pointer rounded-lg border p-2 text-start transition-all hover:shadow-md ${colorClass}`}
         style={{ height: "100%" }}
       >
         <div className="flex h-full flex-col justify-between gap-1">
@@ -130,7 +130,7 @@ export function ScheduleEntryCard({
                   router.push(`/attendance?courseId=${entry.courseId}`);
                 }}
               >
-                <ClipboardCheck className="mr-1.5 h-3.5 w-3.5" />
+                <ClipboardCheck className="me-1.5 h-3.5 w-3.5" />
                 {t("takeAttendance")}
               </Button>
             )}

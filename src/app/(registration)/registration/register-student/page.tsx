@@ -89,7 +89,7 @@ function RegisterStudentContent() {
           size="sm"
           onClick={() => router.push(REG_ROUTES.myStudents)}
         >
-          <ListChecks className="mr-2 h-4 w-4" />
+          <ListChecks className="me-2 h-4 w-4" />
           My Students
         </Button>
       </div>

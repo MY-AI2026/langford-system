@@ -100,7 +100,7 @@ function CoordinatorScheduleView() {
         />
         {selectedInstructorId && (
           <Button onClick={handleAddNew}>
-            <Plus className="mr-1.5 h-4 w-4" />
+            <Plus className="me-1.5 h-4 w-4" />
             {t("addToSchedule")}
           </Button>
         )}
