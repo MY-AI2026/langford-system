@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { usePathname } from "next/navigation";
 import { ProtectedRoute } from "@/components/auth/protected-route";
 import { Sidebar } from "@/components/layout/sidebar";
 import { Topbar } from "@/components/layout/topbar";
@@ -12,6 +13,7 @@ export default function DashboardLayout({
   children: React.ReactNode;
 }) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const pathname = usePathname();
 
   return (
     <ProtectedRoute>
@@ -19,7 +21,10 @@ export default function DashboardLayout({
         <Sidebar open={sidebarOpen} onClose={() => setSidebarOpen(false)} />
         <div className="flex min-h-screen flex-col lg:pl-64">
           <Topbar onMenuClick={() => setSidebarOpen(true)} />
-          <main className="flex-1 p-4 lg:p-6">{children}</main>
+          {/* Keyed on the route so content fades/slides in on each navigation */}
+          <main key={pathname} className="animate-page-in flex-1 p-4 lg:p-6">
+            {children}
+          </main>
           <AppFooter />
         </div>
       </div>

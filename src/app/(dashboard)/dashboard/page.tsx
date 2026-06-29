@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
+import dynamic from "next/dynamic";
 import { useAuth } from "@/contexts/auth-context";
 import { PageHeader } from "@/components/layout/page-header";
 import { StatsCards } from "@/components/dashboard/stats-cards";
@@ -8,11 +9,34 @@ import { MonthlyTargetProgress } from "@/components/dashboard/monthly-target-pro
 import { OverduePaymentsWidget } from "@/components/dashboard/overdue-payments-widget";
 import { RecentActivityFeed } from "@/components/dashboard/recent-activity-feed";
 import { FollowUpRemindersWidget, type FollowUpItem } from "@/components/dashboard/followup-reminders-widget";
-import { SalesLeaderboard } from "@/components/dashboard/sales-leaderboard";
-import { PipelineFunnel } from "@/components/dashboard/pipeline-funnel";
-import { RevenueTrendChart } from "@/components/dashboard/revenue-trend-chart";
-import { LeadSourceChart } from "@/components/dashboard/lead-source-chart";
-import { CourseEnrollmentChart } from "@/components/dashboard/course-enrollment-chart";
+import { Skeleton } from "@/components/ui/skeleton";
+
+// Charts pull in recharts (a heavy dependency). Loading them lazily keeps the
+// initial dashboard JS small so the page becomes interactive faster; each
+// renders a skeleton placeholder until its chunk arrives.
+const chartFallback = () => (
+  <Skeleton className="h-[320px] w-full rounded-xl" />
+);
+const SalesLeaderboard = dynamic(
+  () => import("@/components/dashboard/sales-leaderboard").then((m) => m.SalesLeaderboard),
+  { loading: chartFallback },
+);
+const PipelineFunnel = dynamic(
+  () => import("@/components/dashboard/pipeline-funnel").then((m) => m.PipelineFunnel),
+  { loading: chartFallback },
+);
+const RevenueTrendChart = dynamic(
+  () => import("@/components/dashboard/revenue-trend-chart").then((m) => m.RevenueTrendChart),
+  { loading: chartFallback },
+);
+const LeadSourceChart = dynamic(
+  () => import("@/components/dashboard/lead-source-chart").then((m) => m.LeadSourceChart),
+  { loading: chartFallback },
+);
+const CourseEnrollmentChart = dynamic(
+  () => import("@/components/dashboard/course-enrollment-chart").then((m) => m.CourseEnrollmentChart),
+  { loading: chartFallback },
+);
 import {
   subscribeToStudents,
   subscribeToRecentActivities,

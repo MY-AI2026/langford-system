@@ -34,83 +34,164 @@ interface SidebarProps {
   onClose: () => void;
 }
 
+interface NavItem {
+  href: string;
+  label: string;
+  icon: typeof LayoutDashboard;
+  showFollowupBadge?: boolean;
+}
+
+interface NavSection {
+  /** Optional section heading; omit for an ungrouped block. */
+  label?: string;
+  items: NavItem[];
+}
+
 export function Sidebar({ open, onClose }: SidebarProps) {
   const pathname = usePathname();
   const { role } = useAuth();
   const followupCount = useFollowupCount();
   const { t } = useLanguage();
 
-  const adminNavItems = [
-    { href: "/dashboard", label: t("dashboard"), icon: LayoutDashboard },
-    { href: "/students", label: t("students"), icon: GraduationCap, showFollowupBadge: true },
-    { href: "/pipeline", label: t("pipeline"), icon: Kanban },
-    { href: "/payments", label: t("payments"), icon: CreditCard },
-    { href: "/payments/embassy", label: "Embassy Transfers", icon: FileCheck },
-    { href: "/summer-club", label: "النادي الصيفي", icon: Sun },
-    { href: "/reports/summer-club", label: "تقرير النادي الصيفي", icon: Sun },
-    { href: "/acceptix", label: "Acceptix", icon: Handshake },
-    { href: "/acceptix/students", label: "Acceptix Students", icon: GraduationCap },
-    { href: "/acceptix/agents", label: "Acceptix Agents", icon: UserPlus },
-    { href: "/acceptix/courses", label: "Acceptix Courses", icon: BookOpen },
-    { href: "/acceptix/reports", label: "Acceptix Reports", icon: FileBarChart },
-    { href: "/acceptix/settings", label: "Acceptix Settings", icon: Settings },
-    { href: "/reports", label: t("reports"), icon: BarChart3 },
-    { href: "/reports/outstanding-balances", label: "Outstanding Balances", icon: Wallet },
-    { href: "/reports/student-notes", label: "Student Notes", icon: MessageSquare },
-    { href: "/reports/logins", label: t("loginReport"), icon: LogIn },
-    { href: "/reports/audit", label: t("auditLog"), icon: ShieldCheck },
-    { href: "/settings", label: t("settings"), icon: Settings },
-    { href: "/settings/courses", label: t("courses"), icon: BookOpen },
-    { href: "/schedule", label: t("schedule"), icon: CalendarDays },
+  // Navigation is grouped into labelled sections so long role menus (admin
+  // has 20+ links) read as organised blocks instead of one flat scroll.
+  const adminNavSections: NavSection[] = [
+    {
+      label: t("dashboard"),
+      items: [
+        { href: "/dashboard", label: t("dashboard"), icon: LayoutDashboard },
+      ],
+    },
+    {
+      label: t("students"),
+      items: [
+        { href: "/students", label: t("students"), icon: GraduationCap, showFollowupBadge: true },
+        { href: "/pipeline", label: t("pipeline"), icon: Kanban },
+        { href: "/payments", label: t("payments"), icon: CreditCard },
+        { href: "/payments/embassy", label: "Embassy Transfers", icon: FileCheck },
+      ],
+    },
+    {
+      label: "النادي الصيفي",
+      items: [
+        { href: "/summer-club", label: "النادي الصيفي", icon: Sun },
+        { href: "/reports/summer-club", label: "تقرير النادي الصيفي", icon: Sun },
+      ],
+    },
+    {
+      label: "Acceptix",
+      items: [
+        { href: "/acceptix", label: "Acceptix", icon: Handshake },
+        { href: "/acceptix/students", label: "Acceptix Students", icon: GraduationCap },
+        { href: "/acceptix/agents", label: "Acceptix Agents", icon: UserPlus },
+        { href: "/acceptix/courses", label: "Acceptix Courses", icon: BookOpen },
+        { href: "/acceptix/reports", label: "Acceptix Reports", icon: FileBarChart },
+        { href: "/acceptix/settings", label: "Acceptix Settings", icon: Settings },
+      ],
+    },
+    {
+      label: t("reports"),
+      items: [
+        { href: "/reports", label: t("reports"), icon: BarChart3 },
+        { href: "/reports/outstanding-balances", label: "Outstanding Balances", icon: Wallet },
+        { href: "/reports/student-notes", label: "Student Notes", icon: MessageSquare },
+        { href: "/reports/logins", label: t("loginReport"), icon: LogIn },
+        { href: "/reports/audit", label: t("auditLog"), icon: ShieldCheck },
+      ],
+    },
+    {
+      label: t("settings"),
+      items: [
+        { href: "/settings", label: t("settings"), icon: Settings },
+        { href: "/settings/courses", label: t("courses"), icon: BookOpen },
+        { href: "/schedule", label: t("schedule"), icon: CalendarDays },
+      ],
+    },
   ];
 
-  const salesNavItems = [
-    { href: "/dashboard", label: t("dashboard"), icon: LayoutDashboard },
-    { href: "/students", label: t("students"), icon: GraduationCap, showFollowupBadge: true },
-    { href: "/pipeline", label: t("pipeline"), icon: Kanban },
-    { href: "/payments", label: t("payments"), icon: CreditCard },
-    { href: "/summer-club", label: "النادي الصيفي", icon: Sun },
-    { href: "/reports/summer-club", label: "تقرير النادي الصيفي", icon: Sun },
+  const salesNavSections: NavSection[] = [
+    {
+      items: [
+        { href: "/dashboard", label: t("dashboard"), icon: LayoutDashboard },
+        { href: "/students", label: t("students"), icon: GraduationCap, showFollowupBadge: true },
+        { href: "/pipeline", label: t("pipeline"), icon: Kanban },
+        { href: "/payments", label: t("payments"), icon: CreditCard },
+      ],
+    },
+    {
+      label: "النادي الصيفي",
+      items: [
+        { href: "/summer-club", label: "النادي الصيفي", icon: Sun },
+        { href: "/reports/summer-club", label: "تقرير النادي الصيفي", icon: Sun },
+      ],
+    },
   ];
 
-  const instructorNavItems = [
-    { href: "/dashboard", label: t("dashboard"), icon: LayoutDashboard },
-    { href: "/schedule", label: t("schedule"), icon: CalendarDays },
-    { href: "/attendance", label: t("attendance"), icon: ClipboardCheck },
+  const instructorNavSections: NavSection[] = [
+    {
+      items: [
+        { href: "/dashboard", label: t("dashboard"), icon: LayoutDashboard },
+        { href: "/schedule", label: t("schedule"), icon: CalendarDays },
+        { href: "/attendance", label: t("attendance"), icon: ClipboardCheck },
+      ],
+    },
   ];
 
-  const coordinatorNavItems = [
-    { href: "/dashboard", label: t("dashboard"), icon: LayoutDashboard },
-    { href: "/students", label: t("students"), icon: GraduationCap },
-    { href: "/settings/courses", label: t("courses"), icon: BookOpen },
-    { href: "/schedule", label: t("schedule"), icon: CalendarDays },
-    { href: "/attendance", label: t("attendance"), icon: ClipboardCheck },
-    { href: "/summer-club", label: "النادي الصيفي", icon: Sun },
-    { href: "/reports/summer-club", label: "تقرير النادي الصيفي", icon: Sun },
+  const coordinatorNavSections: NavSection[] = [
+    {
+      items: [
+        { href: "/dashboard", label: t("dashboard"), icon: LayoutDashboard },
+        { href: "/students", label: t("students"), icon: GraduationCap },
+        { href: "/settings/courses", label: t("courses"), icon: BookOpen },
+        { href: "/schedule", label: t("schedule"), icon: CalendarDays },
+        { href: "/attendance", label: t("attendance"), icon: ClipboardCheck },
+      ],
+    },
+    {
+      label: "النادي الصيفي",
+      items: [
+        { href: "/summer-club", label: "النادي الصيفي", icon: Sun },
+        { href: "/reports/summer-club", label: "تقرير النادي الصيفي", icon: Sun },
+      ],
+    },
   ];
 
-  const accountantNavItems = [
-    { href: "/dashboard", label: t("dashboard"), icon: LayoutDashboard },
-    { href: "/students", label: t("students"), icon: GraduationCap },
-    { href: "/payments", label: t("payments"), icon: CreditCard },
-    { href: "/payments/embassy", label: "Embassy Transfers", icon: FileCheck },
-    { href: "/settings/courses", label: t("courses"), icon: BookOpen },
-    { href: "/summer-club", label: "النادي الصيفي", icon: Sun },
-    { href: "/reports/summer-club", label: "تقرير النادي الصيفي", icon: Sun },
-    { href: "/reports/outstanding-balances", label: "Outstanding Balances", icon: Wallet },
-    { href: "/reports/student-notes", label: "Student Notes", icon: MessageSquare },
+  const accountantNavSections: NavSection[] = [
+    {
+      items: [
+        { href: "/dashboard", label: t("dashboard"), icon: LayoutDashboard },
+        { href: "/students", label: t("students"), icon: GraduationCap },
+        { href: "/payments", label: t("payments"), icon: CreditCard },
+        { href: "/payments/embassy", label: "Embassy Transfers", icon: FileCheck },
+        { href: "/settings/courses", label: t("courses"), icon: BookOpen },
+      ],
+    },
+    {
+      label: "النادي الصيفي",
+      items: [
+        { href: "/summer-club", label: "النادي الصيفي", icon: Sun },
+        { href: "/reports/summer-club", label: "تقرير النادي الصيفي", icon: Sun },
+      ],
+    },
+    {
+      label: t("reports"),
+      items: [
+        { href: "/reports/outstanding-balances", label: "Outstanding Balances", icon: Wallet },
+        { href: "/reports/student-notes", label: "Student Notes", icon: MessageSquare },
+      ],
+    },
   ];
 
-  const navItems =
+  const navSections =
     role === "admin"
-      ? adminNavItems
+      ? adminNavSections
       : role === "instructor"
-        ? instructorNavItems
+        ? instructorNavSections
         : role === "coordinator"
-          ? coordinatorNavItems
+          ? coordinatorNavSections
           : role === "accountant"
-            ? accountantNavItems
-            : salesNavItems;
+            ? accountantNavSections
+            : salesNavSections;
 
   return (
     <>
@@ -151,34 +232,51 @@ export function Sidebar({ open, onClose }: SidebarProps) {
         </div>
 
         {/* Navigation */}
-        <nav className="flex-1 space-y-1 p-3">
-          {navItems.map((item) => {
-            const isActive =
-              pathname === item.href ||
-              (item.href !== "/dashboard" && pathname.startsWith(item.href));
+        <nav className="flex-1 space-y-4 overflow-y-auto p-3 [scrollbar-width:thin]">
+          {navSections.map((section, sectionIdx) => (
+            <div key={section.label ?? `section-${sectionIdx}`} className="space-y-1">
+              {section.label && (
+                <p className="px-3 pb-1 pt-1 text-[10px] font-semibold uppercase tracking-wider text-sidebar-foreground/35">
+                  {section.label}
+                </p>
+              )}
+              {section.items.map((item) => {
+                const isActive =
+                  pathname === item.href ||
+                  (item.href !== "/dashboard" && pathname.startsWith(item.href));
 
-            return (
-              <Link
-                key={item.href}
-                href={item.href}
-                onClick={onClose}
-                className={cn(
-                  "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm transition-colors",
-                  isActive
-                    ? "bg-sidebar-primary text-sidebar-primary-foreground"
-                    : "text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
-                )}
-              >
-                <item.icon className="h-4 w-4" />
-                <span className="flex-1">{item.label}</span>
-                {(item as { showFollowupBadge?: boolean }).showFollowupBadge && followupCount > 0 && (
-                  <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-red-500 px-1 text-[10px] font-bold text-white">
-                    {followupCount > 99 ? "99+" : followupCount}
-                  </span>
-                )}
-              </Link>
-            );
-          })}
+                return (
+                  <Link
+                    key={item.href}
+                    href={item.href}
+                    onClick={onClose}
+                    aria-current={isActive ? "page" : undefined}
+                    className={cn(
+                      "group/nav relative flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm transition-all duration-200",
+                      isActive
+                        ? "bg-sidebar-primary text-sidebar-primary-foreground shadow-sm"
+                        : "text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+                    )}
+                  >
+                    {/* Active accent bar */}
+                    <span
+                      className={cn(
+                        "absolute left-0 top-1/2 h-5 w-1 -translate-y-1/2 rounded-r-full bg-langford-red transition-all duration-200",
+                        isActive ? "opacity-100" : "opacity-0 group-hover/nav:opacity-40"
+                      )}
+                    />
+                    <item.icon className="h-4 w-4 shrink-0 transition-transform duration-200 group-hover/nav:scale-110" />
+                    <span className="flex-1">{item.label}</span>
+                    {item.showFollowupBadge && followupCount > 0 && (
+                      <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-red-500 px-1 text-[10px] font-bold text-white">
+                        {followupCount > 99 ? "99+" : followupCount}
+                      </span>
+                    )}
+                  </Link>
+                );
+              })}
+            </div>
+          ))}
         </nav>
 
         {/* Footer */}
