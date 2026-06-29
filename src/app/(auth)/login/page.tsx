@@ -61,6 +61,10 @@ export default function LoginPage() {
         <p className="mt-6 text-center text-xs text-gray-500">
           Langford International Institute · In Kuwait
         </p>
+        <p className="mt-2 text-center text-[11px] text-gray-600">
+          Powered by{" "}
+          <span className="font-semibold text-gray-300">ENG.Ahmad Alsayed</span>
+        </p>
       </div>
     </div>
   );
