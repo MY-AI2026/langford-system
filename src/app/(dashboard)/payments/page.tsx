@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useAuth } from "@/contexts/auth-context";
+import { useLanguage } from "@/contexts/language-context";
 import { PageHeader } from "@/components/layout/page-header";
 import { subscribeToStudents } from "@/lib/services/student-service";
 import { Student } from "@/lib/types";
@@ -41,6 +42,7 @@ function ps(student: Student) {
 
 export default function PaymentsPage() {
   const { role, firebaseUser } = useAuth();
+  const { t } = useLanguage();
   const [students, setStudents] = useState<Student[]>([]);
   const [filter, setFilter] = useState<"all" | "pending" | "partial" | "paid">("all");
 
@@ -69,15 +71,15 @@ export default function PaymentsPage() {
   return (
     <div className="space-y-6">
       <PageHeader
-        title="Payments"
-        description="Track all student payments and balances"
+        title={t("payments")}
+        description={t("trackAllStudentPaymentsAndBalances")}
       />
 
       {/* Summary Cards */}
       <div className="grid gap-4 sm:grid-cols-3">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm text-muted-foreground">Total Fees</CardTitle>
+            <CardTitle className="text-sm text-muted-foreground">{t("totalFees")}</CardTitle>
             <DollarSign className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
@@ -86,7 +88,7 @@ export default function PaymentsPage() {
         </Card>
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm text-muted-foreground">Collected</CardTitle>
+            <CardTitle className="text-sm text-muted-foreground">{t("collected")}</CardTitle>
             <CheckCircle className="h-4 w-4 text-green-500" />
           </CardHeader>
           <CardContent>
@@ -95,7 +97,7 @@ export default function PaymentsPage() {
         </Card>
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm text-muted-foreground">Pending</CardTitle>
+            <CardTitle className="text-sm text-muted-foreground">{t("pending")}</CardTitle>
             <AlertTriangle className="h-4 w-4 text-yellow-500" />
           </CardHeader>
           <CardContent>
@@ -111,10 +113,10 @@ export default function PaymentsPage() {
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">All</SelectItem>
-            <SelectItem value="pending">Pending</SelectItem>
-            <SelectItem value="partial">Partial</SelectItem>
-            <SelectItem value="paid">Paid</SelectItem>
+            <SelectItem value="all">{t("all")}</SelectItem>
+            <SelectItem value="pending">{t("pending")}</SelectItem>
+            <SelectItem value="partial">{t("partiallyPaid")}</SelectItem>
+            <SelectItem value="paid">{t("paid")}</SelectItem>
           </SelectContent>
         </Select>
       </div>
@@ -124,11 +126,11 @@ export default function PaymentsPage() {
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Student</TableHead>
-              <TableHead>Total Fees</TableHead>
-              <TableHead>Paid</TableHead>
-              <TableHead>Remaining</TableHead>
-              <TableHead>Status</TableHead>
+              <TableHead>{t("student")}</TableHead>
+              <TableHead>{t("totalFees")}</TableHead>
+              <TableHead>{t("paid")}</TableHead>
+              <TableHead>{t("remaining")}</TableHead>
+              <TableHead>{t("status")}</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -157,7 +159,7 @@ export default function PaymentsPage() {
                       variant="secondary"
                       className={cn(config?.bgColor, config?.color, "border-0")}
                     >
-                      {config?.label || "Pending"}
+                      {config?.label || t("pending")}
                     </Badge>
                   </TableCell>
                 </TableRow>
@@ -166,7 +168,7 @@ export default function PaymentsPage() {
             {filtered.length === 0 && (
               <TableRow>
                 <TableCell colSpan={5} className="text-center text-muted-foreground">
-                  No payments found
+                  {t("noPaymentsFound")}
                 </TableCell>
               </TableRow>
             )}

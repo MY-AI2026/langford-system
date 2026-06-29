@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useAuth } from "@/contexts/auth-context";
+import { useLanguage } from "@/contexts/language-context";
 import { RoleGate } from "@/components/auth/role-gate";
 import {
   getEmailSettings,
@@ -22,6 +23,7 @@ function isValidEmail(s: string): boolean {
 }
 
 function SettingsContent() {
+  const { t } = useLanguage();
   const { firebaseUser } = useAuth();
 
   const [enabled, setEnabled] = useState(true);
@@ -43,7 +45,7 @@ function SettingsContent() {
         setReplyTo(s.replyTo);
       } catch (e) {
         console.error("[settings] load failed:", e);
-        toast.error("Failed to load settings — using defaults");
+        toast.error(t("failedToLoadSettings"));
         setEnabled(EMAIL_SETTINGS_DEFAULTS.enabled);
         setRecipients(EMAIL_SETTINGS_DEFAULTS.recipients);
         setFrom(EMAIL_SETTINGS_DEFAULTS.from);
@@ -58,11 +60,11 @@ function SettingsContent() {
     const e = newEmail.trim();
     if (!e) return;
     if (!isValidEmail(e)) {
-      toast.error("Invalid email");
+      toast.error(t("invalidEmail"));
       return;
     }
     if (recipients.includes(e)) {
-      toast.error("This email is already in the list");
+      toast.error(t("emailAlreadyInList"));
       return;
     }
     setRecipients([...recipients, e]);
@@ -76,11 +78,11 @@ function SettingsContent() {
   async function handleSave() {
     if (!firebaseUser) return;
     if (recipients.length === 0 && enabled) {
-      toast.error("Add at least one recipient or disable notifications");
+      toast.error(t("addRecipientOrDisable"));
       return;
     }
     if (replyTo && !isValidEmail(replyTo)) {
-      toast.error("Invalid reply-to email");
+      toast.error(t("invalidReplyToEmail"));
       return;
     }
     setSaving(true);
@@ -89,10 +91,10 @@ function SettingsContent() {
         { enabled, recipients, from, replyTo },
         firebaseUser.uid
       );
-      toast.success("Settings saved");
+      toast.success(t("settingsSaved"));
     } catch (e) {
       console.error("[settings] save failed:", e);
-      toast.error("Save failed");
+      toast.error(t("saveFailed"));
     } finally {
       setSaving(false);
     }
@@ -112,10 +114,10 @@ function SettingsContent() {
       <div>
         <h1 className="flex items-center gap-2 text-2xl font-semibold">
           <Settings className="h-6 w-6 text-primary" />
-          Module Settings
+          {t("moduleSettings")}
         </h1>
         <p className="mt-1 text-sm text-muted-foreground">
-          Manage email notifications for new student registrations.
+          {t("moduleSettingsSubtitle")}
         </p>
       </div>
 
@@ -123,22 +125,22 @@ function SettingsContent() {
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-base">
             <Mail className="h-4 w-4" />
-            Email Notifications
+            {t("emailNotifications")}
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-5">
           <div className="flex items-center justify-between rounded-md border p-3">
             <div>
-              <p className="text-sm font-medium">Enable Notifications</p>
+              <p className="text-sm font-medium">{t("enableNotifications")}</p>
               <p className="text-xs text-muted-foreground">
-                If disabled, the Cloud Function skips sending email but in-app notifications still work.
+                {t("enableNotificationsDesc")}
               </p>
             </div>
             <Switch checked={enabled} onCheckedChange={setEnabled} />
           </div>
 
           <div className="space-y-2">
-            <Label>Recipients</Label>
+            <Label>{t("recipients")}</Label>
             <div className="flex gap-2">
               <Input
                 type="email"
@@ -156,12 +158,12 @@ function SettingsContent() {
               />
               <Button type="button" variant="outline" onClick={addRecipient}>
                 <Plus className="ml-2 h-4 w-4" />
-                Add
+                {t("add")}
               </Button>
             </div>
             {recipients.length === 0 ? (
               <p className="text-xs text-muted-foreground">
-                None yet — when enabled the default recipient is used
+                {t("noRecipientsYet")}
                 ({EMAIL_SETTINGS_DEFAULTS.recipients.join(", ")}).
               </p>
             ) : (
@@ -179,7 +181,7 @@ function SettingsContent() {
                       variant="ghost"
                       size="icon"
                       onClick={() => removeRecipient(r)}
-                      aria-label={`Remove ${r}`}
+                      aria-label={`${t("remove")} ${r}`}
                     >
                       <Trash2 className="h-4 w-4 text-destructive" />
                     </Button>
@@ -191,7 +193,7 @@ function SettingsContent() {
 
           <div className="grid gap-3 sm:grid-cols-2">
             <div className="space-y-2">
-              <Label htmlFor="from">ago (From)</Label>
+              <Label htmlFor="from">{t("fromSender")}</Label>
               <Input
                 id="from"
                 value={from}
@@ -201,12 +203,12 @@ function SettingsContent() {
                 placeholder="Name <noreply@your-domain.com>"
               />
               <p className="text-xs text-muted-foreground">
-                The domain must be verified in Resend.
+                {t("domainVerifiedInResend")}
               </p>
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="replyTo">Reply-To</Label>
+              <Label htmlFor="replyTo">{t("replyTo")}</Label>
               <Input
                 id="replyTo"
                 type="email"
@@ -222,7 +224,7 @@ function SettingsContent() {
           <div className="flex justify-start pt-2">
             <Button onClick={handleSave} disabled={saving} size="lg">
               {saving && <Loader2 className="ml-2 h-4 w-4 animate-spin" />}
-              Save Settings
+              {t("saveSettings")}
             </Button>
           </div>
         </CardContent>

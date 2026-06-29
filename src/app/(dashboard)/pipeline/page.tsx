@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useAuth } from "@/contexts/auth-context";
+import { useLanguage } from "@/contexts/language-context";
 import { PageHeader } from "@/components/layout/page-header";
 import { PipelineBoard } from "@/components/pipeline/pipeline-board";
 import { subscribeToStudents, updateStudentStatus } from "@/lib/services/student-service";
@@ -11,6 +12,7 @@ import { toast } from "sonner";
 
 export default function PipelinePage() {
   const { role, firebaseUser, userData } = useAuth();
+  const { t } = useLanguage();
   const [students, setStudents] = useState<Student[]>([]);
 
   useEffect(() => {
@@ -27,17 +29,17 @@ export default function PipelinePage() {
     if (!firebaseUser || !userData) return;
     try {
       await updateStudentStatus(studentId, newStatus, firebaseUser.uid, userData.displayName);
-      toast.success(`Moved to ${STUDENT_STATUS_CONFIG[newStatus].label}`);
+      toast.success(`${t("movedTo")} ${STUDENT_STATUS_CONFIG[newStatus].label}`);
     } catch {
-      toast.error("Failed to update status");
+      toast.error(t("failedToUpdateStatus"));
     }
   }
 
   return (
     <div className="space-y-6">
       <PageHeader
-        title="Sales Pipeline"
-        description="Drag and drop students between stages"
+        title={t("salesPipeline")}
+        description={t("dragAndDropStudentsBetweenStages")}
       />
       <PipelineBoard students={students} onStatusChange={handleStatusChange} />
     </div>

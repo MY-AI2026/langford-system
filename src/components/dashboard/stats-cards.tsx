@@ -14,6 +14,7 @@ import {
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { formatCurrency } from "@/lib/utils/format";
+import { useLanguage } from "@/contexts/language-context";
 
 interface Trend {
   value: number;
@@ -68,53 +69,54 @@ export function StatsCards({
   revenueTrend,
   ieltsTrend,
 }: StatsCardsProps) {
+  const { t } = useLanguage();
   const netIelts = ieltsRevenue - embassyPaid;
   const stats: StatItem[] = [
     {
-      title: "Total Students",
+      title: t("totalStudents"),
       value: totalStudents.toString(),
       icon: GraduationCap,
       tone: "blue",
       trend: studentsTrend,
     },
     {
-      title: "Total Revenue",
+      title: t("totalRevenue"),
       value: formatCurrency(totalRevenue),
-      subtitle: "Course fees only",
+      subtitle: t("courseFeesOnly"),
       icon: DollarSign,
       tone: "green",
       trend: revenueTrend,
     },
     {
-      title: "IELTS Bookings",
+      title: t("ieltsBookings"),
       value: formatCurrency(ieltsRevenue),
-      subtitle: `${ieltsBookingsCount} booking${ieltsBookingsCount !== 1 ? "s" : ""}`,
+      subtitle: `${ieltsBookingsCount} ${ieltsBookingsCount !== 1 ? t("bookings") : t("booking")}`,
       icon: FileCheck,
       tone: "purple",
       trend: ieltsTrend,
     },
     {
-      title: "Paid to Embassy",
+      title: t("paidToEmbassy"),
       value: formatCurrency(embassyPaid),
-      subtitle: "IELTS transfers",
+      subtitle: t("ieltsTransfers"),
       icon: TrendingDown,
       tone: "orange",
     },
     {
-      title: "Net IELTS",
+      title: t("netIelts"),
       value: formatCurrency(netIelts),
-      subtitle: "Bookings − Embassy",
+      subtitle: t("bookingsMinusEmbassy"),
       icon: Calculator,
       tone: netIelts >= 0 ? "emerald" : "red",
     },
     {
-      title: "Pending Payments",
+      title: t("pendingPayments"),
       value: formatCurrency(pendingPayments),
       icon: Clock,
       tone: "yellow",
     },
     {
-      title: "Conversion Rate",
+      title: t("conversionRate"),
       value: `${conversionRate.toFixed(1)}%`,
       icon: TrendingUp,
       tone: "red",

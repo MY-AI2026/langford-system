@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useAuth } from "@/contexts/auth-context";
+import { useLanguage } from "@/contexts/language-context";
 import { RoleGate } from "@/components/auth/role-gate";
 import {
   subscribeToCourses,
@@ -61,6 +62,7 @@ import {
 } from "lucide-react";
 
 function AdminCoursesContent() {
+  const { t } = useLanguage();
   const { firebaseUser, userData } = useAuth();
   const [courses, setCourses] = useState<RegCourse[]>([]);
   const [loading, setLoading] = useState(true);
@@ -108,23 +110,17 @@ function AdminCoursesContent() {
         displayName: userData.displayName,
         role: "admin",
       });
-      toast.success(course.isActive ? "Course hidden" : "Course activated");
+      toast.success(course.isActive ? t("courseHidden") : t("courseActivated"));
     } catch (e) {
       console.error("[admin-courses] toggle failed:", e);
-      toast.error("Status change failed");
+      toast.error(t("statusChangeFailed"));
     }
   }
 
   async function handleSeed() {
     if (!firebaseUser || !userData) return;
     if (courses.length > 0) {
-      const ok = window.confirm(
-        "Sync default catalogue?\n\n" +
-          "• New courses will be added.\n" +
-          "• Existing courses (matched by name) will be updated with the " +
-          "latest fee, category, description, and tier.\n\n" +
-          "Custom courses you created manually are untouched."
-      );
+      const ok = window.confirm(t("syncCatalogueConfirm"));
       if (!ok) return;
     }
     setSeeding(true);
@@ -190,16 +186,16 @@ function AdminCoursesContent() {
       }
 
       const parts: string[] = [];
-      if (added > 0) parts.push(`added ${added}`);
-      if (updated > 0) parts.push(`updated ${updated}`);
+      if (added > 0) parts.push(`${t("addedCount")} ${added}`);
+      if (updated > 0) parts.push(`${t("updatedCount")} ${updated}`);
       toast.success(
         parts.length > 0
-          ? `Catalogue synced — ${parts.join(", ")}.`
-          : "Catalogue already up to date."
+          ? `${t("catalogueSynced")} — ${parts.join("، ")}.`
+          : t("catalogueUpToDate")
       );
     } catch (e) {
       console.error("[admin-courses] seed failed:", e);
-      toast.error("Seed failed");
+      toast.error(t("seedFailed"));
     } finally {
       setSeeding(false);
     }
@@ -211,10 +207,10 @@ function AdminCoursesContent() {
         <div>
           <h1 className="flex items-center gap-2 text-2xl font-semibold">
             <BookOpen className="h-6 w-6 text-primary" />
-            Manage Courses
+            {t("manageCourses")}
           </h1>
           <p className="mt-1 text-sm text-muted-foreground">
-            Add, edit, or hide courses. Hiding prevents agents from picking the course without deleting the record.
+            {t("manageCoursesPageSubtitle")}
           </p>
         </div>
 
@@ -225,11 +221,11 @@ function AdminCoursesContent() {
             ) : (
               <Sparkles className="ml-2 h-4 w-4" />
             )}
-            Load Default Catalogue
+            {t("loadDefaultCatalogue")}
           </Button>
           <Button onClick={openCreate}>
             <Plus className="ml-2 h-4 w-4" />
-            New Course
+            {t("newCourse")}
           </Button>
         </div>
       </div>
@@ -244,19 +240,18 @@ function AdminCoursesContent() {
         <Card>
           <CardContent className="flex flex-col items-center justify-center py-12 text-center">
             <BookOpen className="mb-3 h-10 w-10 text-muted-foreground" />
-            <h3 className="text-base font-semibold">No courses yet</h3>
+            <h3 className="text-base font-semibold">{t("noCoursesYet")}</h3>
             <p className="mt-1 max-w-sm text-sm text-muted-foreground">
-              Load the default catalogue from the Acceptix agreement, or add a
-              course manually.
+              {t("noCoursesYetDesc")}
             </p>
             <div className="mt-4 flex gap-2">
               <Button variant="outline" onClick={handleSeed} disabled={seeding}>
                 <Sparkles className="ml-2 h-4 w-4" />
-                Load Defaults
+                {t("loadDefaults")}
               </Button>
               <Button onClick={openCreate}>
                 <Plus className="ml-2 h-4 w-4" />
-                New Course
+                {t("newCourse")}
               </Button>
             </div>
           </CardContent>
@@ -280,11 +275,11 @@ function AdminCoursesContent() {
                   <Table>
                     <TableHeader>
                       <TableRow>
-                        <TableHead>Name</TableHead>
-                        <TableHead>Fee</TableHead>
-                        <TableHead>Duration</TableHead>
-                        <TableHead>Exclusive</TableHead>
-                        <TableHead>Status</TableHead>
+                        <TableHead>{t("name")}</TableHead>
+                        <TableHead>{t("fee")}</TableHead>
+                        <TableHead>{t("duration")}</TableHead>
+                        <TableHead>{t("exclusive")}</TableHead>
+                        <TableHead>{t("status")}</TableHead>
                         <TableHead className="w-32"></TableHead>
                       </TableRow>
                     </TableHeader>
@@ -301,7 +296,7 @@ function AdminCoursesContent() {
                           <TableCell>
                             {c.isExclusiveAcceptix ? (
                               <Badge variant="secondary" className="border-0">
-                                Acceptix Exclusive
+                                {t("acceptixExclusive")}
                               </Badge>
                             ) : (
                               "—"

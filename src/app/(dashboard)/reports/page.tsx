@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useAuth } from "@/contexts/auth-context";
+import { useLanguage } from "@/contexts/language-context";
 import { RoleGate } from "@/components/auth/role-gate";
 import { PageHeader } from "@/components/layout/page-header";
 import { subscribeToStudents } from "@/lib/services/student-service";
@@ -47,6 +48,7 @@ export default function ReportsPage() {
 
 function ReportsContent() {
   const { role, firebaseUser } = useAuth();
+  const { t } = useLanguage();
   const [students, setStudents] = useState<Student[]>([]);
   const [users, setUsers] = useState<User[]>([]);
 
@@ -134,12 +136,12 @@ function ReportsContent() {
   return (
     <div className="space-y-6">
       <PageHeader
-        title="Reports & Analytics"
-        description="System-wide performance and financial reports"
+        title={t("reportsAndAnalytics")}
+        description={t("reportsDescription")}
         action={
           <Button variant="outline" onClick={exportCSV}>
             <Download className="mr-2 h-4 w-4" />
-            Export CSV
+            {t("exportCSV")}
           </Button>
         }
       />
@@ -149,7 +151,7 @@ function ReportsContent() {
         {/* Lead Source Chart */}
         <Card>
           <CardHeader>
-            <CardTitle className="text-base">Lead Sources</CardTitle>
+            <CardTitle className="text-base">{t("leadSources")}</CardTitle>
           </CardHeader>
           <CardContent>
             <ResponsiveContainer width="100%" height={300}>
@@ -158,8 +160,8 @@ function ReportsContent() {
                 <XAxis dataKey="name" tick={{ fontSize: 12 }} />
                 <YAxis />
                 <Tooltip />
-                <Bar dataKey="count" fill="#1a1a1a" name="Total" />
-                <Bar dataKey="enrolled" fill="#E31E24" name="Enrolled" />
+                <Bar dataKey="count" fill="#1a1a1a" name={t("total")} />
+                <Bar dataKey="enrolled" fill="#E31E24" name={t("enrolled")} />
               </BarChart>
             </ResponsiveContainer>
           </CardContent>
@@ -168,7 +170,7 @@ function ReportsContent() {
         {/* Status Distribution */}
         <Card>
           <CardHeader>
-            <CardTitle className="text-base">Status Distribution</CardTitle>
+            <CardTitle className="text-base">{t("statusDistribution")}</CardTitle>
           </CardHeader>
           <CardContent>
             <ResponsiveContainer width="100%" height={300}>
@@ -196,19 +198,19 @@ function ReportsContent() {
       {/* Sales Performance Table */}
       <Card>
         <CardHeader>
-          <CardTitle className="text-base">Sales Performance</CardTitle>
+          <CardTitle className="text-base">{t("salesPerformance")}</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="rounded-lg border">
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Sales Rep</TableHead>
-                  <TableHead>Total Students</TableHead>
-                  <TableHead>Enrolled</TableHead>
-                  <TableHead>Conversion</TableHead>
-                  <TableHead>Revenue</TableHead>
-                  <TableHead>Target</TableHead>
+                  <TableHead>{t("salesRep")}</TableHead>
+                  <TableHead>{t("totalStudents")}</TableHead>
+                  <TableHead>{t("enrolled")}</TableHead>
+                  <TableHead>{t("conversion")}</TableHead>
+                  <TableHead>{t("revenue")}</TableHead>
+                  <TableHead>{t("target")}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -231,7 +233,7 @@ function ReportsContent() {
                 {salesPerformance.length === 0 && (
                   <TableRow>
                     <TableCell colSpan={6} className="text-center text-muted-foreground">
-                      No sales users found
+                      {t("noSalesUsersFound")}
                     </TableCell>
                   </TableRow>
                 )}

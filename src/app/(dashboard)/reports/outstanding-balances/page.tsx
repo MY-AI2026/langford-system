@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { RoleGate } from "@/components/auth/role-gate";
+import { useLanguage } from "@/contexts/language-context";
 import { PageHeader } from "@/components/layout/page-header";
 import { fetchCollection, runQuery } from "@/lib/firebase/rest-helpers";
 import { InstallmentPlan, Student } from "@/lib/types";
@@ -129,6 +130,7 @@ export default function OutstandingBalancesReportPage() {
 }
 
 function OutstandingBalancesContent() {
+  const { t } = useLanguage();
   const [rows, setRows] = useState<DueRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [studentFilter, setStudentFilter] = useState("");
@@ -247,20 +249,20 @@ function OutstandingBalancesContent() {
   return (
     <div className="space-y-6">
       <PageHeader
-        title="Outstanding Balances"
-        description="Students with unpaid installments — amount and due date"
+        title={t("outstandingBalances")}
+        description={t("outstandingBalancesDescription")}
         action={
           <div className="flex gap-2">
             <Button variant="outline" onClick={load} disabled={loading}>
               <RefreshCw className="mr-2 h-4 w-4" />
-              Refresh
+              {t("refresh")}
             </Button>
             <Button
               onClick={() => exportToCSV(filtered)}
               disabled={filtered.length === 0}
             >
               <Download className="mr-2 h-4 w-4" />
-              Export CSV
+              {t("exportCsv")}
             </Button>
           </div>
         }
@@ -271,21 +273,21 @@ function OutstandingBalancesContent() {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-xs text-muted-foreground">
-              Total Outstanding
+              {t("totalOutstanding")}
             </CardTitle>
             <Wallet className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <p className="text-2xl font-bold">{formatCurrency(summary.totalAmount)}</p>
             <p className="text-xs text-muted-foreground">
-              {summary.totalCount} installment(s) · {summary.studentsCount} student(s)
+              {summary.totalCount} {t("installmentsLabel")} · {summary.studentsCount} {t("studentsLabel")}
             </p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-xs text-muted-foreground">Overdue</CardTitle>
+            <CardTitle className="text-xs text-muted-foreground">{t("overdue")}</CardTitle>
             <AlertCircle className="h-4 w-4 text-red-500" />
           </CardHeader>
           <CardContent>
@@ -293,7 +295,7 @@ function OutstandingBalancesContent() {
               {formatCurrency(summary.overdueAmount)}
             </p>
             <p className="text-xs text-muted-foreground">
-              {summary.overdueCount} installment(s)
+              {summary.overdueCount} {t("installmentsLabel")}
             </p>
           </CardContent>
         </Card>
@@ -301,7 +303,7 @@ function OutstandingBalancesContent() {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-xs text-muted-foreground">
-              Due in 7 Days
+              {t("dueIn7Days")}
             </CardTitle>
             <Coins className="h-4 w-4 text-amber-500" />
           </CardHeader>
@@ -310,7 +312,7 @@ function OutstandingBalancesContent() {
               {formatCurrency(summary.dueSoonAmount)}
             </p>
             <p className="text-xs text-muted-foreground">
-              {summary.dueSoonCount} installment(s)
+              {summary.dueSoonCount} {t("installmentsLabel")}
             </p>
           </CardContent>
         </Card>
@@ -318,7 +320,7 @@ function OutstandingBalancesContent() {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-xs text-muted-foreground">
-              Students Affected
+              {t("studentsAffected")}
             </CardTitle>
             <Coins className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
@@ -332,7 +334,7 @@ function OutstandingBalancesContent() {
       <Card>
         <CardContent className="grid gap-3 pt-6 md:grid-cols-4">
           <div className="space-y-1.5">
-            <Label className="text-xs">Status</Label>
+            <Label className="text-xs">{t("status")}</Label>
             <Select
               value={statusFilter}
               onValueChange={(v) => setStatusFilter(v as StatusFilter)}
@@ -341,23 +343,23 @@ function OutstandingBalancesContent() {
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">All</SelectItem>
-                <SelectItem value="overdue">Overdue</SelectItem>
-                <SelectItem value="due_soon">Due Soon (7 days)</SelectItem>
-                <SelectItem value="upcoming">Upcoming</SelectItem>
+                <SelectItem value="all">{t("all")}</SelectItem>
+                <SelectItem value="overdue">{t("overdue")}</SelectItem>
+                <SelectItem value="due_soon">{t("dueSoon7Days")}</SelectItem>
+                <SelectItem value="upcoming">{t("upcoming")}</SelectItem>
               </SelectContent>
             </Select>
           </div>
           <div className="space-y-1.5">
-            <Label className="text-xs">Student (name or phone)</Label>
+            <Label className="text-xs">{t("studentNameOrPhone")}</Label>
             <Input
               value={studentFilter}
               onChange={(e) => setStudentFilter(e.target.value)}
-              placeholder="Search student..."
+              placeholder={t("searchStudent")}
             />
           </div>
           <div className="space-y-1.5">
-            <Label className="text-xs">Due From</Label>
+            <Label className="text-xs">{t("dueFrom")}</Label>
             <Input
               type="date"
               value={dueFrom}
@@ -365,7 +367,7 @@ function OutstandingBalancesContent() {
             />
           </div>
           <div className="space-y-1.5">
-            <Label className="text-xs">Due To</Label>
+            <Label className="text-xs">{t("dueTo")}</Label>
             <Input
               type="date"
               value={dueTo}
@@ -380,7 +382,7 @@ function OutstandingBalancesContent() {
       <Card>
         <CardHeader>
           <CardTitle className="text-base">
-            Outstanding Installments ({filtered.length})
+            {t("outstandingInstallments")} ({filtered.length})
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -395,11 +397,11 @@ function OutstandingBalancesContent() {
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>Student</TableHead>
-                    <TableHead>Installment</TableHead>
-                    <TableHead>Amount</TableHead>
-                    <TableHead>Due Date</TableHead>
-                    <TableHead>Status</TableHead>
+                    <TableHead>{t("student")}</TableHead>
+                    <TableHead>{t("installment")}</TableHead>
+                    <TableHead>{t("amount")}</TableHead>
+                    <TableHead>{t("dueDate")}</TableHead>
+                    <TableHead>{t("status")}</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -427,7 +429,11 @@ function OutstandingBalancesContent() {
                       </TableCell>
                       <TableCell>
                         <Badge variant={STATUS_BADGE[r.status]}>
-                          {STATUS_LABEL[r.status]}
+                          {r.status === "overdue"
+                            ? t("overdue")
+                            : r.status === "due_soon"
+                              ? t("dueSoon")
+                              : t("upcoming")}
                         </Badge>
                       </TableCell>
                     </TableRow>
@@ -438,7 +444,7 @@ function OutstandingBalancesContent() {
                         colSpan={5}
                         className="text-center text-muted-foreground"
                       >
-                        No outstanding installments
+                        {t("noOutstandingInstallments")}
                       </TableCell>
                     </TableRow>
                   )}

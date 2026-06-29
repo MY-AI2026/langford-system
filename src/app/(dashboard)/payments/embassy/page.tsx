@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { useAuth } from "@/contexts/auth-context";
+import { useLanguage } from "@/contexts/language-context";
 import { RoleGate } from "@/components/auth/role-gate";
 import { PageHeader } from "@/components/layout/page-header";
 import { subscribeToStudents } from "@/lib/services/student-service";
@@ -53,6 +54,7 @@ export default function EmbassyPaymentsPage() {
 
 function EmbassyPaymentsContent() {
   const { role, firebaseUser, userData } = useAuth();
+  const { t } = useLanguage();
   const [students, setStudents] = useState<Student[]>([]);
   const [payments, setPayments] = useState<EmbassyPayment[]>([]);
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -105,17 +107,17 @@ function EmbassyPaymentsContent() {
   const handleSubmit = async () => {
     if (!firebaseUser || !userData) return;
     if (!selectedStudentId) {
-      toast.error("Please select a student");
+      toast.error(t("pleaseSelectStudent"));
       return;
     }
     const amt = parseFloat(amount);
     if (isNaN(amt) || amt <= 0) {
-      toast.error("Please enter a valid amount");
+      toast.error(t("pleaseEnterValidAmount"));
       return;
     }
     const student = students.find((s) => s.id === selectedStudentId);
     if (!student) {
-      toast.error("Student not found");
+      toast.error(t("studentNotFound"));
       return;
     }
 
@@ -132,12 +134,12 @@ function EmbassyPaymentsContent() {
         firebaseUser.uid,
         userData.displayName || firebaseUser.email || "Unknown"
       );
-      toast.success("Embassy payment recorded");
+      toast.success(t("embassyPaymentRecorded"));
       resetForm();
       setDialogOpen(false);
     } catch (e) {
       console.error(e);
-      toast.error("Failed to record payment");
+      toast.error(t("failedToRecordPayment"));
     } finally {
       setSubmitting(false);
     }
@@ -145,7 +147,7 @@ function EmbassyPaymentsContent() {
 
   const handleDelete = async (p: EmbassyPayment) => {
     if (!firebaseUser || !userData) return;
-    if (!confirm(`Delete embassy payment of ${formatCurrency(p.amount)} for ${p.studentName}?`)) {
+    if (!confirm(`${t("deleteEmbassyPaymentConfirm")} ${formatCurrency(p.amount)} — ${p.studentName}?`)) {
       return;
     }
     try {
@@ -156,10 +158,10 @@ function EmbassyPaymentsContent() {
         p.studentName,
         p.amount
       );
-      toast.success("Payment deleted");
+      toast.success(t("paymentDeleted"));
     } catch (e) {
       console.error(e);
-      toast.error("Failed to delete payment");
+      toast.error(t("failedToDeletePayment"));
     }
   };
 
@@ -168,8 +170,8 @@ function EmbassyPaymentsContent() {
   return (
     <div className="space-y-6">
       <PageHeader
-        title="Embassy Transfers (IELTS)"
-        description="Track amounts transferred to the embassy for IELTS exam bookings"
+        title={t("embassyTransfersIelts")}
+        description={t("embassyTransfersDescription")}
       />
 
       {/* Summary cards */}
@@ -177,7 +179,7 @@ function EmbassyPaymentsContent() {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-sm text-muted-foreground">
-              Total IELTS Bookings
+              {t("totalIeltsBookings")}
             </CardTitle>
             <div className="rounded-lg p-2 bg-purple-50">
               <FileCheck className="h-4 w-4 text-purple-600" />
@@ -185,13 +187,13 @@ function EmbassyPaymentsContent() {
           </CardHeader>
           <CardContent>
             <p className="text-2xl font-bold">{formatCurrency(totalIelts)}</p>
-            <p className="text-xs text-muted-foreground mt-1">Gross collected</p>
+            <p className="text-xs text-muted-foreground mt-1">{t("grossCollected")}</p>
           </CardContent>
         </Card>
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-sm text-muted-foreground">
-              Paid to Embassy
+              {t("paidToEmbassy")}
             </CardTitle>
             <div className="rounded-lg p-2 bg-orange-50">
               <TrendingDown className="h-4 w-4 text-orange-600" />
@@ -202,14 +204,14 @@ function EmbassyPaymentsContent() {
               {formatCurrency(totalEmbassy)}
             </p>
             <p className="text-xs text-muted-foreground mt-1">
-              {payments.length} transfer{payments.length !== 1 ? "s" : ""}
+              {payments.length} {t("transfers")}
             </p>
           </CardContent>
         </Card>
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-sm text-muted-foreground">
-              Net IELTS Revenue
+              {t("netIeltsRevenue")}
             </CardTitle>
             <div className="rounded-lg p-2 bg-emerald-50">
               <Calculator className="h-4 w-4 text-emerald-600" />
@@ -220,7 +222,7 @@ function EmbassyPaymentsContent() {
               {formatCurrency(netIelts)}
             </p>
             <p className="text-xs text-muted-foreground mt-1">
-              Total − Embassy
+              {t("totalMinusEmbassy")}
             </p>
           </CardContent>
         </Card>
@@ -231,31 +233,31 @@ function EmbassyPaymentsContent() {
         <div className="flex justify-end">
           <Button onClick={() => setDialogOpen(true)}>
             <Plus className="mr-2 h-4 w-4" />
-            Record Embassy Transfer
+            {t("recordEmbassyTransfer")}
           </Button>
           <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
             <DialogContent>
               <DialogHeader>
-                <DialogTitle>Record Embassy Transfer</DialogTitle>
+                <DialogTitle>{t("recordEmbassyTransfer")}</DialogTitle>
                 <DialogDescription>
-                  Log an amount paid to the embassy for a student&apos;s IELTS exam.
+                  {t("recordEmbassyTransferDescription")}
                 </DialogDescription>
               </DialogHeader>
 
               <div className="grid gap-4 py-2">
                 <div className="grid gap-2">
-                  <Label htmlFor="student">Student (IELTS bookings only)</Label>
+                  <Label htmlFor="student">{t("studentIeltsBookingsOnly")}</Label>
                   <Select
                     value={selectedStudentId}
                     onValueChange={(v) => setSelectedStudentId(v ?? "")}
                   >
                     <SelectTrigger id="student">
-                      <SelectValue placeholder="Select a student..." />
+                      <SelectValue placeholder={t("selectAStudent")} />
                     </SelectTrigger>
                     <SelectContent>
                       {ieltsStudents.length === 0 ? (
                         <div className="px-2 py-1.5 text-sm text-muted-foreground">
-                          No students with IELTS bookings
+                          {t("noStudentsWithIeltsBookings")}
                         </div>
                       ) : (
                         ieltsStudents.map((s) => (
@@ -269,7 +271,7 @@ function EmbassyPaymentsContent() {
                 </div>
 
                 <div className="grid gap-2">
-                  <Label htmlFor="amount">Amount Paid to Embassy</Label>
+                  <Label htmlFor="amount">{t("amountPaidToEmbassy")}</Label>
                   <Input
                     id="amount"
                     type="number"
@@ -282,7 +284,7 @@ function EmbassyPaymentsContent() {
                 </div>
 
                 <div className="grid gap-2">
-                  <Label htmlFor="date">Payment Date</Label>
+                  <Label htmlFor="date">{t("paymentDate")}</Label>
                   <Input
                     id="date"
                     type="date"
@@ -292,12 +294,12 @@ function EmbassyPaymentsContent() {
                 </div>
 
                 <div className="grid gap-2">
-                  <Label htmlFor="notes">Notes (optional)</Label>
+                  <Label htmlFor="notes">{t("notesOptional")}</Label>
                   <Textarea
                     id="notes"
                     value={notes}
                     onChange={(e) => setNotes(e.target.value)}
-                    placeholder="Receipt number, reference, etc."
+                    placeholder={t("receiptNumberReferenceEtc")}
                     rows={2}
                   />
                 </div>
@@ -309,10 +311,10 @@ function EmbassyPaymentsContent() {
                   onClick={() => setDialogOpen(false)}
                   disabled={submitting}
                 >
-                  Cancel
+                  {t("cancel")}
                 </Button>
                 <Button onClick={handleSubmit} disabled={submitting}>
-                  {submitting ? "Saving..." : "Save Transfer"}
+                  {submitting ? t("saving") : t("saveTransfer")}
                 </Button>
               </DialogFooter>
             </DialogContent>
@@ -325,11 +327,11 @@ function EmbassyPaymentsContent() {
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Date</TableHead>
-              <TableHead>Student</TableHead>
-              <TableHead>Amount</TableHead>
-              <TableHead>Notes</TableHead>
-              <TableHead>Recorded By</TableHead>
+              <TableHead>{t("date")}</TableHead>
+              <TableHead>{t("student")}</TableHead>
+              <TableHead>{t("amount")}</TableHead>
+              <TableHead>{t("notes")}</TableHead>
+              <TableHead>{t("recordedBy")}</TableHead>
               {canEdit && <TableHead className="w-16"></TableHead>}
             </TableRow>
           </TableHeader>
@@ -364,7 +366,7 @@ function EmbassyPaymentsContent() {
             {payments.length === 0 && (
               <TableRow>
                 <TableCell colSpan={canEdit ? 6 : 5} className="text-center text-muted-foreground py-8">
-                  No embassy transfers recorded yet
+                  {t("noEmbassyTransfersYet")}
                 </TableCell>
               </TableRow>
             )}

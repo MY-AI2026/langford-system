@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useAuth } from "@/contexts/auth-context";
+import { useLanguage } from "@/contexts/language-context";
 import { ScheduleEntry, Course } from "@/lib/types";
 import {
   subscribeToSchedulesByInstructor,
@@ -30,6 +31,7 @@ import { toast } from "sonner";
 
 function CoordinatorScheduleView() {
   const { firebaseUser } = useAuth();
+  const { t } = useLanguage();
   const [selectedInstructorId, setSelectedInstructorId] = useState<string | null>(null);
   const [selectedInstructorName, setSelectedInstructorName] = useState("");
   const [entries, setEntries] = useState<ScheduleEntry[]>([]);
@@ -73,14 +75,14 @@ function CoordinatorScheduleView() {
     try {
       if (deleteTarget.patternGroupId) {
         await deleteSchedulePattern(deleteTarget.patternGroupId);
-        toast.success("Pattern entries deleted");
+        toast.success(t("patternEntriesDeleted"));
       } else {
         await deleteScheduleEntry(deleteTarget.id);
-        toast.success("Schedule entry deleted");
+        toast.success(t("scheduleEntryDeleted"));
       }
       setRefreshKey((k) => k + 1);
     } catch {
-      toast.error("Failed to delete");
+      toast.error(t("failedToDelete"));
     } finally {
       setDeleteTarget(null);
     }
@@ -99,7 +101,7 @@ function CoordinatorScheduleView() {
         {selectedInstructorId && (
           <Button onClick={handleAddNew}>
             <Plus className="mr-1.5 h-4 w-4" />
-            Add to Schedule
+            {t("addToSchedule")}
           </Button>
         )}
       </div>
@@ -109,7 +111,7 @@ function CoordinatorScheduleView() {
           <div className="text-center">
             <CalendarDays className="mx-auto h-10 w-10 text-muted-foreground/50" />
             <p className="mt-2 text-sm text-muted-foreground">
-              Select an instructor to view their schedule
+              {t("selectInstructorToView")}
             </p>
           </div>
         </div>
@@ -143,19 +145,19 @@ function CoordinatorScheduleView() {
       <Dialog open={!!deleteTarget} onOpenChange={(open) => !open && setDeleteTarget(null)}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Delete Schedule Entry</DialogTitle>
+            <DialogTitle>{t("deleteScheduleEntry")}</DialogTitle>
             <DialogDescription>
               {deleteTarget?.patternGroupId
-                ? "This entry is part of a day pattern. All related entries (e.g., Sat-Mon-Wed) will be deleted."
-                : "Are you sure you want to delete this schedule entry?"}
+                ? t("deletePatternWarning")
+                : t("deleteScheduleEntryConfirm")}
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
             <Button variant="outline" onClick={() => setDeleteTarget(null)}>
-              Cancel
+              {t("cancel")}
             </Button>
             <Button variant="destructive" onClick={handleDelete}>
-              Delete
+              {t("delete")}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -166,6 +168,7 @@ function CoordinatorScheduleView() {
 
 function InstructorScheduleView() {
   const { firebaseUser } = useAuth();
+  const { t } = useLanguage();
   const [entries, setEntries] = useState<ScheduleEntry[]>([]);
   const [courses, setCourses] = useState<Course[]>([]);
   const [loading, setLoading] = useState(true);
@@ -199,7 +202,7 @@ function InstructorScheduleView() {
         <div className="text-center">
           <CalendarDays className="mx-auto h-10 w-10 text-muted-foreground/50" />
           <p className="mt-2 text-sm text-muted-foreground">
-            No schedule entries yet
+            {t("noScheduleEntries")}
           </p>
         </div>
       </div>
@@ -211,17 +214,18 @@ function InstructorScheduleView() {
 
 export default function SchedulePage() {
   const { role } = useAuth();
+  const { t } = useLanguage();
   const isManager = role === "admin" || role === "coordinator";
 
   return (
     <RoleGate allowedRoles={["admin", "coordinator", "instructor"]}>
       <div className="space-y-6">
         <PageHeader
-          title="Weekly Schedule"
+          title={t("weeklySchedule")}
           description={
             isManager
-              ? "Manage instructor weekly schedules"
-              : "Your weekly class schedule"
+              ? t("manageInstructorSchedules")
+              : t("yourWeeklySchedule")
           }
         />
         {isManager ? <CoordinatorScheduleView /> : <InstructorScheduleView />}

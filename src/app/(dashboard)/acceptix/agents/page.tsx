@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
+import { useLanguage } from "@/contexts/language-context";
 import { RoleGate } from "@/components/auth/role-gate";
 import {
   subscribeToAcceptixAgents,
@@ -43,6 +44,7 @@ import {
 } from "lucide-react";
 
 function AdminAgentsContent() {
+  const { t } = useLanguage();
   const [agents, setAgents] = useState<User[]>([]);
   const [students, setStudents] = useState<RegStudent[]>([]);
   const [loading, setLoading] = useState(true);
@@ -80,11 +82,11 @@ function AdminAgentsContent() {
     try {
       const nextActive = !(agent.isActive !== false);
       await setAgentActive(agent.uid, nextActive);
-      toast.success(nextActive ? "Account enabled" : "Account disabled");
+      toast.success(nextActive ? t("accountEnabled") : t("accountDisabled"));
     } catch (e) {
       const err = e as { message?: string };
       console.error("[admin-agents] toggle failed:", e);
-      toast.error(err.message || "Status change failed");
+      toast.error(err.message || t("statusChangeFailed"));
     } finally {
       setTogglingUid(null);
     }
@@ -94,20 +96,20 @@ function AdminAgentsContent() {
     if (!resetTarget) return;
     const parsed = regAgentResetPasswordSchema.safeParse({ password: resetPw });
     if (!parsed.success) {
-      toast.error(parsed.error.issues[0]?.message || "Invalid password");
+      toast.error(parsed.error.issues[0]?.message || t("invalidPassword"));
       return;
     }
 
     setResetSubmitting(true);
     try {
       await resetAgentPassword(resetTarget.uid, resetPw);
-      toast.success(`New password set for ${resetTarget.displayName}`);
+      toast.success(`${t("newPasswordSetFor")} ${resetTarget.displayName}`);
       setResetTarget(null);
       setResetPw("");
     } catch (e) {
       const err = e as { message?: string };
       console.error("[admin-agents] reset password failed:", e);
-      toast.error(err.message || "Failed Set Password");
+      toast.error(err.message || t("failedSetPassword"));
     } finally {
       setResetSubmitting(false);
     }
@@ -119,17 +121,17 @@ function AdminAgentsContent() {
         <div>
           <h1 className="flex items-center gap-2 text-2xl font-semibold">
             <Users className="h-6 w-6 text-primary" />
-            Acceptix Agents
+            {t("acceptixAgents")}
           </h1>
           <p className="mt-1 text-sm text-muted-foreground">
-            Add new accounts, activate / disable, or reset passwords.
+            {t("acceptixAgentsSubtitle")}
           </p>
         </div>
 
         <Link href={REG_ROUTES.adminAgentNew}>
           <Button>
             <UserPlus className="ml-2 h-4 w-4" />
-            New Agent
+            {t("newAgent")}
           </Button>
         </Link>
       </div>
@@ -144,14 +146,14 @@ function AdminAgentsContent() {
         <Card>
           <CardContent className="flex flex-col items-center justify-center py-12 text-center">
             <Users className="mb-3 h-10 w-10 text-muted-foreground" />
-            <h3 className="text-base font-semibold">No agents yet</h3>
+            <h3 className="text-base font-semibold">{t("noAgentsYet")}</h3>
             <p className="mt-1 max-w-sm text-sm text-muted-foreground">
-              Start by adding the first Acceptix agent account.
+              {t("noAgentsYetDesc")}
             </p>
             <Link href={REG_ROUTES.adminAgentNew}>
               <Button className="mt-4">
                 <UserPlus className="ml-2 h-4 w-4" />
-                Add Agent
+                {t("addAgent")}
               </Button>
             </Link>
           </CardContent>
@@ -161,10 +163,10 @@ function AdminAgentsContent() {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Name</TableHead>
-                <TableHead>Email</TableHead>
-                <TableHead>Students</TableHead>
-                <TableHead>Status</TableHead>
+                <TableHead>{t("name")}</TableHead>
+                <TableHead>{t("email")}</TableHead>
+                <TableHead>{t("students")}</TableHead>
+                <TableHead>{t("status")}</TableHead>
                 <TableHead className="w-44"></TableHead>
               </TableRow>
             </TableHeader>
@@ -182,9 +184,9 @@ function AdminAgentsContent() {
                     </TableCell>
                     <TableCell>
                       {active ? (
-                        <Badge className="border-0 bg-green-100 text-green-700">Active</Badge>
+                        <Badge className="border-0 bg-green-100 text-green-700">{t("active")}</Badge>
                       ) : (
-                        <Badge className="border-0 bg-red-100 text-red-700">Disabled</Badge>
+                        <Badge className="border-0 bg-red-100 text-red-700">{t("disabled")}</Badge>
                       )}
                     </TableCell>
                     <TableCell>
@@ -193,17 +195,17 @@ function AdminAgentsContent() {
                           variant="ghost"
                           size="sm"
                           onClick={() => setResetTarget(a)}
-                          aria-label="Reset Password"
+                          aria-label={t("resetPassword")}
                         >
                           <Key className="ml-1 h-4 w-4" />
-                          Password
+                          {t("password")}
                         </Button>
                         <Button
                           variant="ghost"
                           size="sm"
                           onClick={() => handleToggle(a)}
                           disabled={togglingUid === a.uid}
-                          aria-label={active ? "Disable" : "Enable"}
+                          aria-label={active ? t("disable") : t("enable")}
                         >
                           {togglingUid === a.uid ? (
                             <Loader2 className="ml-1 h-4 w-4 animate-spin" />
@@ -212,7 +214,7 @@ function AdminAgentsContent() {
                           ) : (
                             <Power className="ml-1 h-4 w-4 text-green-600" />
                           )}
-                          {active ? "Disable" : "Enable"}
+                          {active ? t("disable") : t("enable")}
                         </Button>
                       </div>
                     </TableCell>
@@ -236,7 +238,7 @@ function AdminAgentsContent() {
       >
         <DialogContent dir="ltr">
           <DialogHeader>
-            <DialogTitle>Reset Password</DialogTitle>
+            <DialogTitle>{t("resetPassword")}</DialogTitle>
           </DialogHeader>
           {resetTarget && (
             <div className="space-y-3">
@@ -247,17 +249,17 @@ function AdminAgentsContent() {
                 </p>
               </div>
               <div className="space-y-2">
-                <label className="text-sm font-medium">New Password</label>
+                <label className="text-sm font-medium">{t("newPassword")}</label>
                 <Input
                   type="password"
                   value={resetPw}
                   onChange={(e) => setResetPw(e.target.value)}
-                  placeholder="At least 12 chars, with digit and special character"
+                  placeholder={t("passwordPlaceholderShort")}
                   dir="ltr"
                   className="text-left"
                 />
                 <p className="text-xs text-muted-foreground">
-                  Required: 12+ chars, uppercase, lowercase, digit, and special character.
+                  {t("passwordRequirements")}
                 </p>
               </div>
             </div>
@@ -271,11 +273,11 @@ function AdminAgentsContent() {
               }}
               disabled={resetSubmitting}
             >
-              Cancel
+              {t("cancel")}
             </Button>
             <Button onClick={handleResetSubmit} disabled={resetSubmitting}>
               {resetSubmitting && <Loader2 className="ml-2 h-4 w-4 animate-spin" />}
-              Set Password
+              {t("setPassword")}
             </Button>
           </DialogFooter>
         </DialogContent>

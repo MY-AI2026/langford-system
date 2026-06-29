@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useAuth } from "@/contexts/auth-context";
+import { useLanguage } from "@/contexts/language-context";
 import { getSalesUsers } from "@/lib/services/user-service";
 import { User, Gender } from "@/lib/types";
 import { Button } from "@/components/ui/button";
@@ -41,10 +42,11 @@ interface Props {
 export function SummerClubForm({
   defaultValues,
   onSubmit,
-  submitLabel = "Save",
+  submitLabel,
   hideAssignedSales = false,
 }: Props) {
   const { role, firebaseUser } = useAuth();
+  const { t } = useLanguage();
   const [salesUsers, setSalesUsers] = useState<User[]>([]);
   const [submitting, setSubmitting] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -89,10 +91,10 @@ export function SummerClubForm({
 
   function validate(): boolean {
     const e: Record<string, string> = {};
-    if (!form.fullName.trim()) e.fullName = "الاسم مطلوب";
+    if (!form.fullName.trim()) e.fullName = t("nameRequired");
 
     if (!form.phone.trim()) {
-      e.phone = "رقم التلفون مطلوب";
+      e.phone = t("phoneRequired");
     } else {
       // Strip all non-digit chars (handles +965, spaces, dashes, parens, Arabic digits)
       const arabicToAscii: Record<string, string> = {
@@ -104,18 +106,18 @@ export function SummerClubForm({
         .map((c) => arabicToAscii[c] ?? c)
         .join("")
         .replace(/\D/g, "");
-      if (digits.length < 6) e.phone = "رقم التلفون قصير — لازم 6 أرقام على الأقل";
+      if (digits.length < 6) e.phone = t("phoneTooShort");
     }
 
     if (!form.assignedSalesRepId) {
       e.assignedSalesRepId =
         role === "sales"
-          ? "بياناتك مش جاهزة لسه — استنى ثانية وحاول تاني"
-          : "السيلز مطلوب";
+          ? t("yourDataNotReady")
+          : t("salesRepRequired");
     }
-    if (form.totalFees < 0) e.totalFees = "غير صحيح";
+    if (form.totalFees < 0) e.totalFees = t("invalid");
     if (form.age !== null && form.age !== undefined && (form.age < 0 || form.age > 120))
-      e.age = "غير صحيح";
+      e.age = t("invalid");
     setErrors(e);
     return Object.keys(e).length === 0;
   }
@@ -135,7 +137,7 @@ export function SummerClubForm({
     <form onSubmit={handleSubmit} className="space-y-4">
       <div className="grid gap-4 md:grid-cols-2">
         <div className="space-y-2">
-          <Label htmlFor="fullName">الاسم الكامل *</Label>
+          <Label htmlFor="fullName">{t("fullName")} *</Label>
           <Input
             id="fullName"
             value={form.fullName}
@@ -145,7 +147,7 @@ export function SummerClubForm({
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="phone">رقم التلفون *</Label>
+          <Label htmlFor="phone">{t("phone")} *</Label>
           <Input
             id="phone"
             value={form.phone}
@@ -155,7 +157,7 @@ export function SummerClubForm({
         </div>
 
         <div className="space-y-2">
-          <Label>النوع *</Label>
+          <Label>{t("gender")} *</Label>
           <Select
             value={form.gender}
             onValueChange={(v) => setForm({ ...form, gender: v as Gender })}
@@ -164,14 +166,14 @@ export function SummerClubForm({
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="male">ذكر</SelectItem>
-              <SelectItem value="female">أنثى</SelectItem>
+              <SelectItem value="male">{t("male")}</SelectItem>
+              <SelectItem value="female">{t("female")}</SelectItem>
             </SelectContent>
           </Select>
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="age">السن</Label>
+          <Label htmlFor="age">{t("age")}</Label>
           <Input
             id="age"
             type="number"
@@ -188,7 +190,7 @@ export function SummerClubForm({
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="guardianName">اسم ولي الأمر</Label>
+          <Label htmlFor="guardianName">{t("guardianName")}</Label>
           <Input
             id="guardianName"
             value={form.guardianName}
@@ -197,7 +199,7 @@ export function SummerClubForm({
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="guardianPhone">تلفون ولي الأمر</Label>
+          <Label htmlFor="guardianPhone">{t("guardianPhone")}</Label>
           <Input
             id="guardianPhone"
             value={form.guardianPhone}
@@ -206,7 +208,7 @@ export function SummerClubForm({
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="totalFees">الرسوم الإجمالية (KWD)</Label>
+          <Label htmlFor="totalFees">{t("totalFees")} (KWD)</Label>
           <Input
             id="totalFees"
             type="number"
@@ -222,7 +224,7 @@ export function SummerClubForm({
 
         {!hideAssignedSales && role !== "sales" && (
           <div className="space-y-2">
-            <Label>السيلز المسؤول *</Label>
+            <Label>{t("assignedSalesRep")} *</Label>
             <Select
               value={form.assignedSalesRepId}
               onValueChange={(v) =>
@@ -230,7 +232,7 @@ export function SummerClubForm({
               }
             >
               <SelectTrigger>
-                <SelectValue placeholder="اختر السيلز" />
+                <SelectValue placeholder={t("selectSalesRep")} />
               </SelectTrigger>
               <SelectContent>
                 {salesUsers.map((u) => (
@@ -252,11 +254,11 @@ export function SummerClubForm({
             checked={form.isRegistered}
             onCheckedChange={(v) => setForm({ ...form, isRegistered: v })}
           />
-          <Label htmlFor="isRegistered">مسجل في النادي الصيفي</Label>
+          <Label htmlFor="isRegistered">{t("registeredInSummerClub")}</Label>
         </div>
 
         <div className="space-y-2 md:col-span-2">
-          <Label htmlFor="notes">ملاحظات</Label>
+          <Label htmlFor="notes">{t("notes")}</Label>
           <Textarea
             id="notes"
             rows={3}
@@ -269,7 +271,7 @@ export function SummerClubForm({
       <div className="flex justify-end">
         <Button type="submit" disabled={submitting}>
           {submitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-          {submitLabel}
+          {submitLabel ?? t("save")}
         </Button>
       </div>
     </form>

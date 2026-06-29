@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useAuth } from "@/contexts/auth-context";
+import { useLanguage } from "@/contexts/language-context";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -45,6 +46,7 @@ interface Props {
  */
 export function WhatsAppButton({ phone, fullName, context, variant = "icon" }: Props) {
   const { userData } = useAuth();
+  const { t } = useLanguage();
   const [open, setOpen] = useState(false);
   const [templateId, setTemplateId] = useState(WHATSAPP_TEMPLATES[0]?.id ?? "");
   const [body, setBody] = useState("");
@@ -81,7 +83,7 @@ export function WhatsAppButton({ phone, fullName, context, variant = "icon" }: P
           variant="ghost"
           size="icon"
           onClick={() => handleOpenChange(true)}
-          title="إرسال واتساب"
+          title={t("sendWhatsApp")}
           disabled={!phone}
         >
           <MessageCircle className="h-4 w-4 text-green-600" />
@@ -89,18 +91,18 @@ export function WhatsAppButton({ phone, fullName, context, variant = "icon" }: P
       ) : (
         <Button onClick={() => handleOpenChange(true)} disabled={!phone}>
           <MessageCircle className="mr-2 h-4 w-4" />
-          واتساب
+          WhatsApp
         </Button>
       )}
 
       <Dialog open={open} onOpenChange={handleOpenChange}>
         <DialogContent className="max-w-lg">
           <DialogHeader>
-            <DialogTitle>إرسال رسالة واتساب لـ {fullName}</DialogTitle>
+            <DialogTitle>{t("sendWhatsAppTo")} {fullName}</DialogTitle>
           </DialogHeader>
           <div className="space-y-3">
             <div>
-              <Label className="mb-1 block">نموذج الرسالة</Label>
+              <Label className="mb-1 block">{t("messageTemplate")}</Label>
               <Select value={templateId} onValueChange={pickTemplate}>
                 <SelectTrigger>
                   <SelectValue />

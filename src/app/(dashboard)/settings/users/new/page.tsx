@@ -21,6 +21,7 @@ import {
 } from "@/components/ui/select";
 import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
+import { useLanguage } from "@/contexts/language-context";
 
 export default function NewUserPage() {
   return (
@@ -32,6 +33,7 @@ export default function NewUserPage() {
 
 function NewUserContent() {
   const router = useRouter();
+  const { t } = useLanguage();
   const [isLoading, setIsLoading] = useState(false);
 
   const {
@@ -64,10 +66,10 @@ function NewUserContent() {
         phone: data.phone,
         monthlyTarget: data.monthlyTarget,
       });
-      toast.success("User created successfully");
+      toast.success(t("userCreatedSuccessfully"));
       router.push("/settings/users");
     } catch (error: unknown) {
-      const message = error instanceof Error ? error.message : "Failed to create user";
+      const message = error instanceof Error ? error.message : t("failedToCreateUser");
       toast.error(message);
     } finally {
       setIsLoading(false);
@@ -76,13 +78,13 @@ function NewUserContent() {
 
   return (
     <div className="space-y-6">
-      <PageHeader title="Add New User" />
+      <PageHeader title={t("addNewUser")} />
       <Card>
         <CardContent className="pt-6">
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
             <div className="grid gap-4 sm:grid-cols-2">
               <div className="space-y-2">
-                <Label htmlFor="displayName">Full Name *</Label>
+                <Label htmlFor="displayName">{t("fullName")} *</Label>
                 <Input id="displayName" {...register("displayName")} />
                 {errors.displayName && (
                   <p className="text-sm text-destructive">
@@ -92,7 +94,7 @@ function NewUserContent() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="email">Email *</Label>
+                <Label htmlFor="email">{t("email")} *</Label>
                 <Input id="email" type="email" {...register("email")} />
                 {errors.email && (
                   <p className="text-sm text-destructive">
@@ -102,7 +104,7 @@ function NewUserContent() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="password">Password *</Label>
+                <Label htmlFor="password">{t("password")} *</Label>
                 <Input
                   id="password"
                   type="password"
@@ -116,7 +118,7 @@ function NewUserContent() {
               </div>
 
               <div className="space-y-2">
-                <Label>Role *</Label>
+                <Label>{t("role")} *</Label>
                 <Select
                   value={watch("role")}
                   onValueChange={(val) =>
@@ -127,21 +129,21 @@ function NewUserContent() {
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="admin">Admin</SelectItem>
-                    <SelectItem value="coordinator">Administrative Coordinator</SelectItem>
-                    <SelectItem value="sales">Sales</SelectItem>
-                    <SelectItem value="instructor">Instructor</SelectItem>
+                    <SelectItem value="admin">{t("admin")}</SelectItem>
+                    <SelectItem value="coordinator">{t("administrativeCoordinator")}</SelectItem>
+                    <SelectItem value="sales">{t("sales")}</SelectItem>
+                    <SelectItem value="instructor">{t("instructor")}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="phone">Phone</Label>
+                <Label htmlFor="phone">{t("phone")}</Label>
                 <Input id="phone" {...register("phone")} />
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="monthlyTarget">Monthly Target (KWD)</Label>
+                <Label htmlFor="monthlyTarget">{t("monthlyTarget")} (KWD)</Label>
                 <Input
                   id="monthlyTarget"
                   type="number"
@@ -156,7 +158,7 @@ function NewUserContent() {
                 {isLoading && (
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                 )}
-                Create User
+                {t("createUser")}
               </Button>
             </div>
           </form>

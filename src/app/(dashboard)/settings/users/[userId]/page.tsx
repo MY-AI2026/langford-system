@@ -30,6 +30,7 @@ import {
 import { Skeleton } from "@/components/ui/skeleton";
 import { Loader2, Trash2, Mail } from "lucide-react";
 import { toast } from "sonner";
+import { useLanguage } from "@/contexts/language-context";
 
 export default function EditUserPage() {
   return (
@@ -42,6 +43,7 @@ export default function EditUserPage() {
 function EditUserContent() {
   const params = useParams();
   const router = useRouter();
+  const { t } = useLanguage();
   const { firebaseUser } = useAuth();
   const userId = params.userId as string;
   const isSelf = firebaseUser?.uid === userId;
@@ -84,10 +86,10 @@ function EditUserContent() {
         monthlyTarget,
         isActive,
       });
-      toast.success("User updated");
+      toast.success(t("userUpdated"));
       router.push("/settings/users");
     } catch {
-      toast.error("Failed to update user");
+      toast.error(t("failedToUpdateUser"));
     } finally {
       setSaving(false);
     }
@@ -98,9 +100,9 @@ function EditUserContent() {
     setSendingReset(true);
     try {
       await resetPassword(user.email);
-      toast.success(`Password reset email sent to ${user.email}`);
+      toast.success(`${t("passwordResetEmailSentTo")} ${user.email}`);
     } catch {
-      toast.error("Failed to send password reset email");
+      toast.error(t("failedToSendPasswordReset"));
     } finally {
       setSendingReset(false);
     }
@@ -116,18 +118,18 @@ function EditUserContent() {
   }
 
   if (!user) {
-    return <p className="text-muted-foreground">User not found</p>;
+    return <p className="text-muted-foreground">{t("userNotFound")}</p>;
   }
 
   return (
     <div className="space-y-6">
-      <PageHeader title={`Edit: ${user.displayName}`} />
+      <PageHeader title={`${t("edit")}: ${user.displayName}`} />
       <Card>
         <CardContent className="pt-6">
           <div className="space-y-4">
             <div className="grid gap-4 sm:grid-cols-2">
               <div className="space-y-2">
-                <Label>Full Name</Label>
+                <Label>{t("fullName")}</Label>
                 <Input
                   value={displayName}
                   onChange={(e) => setDisplayName(e.target.value)}
@@ -135,27 +137,27 @@ function EditUserContent() {
               </div>
 
               <div className="space-y-2">
-                <Label>Email</Label>
+                <Label>{t("email")}</Label>
                 <Input value={user.email} disabled />
               </div>
 
               <div className="space-y-2">
-                <Label>Role</Label>
+                <Label>{t("role")}</Label>
                 <Select value={role} onValueChange={(v) => setRole(v as UserRole)}>
                   <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="admin">Admin</SelectItem>
-                    <SelectItem value="coordinator">Administrative Coordinator</SelectItem>
-                    <SelectItem value="sales">Sales</SelectItem>
-                    <SelectItem value="instructor">Instructor</SelectItem>
+                    <SelectItem value="admin">{t("admin")}</SelectItem>
+                    <SelectItem value="coordinator">{t("administrativeCoordinator")}</SelectItem>
+                    <SelectItem value="sales">{t("sales")}</SelectItem>
+                    <SelectItem value="instructor">{t("instructor")}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
 
               <div className="space-y-2">
-                <Label>Phone</Label>
+                <Label>{t("phone")}</Label>
                 <Input
                   value={phone}
                   onChange={(e) => setPhone(e.target.value)}
@@ -163,7 +165,7 @@ function EditUserContent() {
               </div>
 
               <div className="space-y-2">
-                <Label>Monthly Target (KWD)</Label>
+                <Label>{t("monthlyTarget")} (KWD)</Label>
                 <Input
                   type="number"
                   step="0.001"
@@ -177,7 +179,7 @@ function EditUserContent() {
                   checked={isActive}
                   onCheckedChange={setIsActive}
                 />
-                <Label>Active</Label>
+                <Label>{t("active")}</Label>
               </div>
             </div>
 
@@ -187,10 +189,10 @@ function EditUserContent() {
                   variant="destructive"
                   onClick={() => setDeleteDialogOpen(true)}
                   disabled={isSelf}
-                  title={isSelf ? "You cannot delete your own account" : undefined}
+                  title={isSelf ? t("cannotDeleteOwnAccount") : undefined}
                 >
                   <Trash2 className="mr-2 h-4 w-4" />
-                  Delete User
+                  {t("deleteUser")}
                 </Button>
                 <Button
                   variant="outline"
@@ -200,12 +202,12 @@ function EditUserContent() {
                   {sendingReset
                     ? <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                     : <Mail className="mr-2 h-4 w-4" />}
-                  Reset Password
+                  {t("resetPassword")}
                 </Button>
               </div>
               <Button onClick={handleSave} disabled={saving}>
                 {saving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                Save Changes
+                {t("saveChanges")}
               </Button>
             </div>
           </div>
@@ -216,30 +218,29 @@ function EditUserContent() {
       <Dialog open={deleteDialogOpen && !isSelf} onOpenChange={setDeleteDialogOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Delete User Permanently?</DialogTitle>
+            <DialogTitle>{t("deleteUserPermanentlyQuestion")}</DialogTitle>
           </DialogHeader>
           <p className="text-sm text-muted-foreground">
-            This will permanently delete <strong>{user.displayName}</strong> ({user.email}).
-            This action cannot be undone. Note: Their Firebase Auth account will remain but
-            they will not be able to access the system.
+            {t("deleteUserPermanentlyPrefix")} <strong>{user.displayName}</strong> ({user.email}).
+            {" "}{t("deleteUserPermanentlySuffix")}
           </p>
           <DialogFooter>
             <Button variant="outline" onClick={() => setDeleteDialogOpen(false)}>
-              Cancel
+              {t("cancel")}
             </Button>
             <Button
               variant="destructive"
               onClick={async () => {
                 try {
                   await deleteUser(userId);
-                  toast.success("User deleted");
+                  toast.success(t("userDeleted"));
                   router.push("/settings/users");
                 } catch {
-                  toast.error("Failed to delete user");
+                  toast.error(t("failedToDeleteUser"));
                 }
               }}
             >
-              Delete Permanently
+              {t("deletePermanently")}
             </Button>
           </DialogFooter>
         </DialogContent>

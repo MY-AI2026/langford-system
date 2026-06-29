@@ -18,6 +18,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Plus, Pencil } from "lucide-react";
 import Link from "next/link";
+import { useLanguage } from "@/contexts/language-context";
 
 export default function UsersPage() {
   return (
@@ -28,6 +29,7 @@ export default function UsersPage() {
 }
 
 function UsersContent() {
+  const { t } = useLanguage();
   const [users, setUsers] = useState<User[]>([]);
 
   useEffect(() => {
@@ -38,13 +40,13 @@ function UsersContent() {
   return (
     <div className="space-y-6">
       <PageHeader
-        title="User Management"
-        description={`${users.length} user(s)`}
+        title={t("userManagement")}
+        description={`${users.length} ${t("usersCount")}`}
         action={
           <Link href="/settings/users/new">
             <Button>
               <Plus className="mr-2 h-4 w-4" />
-              Add User
+              {t("addUser")}
             </Button>
           </Link>
         }
@@ -54,12 +56,12 @@ function UsersContent() {
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Name</TableHead>
-              <TableHead>Email</TableHead>
-              <TableHead>Role</TableHead>
-              <TableHead>Monthly Target</TableHead>
-              <TableHead>Status</TableHead>
-              <TableHead>Created</TableHead>
+              <TableHead>{t("name")}</TableHead>
+              <TableHead>{t("email")}</TableHead>
+              <TableHead>{t("role")}</TableHead>
+              <TableHead>{t("monthlyTarget")}</TableHead>
+              <TableHead>{t("status")}</TableHead>
+              <TableHead>{t("created")}</TableHead>
               <TableHead className="w-12" />
             </TableRow>
           </TableHeader>
@@ -92,7 +94,7 @@ function UsersContent() {
                         : "bg-gray-100 text-gray-500 border-0"
                     }
                   >
-                    {user.isActive ? "Active" : "Inactive"}
+                    {user.isActive ? t("active") : t("inactive")}
                   </Badge>
                 </TableCell>
                 <TableCell className="text-muted-foreground">

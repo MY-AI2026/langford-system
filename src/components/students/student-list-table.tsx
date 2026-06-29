@@ -5,6 +5,7 @@ import { Student } from "@/lib/types";
 import { StudentStatusBadge } from "./student-status-badge";
 import { formatDate, formatCurrency, formatPhone } from "@/lib/utils/format";
 import { PAYMENT_STATUS_CONFIG } from "@/lib/utils/constants";
+import { useLanguage } from "@/contexts/language-context";
 import {
   Table,
   TableBody,
@@ -30,13 +31,14 @@ export function StudentListTable({
   students,
   showSalesRep = false,
 }: StudentListTableProps) {
+  const { t } = useLanguage();
   if (students.length === 0) {
     return (
       <div className="rounded-lg border border-dashed">
         <EmptyState
           icon={GraduationCap}
-          title="No students found"
-          description="Try adjusting your search or filters — new students will appear here."
+          title={t("noStudents")}
+          description={t("noStudentsHint")}
         />
       </div>
     );
@@ -47,14 +49,14 @@ export function StudentListTable({
       <Table>
         <TableHeader>
           <TableRow>
-            <TableHead>Name</TableHead>
-            <TableHead>Phone</TableHead>
-            <TableHead>Status</TableHead>
-            <TableHead>Lead Source</TableHead>
-            {showSalesRep && <TableHead>Sales Rep</TableHead>}
-            <TableHead>Payment</TableHead>
-            <TableHead>Date</TableHead>
-            <TableHead className="w-32 text-center">Actions</TableHead>
+            <TableHead>{t("name")}</TableHead>
+            <TableHead>{t("phone")}</TableHead>
+            <TableHead>{t("status")}</TableHead>
+            <TableHead>{t("leadSource")}</TableHead>
+            {showSalesRep && <TableHead>{t("salesRep")}</TableHead>}
+            <TableHead>{t("payments")}</TableHead>
+            <TableHead>{t("date")}</TableHead>
+            <TableHead className="w-32 text-center">{t("actions")}</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -97,12 +99,12 @@ export function StudentListTable({
                         "border-0 w-fit"
                       )}
                     >
-                      {paymentConfig?.label || "Unpaid"}
+                      {paymentConfig?.label || t("unpaid")}
                     </Badge>
                     {remainingBalance > 0 && (
                       <span className="mt-1 text-xs text-muted-foreground">
                         {formatCurrency(remainingBalance)}{" "}
-                        remaining
+                        {t("remaining")}
                       </span>
                     )}
                   </div>
@@ -123,7 +125,7 @@ export function StudentListTable({
                       variant="icon"
                     />
                     <Link href={`/students/${student.id}`}>
-                      <Button variant="ghost" size="icon" title="فتح الطالب">
+                      <Button variant="ghost" size="icon" title={t("openStudent")}>
                         <Eye className="h-4 w-4" />
                       </Button>
                     </Link>

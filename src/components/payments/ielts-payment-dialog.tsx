@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useLanguage } from "@/contexts/language-context";
 import { PaymentMethod } from "@/lib/types";
 import { PAYMENT_METHOD_LABELS, IELTS_EXAM_FEE } from "@/lib/utils/constants";
 import { Button } from "@/components/ui/button";
@@ -40,6 +41,7 @@ export function IeltsPaymentDialog({
   onOpenChange,
   onSubmit,
 }: IeltsPaymentDialogProps) {
+  const { t } = useLanguage();
   const [amount, setAmount] = useState<string>(String(IELTS_EXAM_FEE));
   const [method, setMethod] = useState<PaymentMethod>("cash");
   const [paymentDate, setPaymentDate] = useState<string>(
@@ -63,7 +65,7 @@ export function IeltsPaymentDialog({
 
     const parsedAmount = parseFloat(amount);
     if (isNaN(parsedAmount) || parsedAmount <= 0) {
-      setError("Amount must be greater than 0");
+      setError(t("amountMustBeGreaterThanZero"));
       return;
     }
 
@@ -78,7 +80,7 @@ export function IeltsPaymentDialog({
       reset();
       onOpenChange(false);
     } catch {
-      setError("Failed to record IELTS payment");
+      setError(t("failedToRecordIeltsPayment"));
     } finally {
       setSubmitting(false);
     }
@@ -94,17 +96,16 @@ export function IeltsPaymentDialog({
     >
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Record IELTS Exam Payment</DialogTitle>
+          <DialogTitle>{t("recordIeltsExamPayment")}</DialogTitle>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="rounded-md bg-blue-50 p-3 text-sm text-blue-900 dark:bg-blue-950 dark:text-blue-200">
-            Default IELTS exam fee: <strong>{IELTS_EXAM_FEE} KWD</strong>. You
-            can edit the amount if needed. This payment is <strong>separate</strong>{" "}
-            from the student&apos;s main course fees.
+            {t("defaultIeltsExamFee")}: <strong>{IELTS_EXAM_FEE} KWD</strong>.{" "}
+            {t("ieltsFeeSeparateNote")}
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="ielts-amount">Amount (KWD) *</Label>
+            <Label htmlFor="ielts-amount">{t("amount")} (KWD) *</Label>
             <Input
               id="ielts-amount"
               type="number"
@@ -117,7 +118,7 @@ export function IeltsPaymentDialog({
           </div>
 
           <div className="space-y-2">
-            <Label>Payment Method *</Label>
+            <Label>{t("paymentMethod")} *</Label>
             <Select
               value={method}
               onValueChange={(val) => setMethod(val as PaymentMethod)}
@@ -136,7 +137,7 @@ export function IeltsPaymentDialog({
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="ielts-date">Payment Date *</Label>
+            <Label htmlFor="ielts-date">{t("paymentDate")} *</Label>
             <Input
               id="ielts-date"
               type="date"
