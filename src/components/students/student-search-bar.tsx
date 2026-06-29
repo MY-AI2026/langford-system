@@ -8,10 +8,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { STUDENT_STATUS_CONFIG, STUDENT_STATUSES } from "@/lib/utils/constants";
+import { STUDENT_STATUS_CONFIG, STUDENT_STATUSES, PAYMENT_STATUS_CONFIG } from "@/lib/utils/constants";
 import { StudentStatus } from "@/lib/types";
 import { useLanguage } from "@/contexts/language-context";
-import { Search, X, CalendarRange } from "lucide-react";
+import { Search, X, CalendarRange, Filter } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
@@ -28,6 +28,12 @@ interface StudentSearchBarProps {
   onDateFromChange: (value: string) => void;
   onDateToChange: (value: string) => void;
   isAdmin?: boolean;
+  // Advanced filters (optional)
+  leadSourceFilter?: string;
+  onLeadSourceFilterChange?: (value: string) => void;
+  leadSources?: string[];
+  paymentFilter?: string;
+  onPaymentFilterChange?: (value: string) => void;
 }
 
 const QUICK_RANGES = [
@@ -70,6 +76,11 @@ export function StudentSearchBar({
   onDateFromChange,
   onDateToChange,
   isAdmin,
+  leadSourceFilter = "all",
+  onLeadSourceFilterChange,
+  leadSources,
+  paymentFilter = "all",
+  onPaymentFilterChange,
 }: StudentSearchBarProps) {
   const { t } = useLanguage();
 
@@ -192,6 +203,58 @@ export function StudentSearchBar({
           )}
         </div>
       </div>
+
+      {/* Row 3: advanced filters (lead source + payment status) */}
+      {onLeadSourceFilterChange && (
+        <div className="flex flex-wrap items-center gap-2">
+          <Filter className="h-4 w-4 text-muted-foreground" />
+
+          <Select value={leadSourceFilter} onValueChange={(val) => onLeadSourceFilterChange(val ?? "all")}>
+            <SelectTrigger className="h-8 w-full text-xs sm:w-48">
+              <SelectValue placeholder={t("leadSource")} />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">{t("leadSource")} — {t("all")}</SelectItem>
+              {(leadSources ?? []).map((src) => (
+                <SelectItem key={src} value={src}>
+                  {src}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+
+          {onPaymentFilterChange && (
+            <Select value={paymentFilter} onValueChange={(val) => onPaymentFilterChange(val ?? "all")}>
+              <SelectTrigger className="h-8 w-full text-xs sm:w-44">
+                <SelectValue placeholder={t("paymentStatus")} />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">{t("paymentStatus")} — {t("all")}</SelectItem>
+                {Object.keys(PAYMENT_STATUS_CONFIG).map((k) => (
+                  <SelectItem key={k} value={k}>
+                    {(PAYMENT_STATUS_CONFIG as Record<string, { label: string }>)[k].label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          )}
+
+          {(leadSourceFilter !== "all" || paymentFilter !== "all") && (
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-8 text-xs"
+              onClick={() => {
+                onLeadSourceFilterChange("all");
+                onPaymentFilterChange?.("all");
+              }}
+            >
+              <X className="me-1 h-3 w-3" />
+              {t("clear")}
+            </Button>
+          )}
+        </div>
+      )}
     </div>
   );
 }

@@ -55,22 +55,23 @@ export default function SettingsPage() {
             </CardContent>
           </Card>
 
-          <Card className="opacity-60">
-            <CardHeader>
-              <div className="flex items-center gap-3">
-                <div className="rounded-lg bg-green-50 p-2">
-                  <Database className="h-5 w-5 text-green-600" />
+          <Link href="/settings/export">
+            <Card className="cursor-pointer transition-shadow hover:shadow-md">
+              <CardHeader>
+                <div className="flex items-center gap-3">
+                  <div className="rounded-lg bg-green-50 p-2 dark:bg-green-500/10">
+                    <Database className="h-5 w-5 text-green-600 dark:text-green-400" />
+                  </div>
+                  <CardTitle className="text-base">{t("dataExport")}</CardTitle>
                 </div>
-                <CardTitle className="text-base">{t("dataExport")}</CardTitle>
-              </div>
-            </CardHeader>
-            <CardContent>
-              <p className="text-sm text-muted-foreground">
-                {t("dataExportDescription")}
-              </p>
-              <Badge className="mt-2" variant="secondary">{t("comingSoon")}</Badge>
-            </CardContent>
-          </Card>
+              </CardHeader>
+              <CardContent>
+                <p className="text-sm text-muted-foreground">
+                  {t("dataExportDescription")}
+                </p>
+              </CardContent>
+            </Card>
+          </Link>
         </div>
       </div>
     </RoleGate>
