@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { RoleGate } from "@/components/auth/role-gate";
 import { PageHeader } from "@/components/layout/page-header";
+import { useLanguage } from "@/contexts/language-context";
 import { subscribeToLoginLogs } from "@/lib/services/user-service";
 import { formatDateTime } from "@/lib/utils/format";
 import { Timestamp } from "firebase/firestore";
@@ -35,6 +36,7 @@ export default function LoginReportPage() {
 }
 
 function LoginReportContent() {
+  const { t } = useLanguage();
   const [logs, setLogs] = useState<LoginLog[]>([]);
 
   useEffect(() => {
@@ -60,15 +62,15 @@ function LoginReportContent() {
   return (
     <div className="space-y-6">
       <PageHeader
-        title="Login Activity Report"
-        description="Track all user login activity"
+        title={t("loginActivityReport")}
+        description={t("loginActivityDescription")}
       />
 
       <div className="grid gap-4 sm:grid-cols-3">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-sm text-muted-foreground">
-              Total Logins
+              {t("totalLogins")}
             </CardTitle>
             <LogIn className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
@@ -79,21 +81,21 @@ function LoginReportContent() {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-sm text-muted-foreground">
-              Today&apos;s Logins
+              {t("todaysLogins")}
             </CardTitle>
             <LogIn className="h-4 w-4 text-blue-500" />
           </CardHeader>
           <CardContent>
             <p className="text-2xl font-bold">{todayLogins.length}</p>
             <p className="text-xs text-muted-foreground">
-              {uniqueTodayUsers} unique user(s)
+              {uniqueTodayUsers} {t("uniqueUsers")}
             </p>
           </CardContent>
         </Card>
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-sm text-muted-foreground">
-              This Week
+              {t("thisWeek")}
             </CardTitle>
             <Users className="h-4 w-4 text-green-500" />
           </CardHeader>
@@ -107,9 +109,9 @@ function LoginReportContent() {
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>User</TableHead>
-              <TableHead>Email</TableHead>
-              <TableHead>Login Time</TableHead>
+              <TableHead>{t("user")}</TableHead>
+              <TableHead>{t("email")}</TableHead>
+              <TableHead>{t("loginTime")}</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -132,7 +134,7 @@ function LoginReportContent() {
                   colSpan={3}
                   className="text-center text-muted-foreground"
                 >
-                  No login activity recorded yet
+                  {t("noLoginActivity")}
                 </TableCell>
               </TableRow>
             )}

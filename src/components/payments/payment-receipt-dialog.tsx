@@ -7,6 +7,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
+import { useLanguage } from "@/contexts/language-context";
 import { Payment } from "@/lib/types";
 import { formatDate, formatCurrency } from "@/lib/utils/format";
 import { PAYMENT_METHOD_LABELS } from "@/lib/utils/constants";
@@ -31,6 +32,7 @@ export function PaymentReceiptDialog({
   studentPhone,
   studentCivilId,
 }: PaymentReceiptDialogProps) {
+  const { t } = useLanguage();
   if (!payment) return null;
 
   // Escape every user-controlled value before injecting into the print window
@@ -195,7 +197,7 @@ export function PaymentReceiptDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-sm">
         <DialogHeader>
-          <DialogTitle>Payment Receipt</DialogTitle>
+          <DialogTitle>{t("paymentReceipt")}</DialogTitle>
         </DialogHeader>
 
         {/* Receipt Preview */}
@@ -293,11 +295,11 @@ export function PaymentReceiptDialog({
             onClick={() => onOpenChange(false)}
           >
             <X className="mr-2 h-4 w-4" />
-            Close
+            {t("close")}
           </Button>
           <Button className="flex-1" onClick={handlePrint}>
             <Printer className="mr-2 h-4 w-4" />
-            Print Receipt
+            {t("printReceipt")}
           </Button>
         </div>
       </DialogContent>

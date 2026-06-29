@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useLanguage } from "@/contexts/language-context";
 import { Payment } from "@/lib/types";
 import { formatDate, formatCurrency } from "@/lib/utils/format";
 import { PAYMENT_METHOD_LABELS } from "@/lib/utils/constants";
@@ -42,6 +43,7 @@ export function PaymentHistoryTable({
   isAdmin = false,
   onDeletePayment,
 }: PaymentHistoryTableProps) {
+  const { t } = useLanguage();
   const [receiptPayment, setReceiptPayment] = useState<Payment | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<Payment | null>(null);
   const [deleting, setDeleting] = useState(false);
@@ -60,7 +62,7 @@ export function PaymentHistoryTable({
   if (payments.length === 0) {
     return (
       <div className="flex h-32 items-center justify-center rounded-lg border border-dashed">
-        <p className="text-sm text-muted-foreground">No payments recorded</p>
+        <p className="text-sm text-muted-foreground">{t("noPayments")}</p>
       </div>
     );
   }
@@ -71,11 +73,11 @@ export function PaymentHistoryTable({
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Date</TableHead>
-              <TableHead>Amount</TableHead>
-              <TableHead>Method</TableHead>
-              <TableHead>Receipt #</TableHead>
-              <TableHead>Notes</TableHead>
+              <TableHead>{t("date")}</TableHead>
+              <TableHead>{t("amount")}</TableHead>
+              <TableHead>{t("method")}</TableHead>
+              <TableHead>{t("receiptNumber")}</TableHead>
+              <TableHead>{t("notes")}</TableHead>
               <TableHead className="w-12" />
               {isAdmin && <TableHead className="w-12" />}
             </TableRow>
@@ -111,7 +113,7 @@ export function PaymentHistoryTable({
                   <Button
                     variant="ghost"
                     size="icon"
-                    title="Print Receipt"
+                    title={t("printReceipt")}
                     onClick={() => setReceiptPayment(payment)}
                   >
                     <Printer className="h-4 w-4" />
@@ -122,7 +124,7 @@ export function PaymentHistoryTable({
                     <Button
                       variant="ghost"
                       size="icon"
-                      title="Delete Payment"
+                      title={t("deletePayment")}
                       className="text-destructive hover:text-destructive hover:bg-destructive/10"
                       onClick={() => setDeleteTarget(payment)}
                     >
@@ -148,28 +150,28 @@ export function PaymentHistoryTable({
       <Dialog open={!!deleteTarget} onOpenChange={(open) => { if (!open && !deleting) setDeleteTarget(null); }}>
         <DialogContent showCloseButton={false}>
           <DialogHeader>
-            <DialogTitle>Delete Payment</DialogTitle>
+            <DialogTitle>{t("deletePayment")}</DialogTitle>
             <DialogDescription>
-              Are you sure you want to delete this payment?
+              {t("deletePaymentConfirm")}
             </DialogDescription>
           </DialogHeader>
           {deleteTarget && (
             <div className="rounded-md bg-muted p-3 text-sm space-y-1">
-              <p><span className="font-medium">Amount:</span> {formatCurrency(deleteTarget.amount)}</p>
-              <p><span className="font-medium">Receipt:</span> {deleteTarget.receiptNumber}</p>
-              <p><span className="font-medium">Method:</span> {PAYMENT_METHOD_LABELS[deleteTarget.method]}</p>
-              <p><span className="font-medium">Date:</span> {formatDate(deleteTarget.paymentDate)}</p>
+              <p><span className="font-medium">{t("amount")}:</span> {formatCurrency(deleteTarget.amount)}</p>
+              <p><span className="font-medium">{t("receipt")}:</span> {deleteTarget.receiptNumber}</p>
+              <p><span className="font-medium">{t("method")}:</span> {PAYMENT_METHOD_LABELS[deleteTarget.method]}</p>
+              <p><span className="font-medium">{t("date")}:</span> {formatDate(deleteTarget.paymentDate)}</p>
             </div>
           )}
           <p className="text-sm text-destructive">
-            This will update the student&apos;s balance accordingly. This action cannot be undone.
+            {t("deletePaymentWarning")}
           </p>
           <DialogFooter>
             <Button variant="outline" onClick={() => setDeleteTarget(null)} disabled={deleting}>
-              Cancel
+              {t("cancel")}
             </Button>
             <Button variant="destructive" onClick={handleDelete} disabled={deleting}>
-              {deleting ? "Deleting..." : "Delete Payment"}
+              {deleting ? t("deleting") : t("deletePayment")}
             </Button>
           </DialogFooter>
         </DialogContent>

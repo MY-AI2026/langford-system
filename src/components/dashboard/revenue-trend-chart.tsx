@@ -4,6 +4,7 @@ import { useMemo } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Student } from "@/lib/types";
 import { formatCurrency } from "@/lib/utils/format";
+import { useLanguage } from "@/contexts/language-context";
 import {
   AreaChart,
   Area,
@@ -19,6 +20,7 @@ interface RevenueTrendChartProps {
 }
 
 export function RevenueTrendChart({ students }: RevenueTrendChartProps) {
+  const { t } = useLanguage();
   const data = useMemo(() => {
     const now = new Date();
     const months: { key: string; label: string; revenue: number }[] = [];
@@ -50,7 +52,7 @@ export function RevenueTrendChart({ students }: RevenueTrendChartProps) {
   return (
     <Card>
       <CardHeader className="pb-2">
-        <CardTitle className="text-base">Monthly Revenue Trend</CardTitle>
+        <CardTitle className="text-base">{t("monthlyRevenueTrend")}</CardTitle>
       </CardHeader>
       <CardContent>
         <ResponsiveContainer width="100%" height={250}>
@@ -70,7 +72,7 @@ export function RevenueTrendChart({ students }: RevenueTrendChartProps) {
               }
             />
             <Tooltip
-              formatter={(value) => [formatCurrency(value as number), "Revenue"]}
+              formatter={(value) => [formatCurrency(value as number), t("revenue")]}
               contentStyle={{ borderRadius: 8, fontSize: 13 }}
             />
             <Area

@@ -117,7 +117,7 @@ export function WhatsAppButton({ phone, fullName, context, variant = "icon" }: P
               </Select>
             </div>
             <div>
-              <Label className="mb-1 block">نص الرسالة</Label>
+              <Label className="mb-1 block">{t("messageText")}</Label>
               <Textarea
                 value={body}
                 onChange={(e) => setBody(e.target.value)}
@@ -125,16 +125,16 @@ export function WhatsAppButton({ phone, fullName, context, variant = "icon" }: P
                 dir="rtl"
               />
               <p className="mt-1 text-xs text-muted-foreground">
-                تقدر تعدّل الرسالة قبل الإرسال. الواتساب هيفتح في تاب جديد ومش هيرسل تلقائي.
+                {t("whatsAppEditHint")}
               </p>
             </div>
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setOpen(false)}>
-              إلغاء
+              {t("cancel")}
             </Button>
             <Button onClick={send} disabled={!body.trim()}>
-              افتح واتساب
+              {t("openWhatsApp")}
             </Button>
           </DialogFooter>
         </DialogContent>

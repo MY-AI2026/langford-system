@@ -305,11 +305,11 @@ function AdminCoursesContent() {
                           <TableCell>
                             {c.isActive ? (
                               <Badge className="border-0 bg-green-100 text-green-700">
-                                Active
+                                {t("active")}
                               </Badge>
                             ) : (
                               <Badge className="border-0 bg-muted text-muted-foreground">
-                                Hidden
+                                {t("hidden")}
                               </Badge>
                             )}
                           </TableCell>
@@ -319,7 +319,7 @@ function AdminCoursesContent() {
                                 variant="ghost"
                                 size="icon"
                                 onClick={() => openEdit(c)}
-                                aria-label="Edit"
+                                aria-label={t("edit")}
                               >
                                 <Pencil className="h-4 w-4" />
                               </Button>
@@ -327,7 +327,7 @@ function AdminCoursesContent() {
                                 variant="ghost"
                                 size="icon"
                                 onClick={() => handleToggleActive(c)}
-                                aria-label={c.isActive ? "Hide" : "Show"}
+                                aria-label={c.isActive ? t("hide") : t("show")}
                               >
                                 {c.isActive ? (
                                   <EyeOff className="h-4 w-4" />
@@ -366,6 +366,7 @@ function CourseDialog({
   onOpenChange: (open: boolean) => void;
   editing: RegCourse | null;
 }) {
+  const { t } = useLanguage();
   const { firebaseUser, userData } = useAuth();
 
   const {
@@ -437,7 +438,7 @@ function CourseDialog({
           },
           { uid: firebaseUser.uid, displayName: userData.displayName, role: "admin" }
         );
-        toast.success("Course updated");
+        toast.success(t("courseUpdated"));
       } else {
         await createCourse(
           {
@@ -453,12 +454,12 @@ function CourseDialog({
           },
           { uid: firebaseUser.uid, displayName: userData.displayName, role: "admin" }
         );
-        toast.success("Course created");
+        toast.success(t("courseCreated"));
       }
       onOpenChange(false);
     } catch (e) {
       console.error("[course-dialog] save failed:", e);
-      toast.error("Save failed");
+      toast.error(t("saveFailed"));
     }
   }
 
@@ -466,12 +467,12 @@ function CourseDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent dir="ltr" className="max-w-lg">
         <DialogHeader>
-          <DialogTitle>{editing ? "Edit course(s)" : "New Course"}</DialogTitle>
+          <DialogTitle>{editing ? t("editCourse") : t("newCourse")}</DialogTitle>
         </DialogHeader>
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
           <div className="space-y-2">
             <Label htmlFor="c-name">
-              Name <span className="text-destructive">*</span>
+              {t("name")} <span className="text-destructive">*</span>
             </Label>
             <Input id="c-name" {...register("name")} aria-invalid={!!errors.name} />
             {errors.name && (
@@ -481,7 +482,7 @@ function CourseDialog({
 
           <div className="grid gap-3 sm:grid-cols-2">
             <div className="space-y-2">
-              <Label>Category</Label>
+              <Label>{t("category")}</Label>
               <Select
                 value={watch("category")}
                 onValueChange={(v) => setValue("category", v as RegCourseCategory)}
@@ -500,12 +501,12 @@ function CourseDialog({
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="c-currency">Currency</Label>
+              <Label htmlFor="c-currency">{t("currency")}</Label>
               <Input id="c-currency" {...register("currency")} dir="ltr" />
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="c-fee">Fee</Label>
+              <Label htmlFor="c-fee">{t("fee")}</Label>
               <Input
                 id="c-fee"
                 type="number"
@@ -521,25 +522,25 @@ function CourseDialog({
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="c-dur">Duration (label)</Label>
+              <Label htmlFor="c-dur">{t("durationLabel")}</Label>
               <Input
                 id="c-dur"
-                placeholder="e.g. 3 months / 160 hours"
+                placeholder={t("durationPlaceholderExample")}
                 {...register("durationLabel")}
               />
             </div>
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="c-desc">Description</Label>
+            <Label htmlFor="c-desc">{t("description")}</Label>
             <Textarea id="c-desc" rows={3} {...register("description")} />
           </div>
 
           <div className="flex items-center justify-between rounded-md border p-3">
             <div>
-              <p className="text-sm font-medium">Acceptix Exclusive</p>
+              <p className="text-sm font-medium">{t("acceptixExclusive")}</p>
               <p className="text-xs text-muted-foreground">
-                Check if the course is exclusive to Acceptix (e.g. ESP).
+                {t("acceptixExclusiveDesc")}
               </p>
             </div>
             <Switch
@@ -550,9 +551,9 @@ function CourseDialog({
 
           <div className="flex items-center justify-between rounded-md border p-3">
             <div>
-              <p className="text-sm font-medium">Active</p>
+              <p className="text-sm font-medium">{t("active")}</p>
               <p className="text-xs text-muted-foreground">
-                If disabled, agents won't see this course when registering students.
+                {t("activeCourseDesc")}
               </p>
             </div>
             <Switch
@@ -568,11 +569,11 @@ function CourseDialog({
               onClick={() => onOpenChange(false)}
               disabled={isSubmitting}
             >
-              Cancel
+              {t("cancel")}
             </Button>
             <Button type="submit" disabled={isSubmitting}>
               {isSubmitting && <Loader2 className="ml-2 h-4 w-4 animate-spin" />}
-              Save
+              {t("save")}
             </Button>
           </DialogFooter>
         </form>

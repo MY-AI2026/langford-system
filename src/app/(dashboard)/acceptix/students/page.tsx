@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { useAuth } from "@/contexts/auth-context";
+import { useLanguage } from "@/contexts/language-context";
 import { RoleGate } from "@/components/auth/role-gate";
 import {
   subscribeToAllStudents,
@@ -49,6 +50,7 @@ import { toast } from "sonner";
 import { Search, Pencil, Trash2, Users } from "lucide-react";
 
 function AdminStudentsContent() {
+  const { t } = useLanguage();
   const { firebaseUser, userData } = useAuth();
   const [students, setStudents] = useState<RegStudent[]>([]);
   const [courses, setCourses] = useState<RegCourse[]>([]);
@@ -121,11 +123,11 @@ function AdminStudentsContent() {
           notes: { from: editing.notes, to: editNotes },
         }
       );
-      toast.success("Student updated.");
+      toast.success(t("studentUpdated"));
       setEditing(null);
     } catch (e) {
       console.error("[admin-students] update failed:", e);
-      toast.error("Update failed.");
+      toast.error(t("updateFailed"));
     }
   }
 
@@ -137,11 +139,11 @@ function AdminStudentsContent() {
         displayName: userData.displayName,
         role: "admin",
       });
-      toast.success("Student deleted (soft delete — recoverable from audit log).");
+      toast.success(t("studentSoftDeleted"));
       setDeletingId(null);
     } catch (e) {
       console.error("[admin-students] delete failed:", e);
-      toast.error("Delete failed.");
+      toast.error(t("deleteFailed"));
     }
   }
 
@@ -150,23 +152,23 @@ function AdminStudentsContent() {
       <div>
         <h1 className="flex items-center gap-2 text-2xl font-semibold">
           <Users className="h-6 w-6 text-primary" />
-          All Students
+          {t("allStudents")}
         </h1>
         <p className="mt-1 text-sm text-muted-foreground">
-          All Acceptix registrations from every agent — with filters, edit, and delete.
+          {t("allStudentsSubtitle")}
         </p>
       </div>
 
       <div className="grid gap-3 sm:grid-cols-3">
         <Card>
           <CardContent className="p-4">
-            <p className="text-xs text-muted-foreground">Students (filtered)</p>
+            <p className="text-xs text-muted-foreground">{t("studentsFiltered")}</p>
             <p className="text-2xl font-bold">{totals.count.toLocaleString("en-US")}</p>
           </CardContent>
         </Card>
         <Card>
           <CardContent className="p-4">
-            <p className="text-xs text-muted-foreground">Total Fees</p>
+            <p className="text-xs text-muted-foreground">{t("totalFees")}</p>
             <p className="text-2xl font-bold">
               {totals.totalFees.toLocaleString("en-US")} {REG_DEFAULT_CURRENCY}
             </p>
@@ -174,7 +176,7 @@ function AdminStudentsContent() {
         </Card>
         <Card className="border-primary/30 bg-primary/5">
           <CardContent className="p-4">
-            <p className="text-xs text-muted-foreground">Total Commission (10%)</p>
+            <p className="text-xs text-muted-foreground">{t("totalCommission10")}</p>
             <p className="text-2xl font-bold text-primary">
               {totals.totalCommission.toLocaleString("en-US")} {REG_DEFAULT_CURRENCY}
             </p>
@@ -186,19 +188,19 @@ function AdminStudentsContent() {
         <div className="relative">
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <Input
-            placeholder="Search by name, phone, or email"
+            placeholder={t("searchStudentsPlaceholder")}
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             className="pl-9"
-            aria-label="Search"
+            aria-label={t("search")}
           />
         </div>
         <Select value={statusFilter} onValueChange={(v) => setStatusFilter(v as RegStudentStatus | "all")}>
           <SelectTrigger>
-            <SelectValue placeholder="Status" />
+            <SelectValue placeholder={t("status")} />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">All statuses</SelectItem>
+            <SelectItem value="all">{t("allStatuses")}</SelectItem>
             {REG_STATUS_ORDER.map((s) => (
               <SelectItem key={s} value={s}>
                 {REG_STUDENT_STATUS_LABELS[s].en}
@@ -211,10 +213,10 @@ function AdminStudentsContent() {
           onValueChange={(v) => setCourseFilter(v ?? "all")}
         >
           <SelectTrigger>
-            <SelectValue placeholder="Course" />
+            <SelectValue placeholder={t("course")} />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">All courses</SelectItem>
+            <SelectItem value="all">{t("allCourses")}</SelectItem>
             {courses.map((c) => (
               <SelectItem key={c.id} value={c.id}>
                 {c.name}
@@ -227,10 +229,10 @@ function AdminStudentsContent() {
           onValueChange={(v) => setAgentFilter(v ?? "all")}
         >
           <SelectTrigger>
-            <SelectValue placeholder="Agent" />
+            <SelectValue placeholder={t("agent")} />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">All agents</SelectItem>
+            <SelectItem value="all">{t("allAgents")}</SelectItem>
             {agents.map((a) => (
               <SelectItem key={a.uid} value={a.uid}>
                 {a.displayName}
@@ -250,7 +252,7 @@ function AdminStudentsContent() {
       ) : students.length === 0 ? (
         <Card>
           <CardContent className="py-12 text-center text-sm text-muted-foreground">
-            No students match these filters.
+            {t("noStudentsMatchFilters")}
           </CardContent>
         </Card>
       ) : (
@@ -258,12 +260,12 @@ function AdminStudentsContent() {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Student</TableHead>
-                <TableHead>Course</TableHead>
-                <TableHead>Agent</TableHead>
-                <TableHead>Commission</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Date</TableHead>
+                <TableHead>{t("student")}</TableHead>
+                <TableHead>{t("course")}</TableHead>
+                <TableHead>{t("agent")}</TableHead>
+                <TableHead>{t("commission")}</TableHead>
+                <TableHead>{t("status")}</TableHead>
+                <TableHead>{t("date")}</TableHead>
                 <TableHead className="w-24"></TableHead>
               </TableRow>
             </TableHeader>
@@ -303,7 +305,7 @@ function AdminStudentsContent() {
                         variant="ghost"
                         size="icon"
                         onClick={() => openEdit(s)}
-                        aria-label="Edit"
+                        aria-label={t("edit")}
                       >
                         <Pencil className="h-4 w-4" />
                       </Button>
@@ -311,7 +313,7 @@ function AdminStudentsContent() {
                         variant="ghost"
                         size="icon"
                         onClick={() => setDeletingId(s.id)}
-                        aria-label="Delete"
+                        aria-label={t("delete")}
                       >
                         <Trash2 className="h-4 w-4 text-destructive" />
                       </Button>
@@ -328,19 +330,19 @@ function AdminStudentsContent() {
       <Dialog open={!!editing} onOpenChange={(open) => !open && setEditing(null)}>
         <DialogContent dir="ltr">
           <DialogHeader>
-            <DialogTitle>Edit Student</DialogTitle>
+            <DialogTitle>{t("editStudent")}</DialogTitle>
           </DialogHeader>
           {editing && (
             <div className="space-y-4">
               <div className="rounded-md bg-muted/50 p-3 text-sm">
                 <p className="font-medium">{editing.fullName}</p>
                 <p className="text-xs text-muted-foreground">
-                  {editing.courseName} · registered by {editing.createdByName}
+                  {editing.courseName} · {t("registeredBy")} {editing.createdByName}
                 </p>
               </div>
 
               <div className="space-y-2">
-                <label className="text-sm font-medium">Status</label>
+                <label className="text-sm font-medium">{t("status")}</label>
                 <Select
                   value={editStatus}
                   onValueChange={(v) => setEditStatus(v as RegStudentStatus)}
@@ -359,7 +361,7 @@ function AdminStudentsContent() {
               </div>
 
               <div className="space-y-2">
-                <label className="text-sm font-medium">Notes</label>
+                <label className="text-sm font-medium">{t("notes")}</label>
                 <Textarea
                   value={editNotes}
                   onChange={(e) => setEditNotes(e.target.value)}
@@ -370,9 +372,9 @@ function AdminStudentsContent() {
           )}
           <DialogFooter>
             <Button variant="outline" onClick={() => setEditing(null)}>
-              Cancel
+              {t("cancel")}
             </Button>
-            <Button onClick={handleEditSave}>Save</Button>
+            <Button onClick={handleEditSave}>{t("save")}</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -381,21 +383,20 @@ function AdminStudentsContent() {
       <Dialog open={!!deletingId} onOpenChange={(open) => !open && setDeletingId(null)}>
         <DialogContent dir="ltr">
           <DialogHeader>
-            <DialogTitle>Delete Student?</DialogTitle>
+            <DialogTitle>{t("deleteStudentQuestion")}</DialogTitle>
           </DialogHeader>
           <p className="text-sm text-muted-foreground">
-            This is a soft delete — the record can be restored later. Hard
-            delete is disabled on registration records for safety and audit.
+            {t("softDeleteExplanation")}
           </p>
           <DialogFooter>
             <Button variant="outline" onClick={() => setDeletingId(null)}>
-              Cancel
+              {t("cancel")}
             </Button>
             <Button
               variant="destructive"
               onClick={() => deletingId && handleDelete(deletingId)}
             >
-              Confirm Delete
+              {t("confirmDelete")}
             </Button>
           </DialogFooter>
         </DialogContent>

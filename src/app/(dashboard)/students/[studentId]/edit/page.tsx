@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { useAuth } from "@/contexts/auth-context";
+import { useLanguage } from "@/contexts/language-context";
 import { PageHeader } from "@/components/layout/page-header";
 import { StudentForm } from "@/components/students/student-form";
 import { getStudent, updateStudent } from "@/lib/services/student-service";
@@ -17,6 +18,7 @@ export default function EditStudentPage() {
   const params = useParams();
   const router = useRouter();
   const { firebaseUser, userData, role } = useAuth();
+  const { t } = useLanguage();
 
   // Accountant is read-only — redirect away from edit page
   if (role === "accountant") {
@@ -63,16 +65,16 @@ export default function EditStudentPage() {
         changes
       );
 
-      toast.success("Student updated");
+      toast.success(t("studentUpdated"));
       router.push(`/students/${studentId}`);
     } catch (error) {
       if (error instanceof Error && error.message.startsWith("PHONE_DUPLICATE:")) {
         const existingName = error.message.substring("PHONE_DUPLICATE:".length);
-        toast.error(`رقم التليفون ده مسجل قبل كده باسم: ${existingName}`);
+        toast.error(`${t("phoneDuplicate")}: ${existingName}`);
       } else if (error instanceof Error && error.message === "PHONE_INVALID") {
-        toast.error("رقم التليفون مش صحيح — لازم يكون 7 أرقام على الأقل");
+        toast.error(t("phoneInvalid"));
       } else {
-        toast.error("فشل تحديث بيانات الطالب");
+        toast.error(t("failedToUpdateStudent"));
         console.error(error);
       }
     }
@@ -88,12 +90,12 @@ export default function EditStudentPage() {
   }
 
   if (!student) {
-    return <p className="text-muted-foreground">Student not found</p>;
+    return <p className="text-muted-foreground">{t("studentNotFound")}</p>;
   }
 
   return (
     <div className="space-y-6">
-      <PageHeader title={`Edit: ${student.fullName}`} />
+      <PageHeader title={`${t("edit")}: ${student.fullName}`} />
       <Card>
         <CardContent className="pt-6">
           <StudentForm
@@ -105,7 +107,7 @@ export default function EditStudentPage() {
               assignedSalesRepId: student.assignedSalesRepId,
             }}
             onSubmit={handleSubmit}
-            submitLabel="Update Student"
+            submitLabel={t("updateStudent")}
           />
         </CardContent>
       </Card>

@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useMemo } from "react";
 import { useAuth } from "@/contexts/auth-context";
+import { useLanguage } from "@/contexts/language-context";
 import { PageHeader } from "@/components/layout/page-header";
 import { RoleGate } from "@/components/auth/role-gate";
 import { subscribeToSummerClubStudents } from "@/lib/services/summer-club-service";
@@ -32,6 +33,7 @@ function toDate(val: unknown): Date | null {
 
 export default function SummerClubReportPage() {
   const { role, firebaseUser } = useAuth();
+  const { t } = useLanguage();
   const [students, setStudents] = useState<SummerClubStudent[]>([]);
   const [dateFrom, setDateFrom] = useState("");
   const [dateTo, setDateTo] = useState("");
@@ -175,16 +177,16 @@ export default function SummerClubReportPage() {
     <RoleGate allowedRoles={["admin", "sales", "accountant", "coordinator"]}>
       <div className="space-y-6">
         <PageHeader
-          title="تقرير النادي الصيفي"
+          title={t("summerClubReport")}
           description={
             role === "sales"
-              ? "بياناتك فقط"
-              : `${stats.total} طالب • ${stats.registered} مسجل`
+              ? t("yourDataOnly")
+              : `${stats.total} ${t("studentLabel")} • ${stats.registered} ${t("registeredLabel")}`
           }
           action={
             <Button variant="outline" onClick={exportReport} disabled={filtered.length === 0}>
               <Download className="mr-2 h-4 w-4" />
-              تصدير CSV
+              {t("exportCSV")}
             </Button>
           }
         />
@@ -192,7 +194,7 @@ export default function SummerClubReportPage() {
         {/* Date filters */}
         <div className="flex flex-wrap gap-3 items-end">
           <div>
-            <Label htmlFor="from">من</Label>
+            <Label htmlFor="from">{t("from")}</Label>
             <Input
               id="from"
               type="date"
@@ -201,7 +203,7 @@ export default function SummerClubReportPage() {
             />
           </div>
           <div>
-            <Label htmlFor="to">إلى</Label>
+            <Label htmlFor="to">{t("to")}</Label>
             <Input
               id="to"
               type="date"
@@ -217,7 +219,7 @@ export default function SummerClubReportPage() {
                 setDateTo("");
               }}
             >
-              مسح
+              {t("clear")}
             </Button>
           )}
         </div>
@@ -227,21 +229,21 @@ export default function SummerClubReportPage() {
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center justify-between">
-                <span>الذكور</span>
+                <span>{t("males")}</span>
                 <Sun className="h-5 w-5 text-blue-500" />
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-2">
-              <Row label="إجمالي" value={String(stats.males.count)} />
-              <Row label="مسجلين" value={String(stats.males.registered)} />
-              <Row label="إجمالي الرسوم" value={formatCurrency(stats.males.fees)} />
+              <Row label={t("total")} value={String(stats.males.count)} />
+              <Row label={t("registeredCount")} value={String(stats.males.registered)} />
+              <Row label={t("totalFees")} value={formatCurrency(stats.males.fees)} />
               <Row
-                label="المدفوع"
+                label={t("amountPaid")}
                 value={formatCurrency(stats.males.paid)}
                 valueClass="text-emerald-700"
               />
               <Row
-                label="المتبقي"
+                label={t("remaining")}
                 value={formatCurrency(stats.males.remaining)}
                 valueClass="text-red-700"
               />
@@ -251,21 +253,21 @@ export default function SummerClubReportPage() {
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center justify-between">
-                <span>الإناث</span>
+                <span>{t("females")}</span>
                 <Sun className="h-5 w-5 text-pink-500" />
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-2">
-              <Row label="إجمالي" value={String(stats.females.count)} />
-              <Row label="مسجلات" value={String(stats.females.registered)} />
-              <Row label="إجمالي الرسوم" value={formatCurrency(stats.females.fees)} />
+              <Row label={t("total")} value={String(stats.females.count)} />
+              <Row label={t("registeredCount")} value={String(stats.females.registered)} />
+              <Row label={t("totalFees")} value={formatCurrency(stats.females.fees)} />
               <Row
-                label="المدفوع"
+                label={t("amountPaid")}
                 value={formatCurrency(stats.females.paid)}
                 valueClass="text-emerald-700"
               />
               <Row
-                label="المتبقي"
+                label={t("remaining")}
                 value={formatCurrency(stats.females.remaining)}
                 valueClass="text-red-700"
               />
@@ -276,17 +278,17 @@ export default function SummerClubReportPage() {
         {/* Grand totals */}
         <Card>
           <CardHeader>
-            <CardTitle>الإجمالي العام</CardTitle>
+            <CardTitle>{t("grandTotal")}</CardTitle>
           </CardHeader>
           <CardContent className="grid gap-3 md:grid-cols-3">
-            <Row label="إجمالي الرسوم" value={formatCurrency(stats.totals.fees)} />
+            <Row label={t("totalFees")} value={formatCurrency(stats.totals.fees)} />
             <Row
-              label="إجمالي المدفوع"
+              label={t("totalPaid")}
               value={formatCurrency(stats.totals.paid)}
               valueClass="text-emerald-700"
             />
             <Row
-              label="إجمالي المتبقي"
+              label={t("totalRemaining")}
               value={formatCurrency(stats.totals.remaining)}
               valueClass="text-red-700"
             />
@@ -297,18 +299,18 @@ export default function SummerClubReportPage() {
         {role !== "sales" && bySalesRep.length > 0 && (
           <Card>
             <CardHeader>
-              <CardTitle>توزيع حسب السيلز</CardTitle>
+              <CardTitle>{t("distributionBySalesRep")}</CardTitle>
             </CardHeader>
             <CardContent>
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>السيلز</TableHead>
-                    <TableHead>عدد الطلاب</TableHead>
-                    <TableHead>المسجلين</TableHead>
-                    <TableHead>الرسوم</TableHead>
-                    <TableHead>المدفوع</TableHead>
-                    <TableHead>المتبقي</TableHead>
+                    <TableHead>{t("salesRep")}</TableHead>
+                    <TableHead>{t("studentsCount")}</TableHead>
+                    <TableHead>{t("registeredCount")}</TableHead>
+                    <TableHead>{t("totalFees")}</TableHead>
+                    <TableHead>{t("amountPaid")}</TableHead>
+                    <TableHead>{t("remaining")}</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>

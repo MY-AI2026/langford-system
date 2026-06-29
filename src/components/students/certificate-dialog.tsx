@@ -8,6 +8,7 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Enrollment } from "@/lib/types";
+import { useLanguage } from "@/contexts/language-context";
 import { formatDate } from "@/lib/utils/format";
 import { Printer, X } from "lucide-react";
 import Image from "next/image";
@@ -33,6 +34,7 @@ export function CertificateDialog({
   studentCivilId,
   enrollment,
 }: CertificateDialogProps) {
+  const { t } = useLanguage();
   const certNumber = generateCertificateNumber(enrollment.id);
   const completionDate = enrollment.endDate
     ? formatDate(enrollment.endDate)
@@ -233,7 +235,7 @@ export function CertificateDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-lg">
         <DialogHeader>
-          <DialogTitle>Certificate of Completion</DialogTitle>
+          <DialogTitle>{t("certificateOfCompletion")}</DialogTitle>
         </DialogHeader>
 
         {/* Certificate Preview */}
@@ -287,11 +289,11 @@ export function CertificateDialog({
             onClick={() => onOpenChange(false)}
           >
             <X className="mr-2 h-4 w-4" />
-            Close
+            {t("close")}
           </Button>
           <Button className="flex-1" onClick={handlePrint}>
             <Printer className="mr-2 h-4 w-4" />
-            Print Certificate
+            {t("printCertificate")}
           </Button>
         </div>
       </DialogContent>

@@ -30,6 +30,7 @@ import {
 } from "@/components/ui/select";
 import { toast } from "sonner";
 import { formatDate } from "@/lib/utils/format";
+import { useLanguage } from "@/contexts/language-context";
 
 const DAY_NAMES: { value: DayOfWeek; label: string; labelAr: string }[] = [
   { value: 6, label: "Saturday", labelAr: "السبت" },
@@ -70,6 +71,7 @@ export function ScheduleEntryForm({
   createdBy,
   onSuccess,
 }: ScheduleEntryFormProps) {
+  const { t } = useLanguage();
   const isEdit = !!editEntry;
 
   // Form state
@@ -143,17 +145,17 @@ export function ScheduleEntryForm({
       : courseName.trim();
 
     if (!finalCourseName) {
-      toast.error("Please select or enter a course name");
+      toast.error(t("selectOrEnterCourseName"));
       return;
     }
 
     if (startTime >= endTime) {
-      toast.error("End time must be after start time");
+      toast.error(t("endTimeAfterStart"));
       return;
     }
 
     if (endTime > "22:00") {
-      toast.error("End time cannot exceed 10:00 PM");
+      toast.error(t("endTimeMaxLimit"));
       return;
     }
 
@@ -170,7 +172,7 @@ export function ScheduleEntryForm({
           editEntry.id
         );
         if (conflict) {
-          toast.error(`Time conflict with "${conflict.courseName}" on this day`);
+          toast.error(`${t("timeConflictWith")} "${conflict.courseName}" ${t("onThisDay")}`);
           setSaving(false);
           return;
         }
@@ -183,7 +185,7 @@ export function ScheduleEntryForm({
           room,
           notes,
         });
-        toast.success("Schedule entry updated");
+        toast.success(t("scheduleEntryUpdated"));
       } else {
         // Create new entries
         const baseData = {
@@ -201,7 +203,7 @@ export function ScheduleEntryForm({
 
         if (dayPattern === "custom") {
           if (customDays.length === 0) {
-            toast.error("Please select at least one day");
+            toast.error(t("selectAtLeastOneDay"));
             setSaving(false);
             return;
           }
@@ -211,7 +213,7 @@ export function ScheduleEntryForm({
             const conflict = await checkTimeConflict(instructorId, day, startTime, endTime);
             if (conflict) {
               const dayName = DAY_NAMES.find((d) => d.value === day)?.label || "";
-              toast.error(`Time conflict on ${dayName} with "${conflict.courseName}"`);
+              toast.error(`${t("timeConflictOn")} ${dayName} ${t("withCourse")} "${conflict.courseName}"`);
               setSaving(false);
               return;
             }
@@ -229,7 +231,7 @@ export function ScheduleEntryForm({
               patternGroupId: groupId,
             });
           }
-          toast.success(`${customDays.length} schedule entries created`);
+          toast.success(`${customDays.length} ${t("scheduleEntriesCreated")}`);
         } else {
           // Pattern-based creation (Sat-Mon-Wed or Sun-Tue-Thu)
           const patternDays = dayPattern === "sat_mon_wed" ? [6, 1, 3] : [0, 2, 4];
@@ -237,7 +239,7 @@ export function ScheduleEntryForm({
             const conflict = await checkTimeConflict(instructorId, day as DayOfWeek, startTime, endTime);
             if (conflict) {
               const dayName = DAY_NAMES.find((d) => d.value === day)?.label || "";
-              toast.error(`Time conflict on ${dayName} with "${conflict.courseName}"`);
+              toast.error(`${t("timeConflictOn")} ${dayName} ${t("withCourse")} "${conflict.courseName}"`);
               setSaving(false);
               return;
             }

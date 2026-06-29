@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { useAuth } from "@/contexts/auth-context";
+import { useLanguage } from "@/contexts/language-context";
 import { PageHeader } from "@/components/layout/page-header";
 import { StudentStatusBadge } from "@/components/students/student-status-badge";
 import { EvaluationForm } from "@/components/evaluation/evaluation-form";
@@ -76,6 +77,7 @@ export default function StudentDetailPage() {
   const params = useParams();
   const router = useRouter();
   const { firebaseUser, userData, role } = useAuth();
+  const { t } = useLanguage();
   const studentId = params.studentId as string;
 
   const [student, setStudent] = useState<Student | null>(null);

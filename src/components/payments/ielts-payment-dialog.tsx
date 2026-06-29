@@ -147,10 +147,10 @@ export function IeltsPaymentDialog({
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="ielts-notes">Notes</Label>
+            <Label htmlFor="ielts-notes">{t("notes")}</Label>
             <Textarea
               id="ielts-notes"
-              placeholder="Optional notes..."
+              placeholder={t("optionalNotes")}
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
             />
@@ -166,11 +166,11 @@ export function IeltsPaymentDialog({
               variant="outline"
               onClick={() => onOpenChange(false)}
             >
-              Cancel
+              {t("cancel")}
             </Button>
             <Button type="submit" disabled={submitting}>
               {submitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              Record IELTS Payment
+              {t("recordIeltsPayment")}
             </Button>
           </div>
         </form>

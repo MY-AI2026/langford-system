@@ -2,6 +2,7 @@
 
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useLanguage } from "@/contexts/language-context";
 import { paymentSchema, PaymentFormData } from "@/lib/utils/validators";
 import { PAYMENT_METHOD_LABELS } from "@/lib/utils/constants";
 import { PaymentMethod, Enrollment } from "@/lib/types";
@@ -39,6 +40,7 @@ export function PaymentForm({
   remainingBalance,
   enrollments,
 }: PaymentFormProps) {
+  const { t } = useLanguage();
   const {
     register,
     handleSubmit,
@@ -84,15 +86,15 @@ export function PaymentForm({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Record Payment</DialogTitle>
+          <DialogTitle>{t("recordPayment")}</DialogTitle>
         </DialogHeader>
         <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-4">
           <div className="space-y-2">
             <Label htmlFor="amount">
-              Amount *
+              {t("amount")} *
               {remainingBalance !== undefined && (
                 <span className="ml-2 text-xs text-muted-foreground">
-                  (Remaining: {remainingBalance.toFixed(3)} KWD)
+                  ({t("remaining")}: {remainingBalance.toFixed(3)} KWD)
                 </span>
               )}
             </Label>
@@ -112,7 +114,7 @@ export function PaymentForm({
           </div>
 
           <div className="space-y-2">
-            <Label>Payment Method *</Label>
+            <Label>{t("paymentMethod")} *</Label>
             <Select
               value={watch("method")}
               onValueChange={(val) => setValue("method", val as PaymentMethod)}
@@ -132,16 +134,16 @@ export function PaymentForm({
 
           {activeEnrollments.length > 0 && (
             <div className="space-y-2">
-              <Label>Course (optional)</Label>
+              <Label>{t("courseOptional")}</Label>
               <Select
                 value={watch("courseId") || "none"}
                 onValueChange={(val) => handleCourseChange(val || "none")}
               >
                 <SelectTrigger>
-                  <SelectValue placeholder="Select course" />
+                  <SelectValue placeholder={t("selectCourse")} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="none">No specific course</SelectItem>
+                  <SelectItem value="none">{t("noSpecificCourse")}</SelectItem>
                   {activeEnrollments.map((enrollment) => (
                     <SelectItem key={enrollment.id} value={enrollment.id}>
                       {enrollment.courseName}
@@ -153,7 +155,7 @@ export function PaymentForm({
           )}
 
           <div className="space-y-2">
-            <Label htmlFor="paymentDate">Payment Date *</Label>
+            <Label htmlFor="paymentDate">{t("paymentDate")} *</Label>
             <Input
               id="paymentDate"
               type="date"
@@ -162,10 +164,10 @@ export function PaymentForm({
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="notes">Notes</Label>
+            <Label htmlFor="notes">{t("notes")}</Label>
             <Textarea
               id="notes"
-              placeholder="Optional notes..."
+              placeholder={t("optionalNotes")}
               {...register("notes")}
             />
           </div>
@@ -176,13 +178,13 @@ export function PaymentForm({
               variant="outline"
               onClick={() => onOpenChange(false)}
             >
-              Cancel
+              {t("cancel")}
             </Button>
             <Button type="submit" disabled={isSubmitting}>
               {isSubmitting && (
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
               )}
-              Record Payment
+              {t("recordPayment")}
             </Button>
           </div>
         </form>

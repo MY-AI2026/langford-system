@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useLanguage } from "@/contexts/language-context";
 import { addMonths } from "date-fns";
 import { createInstallmentPlan } from "@/lib/services/installment-service";
 import { formatCurrency, formatDate } from "@/lib/utils/format";
@@ -39,6 +40,7 @@ export function InstallmentPlanForm({
   userId,
   onCreated,
 }: InstallmentPlanFormProps) {
+  const { t } = useLanguage();
   const [totalFees, setTotalFees] = useState("");
   const [numInstallments, setNumInstallments] = useState("3");
   const [startDate, setStartDate] = useState(
@@ -59,11 +61,11 @@ export function InstallmentPlanForm({
 
   async function handleSubmit() {
     if (!totalFeesNum || totalFeesNum <= 0) {
-      toast.error("Please enter a valid total fees amount");
+      toast.error(t("pleaseEnterValidTotalFees"));
       return;
     }
     if (!startDate) {
-      toast.error("Please select a start date");
+      toast.error(t("pleaseSelectStartDate"));
       return;
     }
 
@@ -78,14 +80,14 @@ export function InstallmentPlanForm({
         },
         userId
       );
-      toast.success("Installment plan created");
+      toast.success(t("installmentPlanCreated"));
       onCreated?.();
       onOpenChange(false);
       setTotalFees("");
       setNumInstallments("3");
     } catch (e) {
       console.error(e);
-      toast.error("Failed to create installment plan");
+      toast.error(t("failedToCreateInstallmentPlan"));
     } finally {
       setSaving(false);
     }
@@ -95,12 +97,12 @@ export function InstallmentPlanForm({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-lg">
         <DialogHeader>
-          <DialogTitle>Create Installment Plan</DialogTitle>
+          <DialogTitle>{t("createInstallmentPlan")}</DialogTitle>
         </DialogHeader>
 
         <div className="space-y-4">
           <div className="space-y-2">
-            <Label>Total Fees (KWD)</Label>
+            <Label>{t("totalFees")} (KWD)</Label>
             <Input
               type="number"
               step="0.001"
@@ -112,7 +114,7 @@ export function InstallmentPlanForm({
           </div>
 
           <div className="space-y-2">
-            <Label>Number of Installments</Label>
+            <Label>{t("numberOfInstallments")}</Label>
             <Select value={numInstallments} onValueChange={(val) => { if (val !== null) setNumInstallments(val); }}>
               <SelectTrigger>
                 <SelectValue />
@@ -120,7 +122,7 @@ export function InstallmentPlanForm({
               <SelectContent>
                 {Array.from({ length: 11 }, (_, i) => i + 2).map((n) => (
                   <SelectItem key={n} value={String(n)}>
-                    {n} installments
+                    {n} {t("installmentsLabel")}
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -128,7 +130,7 @@ export function InstallmentPlanForm({
           </div>
 
           <div className="space-y-2">
-            <Label>Start Date</Label>
+            <Label>{t("startDate")}</Label>
             <Input
               type="date"
               value={startDate}
@@ -138,7 +140,7 @@ export function InstallmentPlanForm({
 
           {preview.length > 0 && (
             <div className="space-y-2">
-              <p className="text-sm font-medium">Preview</p>
+              <p className="text-sm font-medium">{t("preview")}</p>
               <div className="max-h-48 overflow-y-auto rounded-lg border divide-y">
                 {preview.map((item) => (
                   <div
@@ -146,7 +148,7 @@ export function InstallmentPlanForm({
                     className="flex justify-between px-3 py-2 text-sm"
                   >
                     <span className="text-muted-foreground">
-                      Installment {item.number}
+                      {t("installment")} {item.number}
                     </span>
                     <span>{formatDate(Timestamp.fromDate(item.dueDate))}</span>
                     <span className="font-medium">{formatCurrency(item.amount)}</span>
@@ -154,7 +156,7 @@ export function InstallmentPlanForm({
                 ))}
               </div>
               <p className="text-xs text-muted-foreground text-right">
-                Total: {formatCurrency(totalFeesNum)}
+                {t("total")}: {formatCurrency(totalFeesNum)}
               </p>
             </div>
           )}
@@ -162,10 +164,10 @@ export function InstallmentPlanForm({
 
         <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)}>
-            Cancel
+            {t("cancel")}
           </Button>
           <Button onClick={handleSubmit} disabled={saving}>
-            {saving ? "Creating..." : "Create Plan"}
+            {saving ? t("creating") : t("createPlan")}
           </Button>
         </DialogFooter>
       </DialogContent>

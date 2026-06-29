@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { RoleGate } from "@/components/auth/role-gate";
 import { PageHeader } from "@/components/layout/page-header";
+import { useLanguage } from "@/contexts/language-context";
 import { fetchCollection, runQueryWithPath } from "@/lib/firebase/rest-helpers";
 import { ActivityLogEntry, ActivityLogType, Student } from "@/lib/types";
 import { formatDateTime } from "@/lib/utils/format";
@@ -129,6 +130,7 @@ export default function StudentNotesReportPage() {
 }
 
 function StudentNotesContent() {
+  const { t } = useLanguage();
   const [rows, setRows] = useState<NoteRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [typeFilter, setTypeFilter] = useState<ActivityLogType | "all">("all");
@@ -260,20 +262,20 @@ function StudentNotesContent() {
   return (
     <div className="space-y-6">
       <PageHeader
-        title="Student Notes Report"
-        description="All notes and activities logged on students"
+        title={t("studentNotesReport")}
+        description={t("studentNotesDescription")}
         action={
           <div className="flex gap-2">
             <Button variant="outline" onClick={load} disabled={loading}>
               <RefreshCw className="mr-2 h-4 w-4" />
-              Refresh
+              {t("refresh")}
             </Button>
             <Button
               onClick={() => exportToCSV(filtered)}
               disabled={filtered.length === 0}
             >
               <Download className="mr-2 h-4 w-4" />
-              Export CSV
+              {t("exportCSV")}
             </Button>
           </div>
         }
@@ -286,7 +288,7 @@ function StudentNotesContent() {
             <Card key={k}>
               <CardHeader className="flex flex-row items-center justify-between pb-2">
                 <CardTitle className="text-xs text-muted-foreground capitalize">
-                  {k === "all" ? "Total" : TYPE_LABELS[k as ActivityLogType]}
+                  {k === "all" ? t("total") : TYPE_LABELS[k as ActivityLogType]}
                 </CardTitle>
                 {k === "all" ? (
                   <MessageSquare className="h-4 w-4 text-muted-foreground" />
@@ -306,7 +308,7 @@ function StudentNotesContent() {
       <Card>
         <CardContent className="grid gap-3 pt-6 md:grid-cols-5">
           <div className="space-y-1.5">
-            <Label className="text-xs">Type</Label>
+            <Label className="text-xs">{t("type")}</Label>
             <Select
               value={typeFilter}
               onValueChange={(v) => setTypeFilter(v as ActivityLogType | "all")}
@@ -315,34 +317,34 @@ function StudentNotesContent() {
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">All Types</SelectItem>
-                <SelectItem value="note">Note</SelectItem>
-                <SelectItem value="follow_up">Follow-up</SelectItem>
-                <SelectItem value="status_change">Status Change</SelectItem>
-                <SelectItem value="payment">Payment</SelectItem>
-                <SelectItem value="evaluation">Evaluation</SelectItem>
-                <SelectItem value="edit">Edit</SelectItem>
+                <SelectItem value="all">{t("allTypes")}</SelectItem>
+                <SelectItem value="note">{t("note")}</SelectItem>
+                <SelectItem value="follow_up">{t("followUp")}</SelectItem>
+                <SelectItem value="status_change">{t("statusChange")}</SelectItem>
+                <SelectItem value="payment">{t("payment")}</SelectItem>
+                <SelectItem value="evaluation">{t("evaluation")}</SelectItem>
+                <SelectItem value="edit">{t("edit")}</SelectItem>
               </SelectContent>
             </Select>
           </div>
           <div className="space-y-1.5">
-            <Label className="text-xs">Student (name or phone)</Label>
+            <Label className="text-xs">{t("studentNameOrPhone")}</Label>
             <Input
               value={studentFilter}
               onChange={(e) => setStudentFilter(e.target.value)}
-              placeholder="Search student..."
+              placeholder={t("searchStudentPlaceholder")}
             />
           </div>
           <div className="space-y-1.5">
-            <Label className="text-xs">Created By</Label>
+            <Label className="text-xs">{t("createdBy")}</Label>
             <Input
               value={createdByFilter}
               onChange={(e) => setCreatedByFilter(e.target.value)}
-              placeholder="Sales rep name..."
+              placeholder={t("salesRepNamePlaceholder")}
             />
           </div>
           <div className="space-y-1.5">
-            <Label className="text-xs">From</Label>
+            <Label className="text-xs">{t("from")}</Label>
             <Input
               type="date"
               value={dateFrom}
@@ -350,7 +352,7 @@ function StudentNotesContent() {
             />
           </div>
           <div className="space-y-1.5">
-            <Label className="text-xs">To</Label>
+            <Label className="text-xs">{t("to")}</Label>
             <Input
               type="date"
               value={dateTo}
@@ -364,7 +366,7 @@ function StudentNotesContent() {
       <Card>
         <CardHeader>
           <CardTitle className="text-base">
-            All Notes ({filtered.length})
+            {t("allNotes")} ({filtered.length})
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -379,12 +381,12 @@ function StudentNotesContent() {
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>Student</TableHead>
-                    <TableHead>Type</TableHead>
-                    <TableHead>Description</TableHead>
-                    <TableHead>Created By</TableHead>
-                    <TableHead>Date</TableHead>
-                    <TableHead>Follow-up</TableHead>
+                    <TableHead>{t("student")}</TableHead>
+                    <TableHead>{t("type")}</TableHead>
+                    <TableHead>{t("description")}</TableHead>
+                    <TableHead>{t("createdBy")}</TableHead>
+                    <TableHead>{t("date")}</TableHead>
+                    <TableHead>{t("followUp")}</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -422,7 +424,7 @@ function StudentNotesContent() {
                                 }
                                 className="mt-1 w-fit"
                               >
-                                {r.isFollowUpDone ? "Done" : "Pending"}
+                                {r.isFollowUpDone ? t("done") : t("pending")}
                               </Badge>
                             </div>
                           ) : (
@@ -438,7 +440,7 @@ function StudentNotesContent() {
                         colSpan={6}
                         className="text-center text-muted-foreground"
                       >
-                        No notes found
+                        {t("noNotesFound")}
                       </TableCell>
                     </TableRow>
                   )}
@@ -454,7 +456,7 @@ function StudentNotesContent() {
         <Card>
           <CardHeader>
             <CardTitle className="text-base">
-              Notes by Student ({groupedByStudent.length})
+              {t("notesByStudent")} ({groupedByStudent.length})
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
@@ -467,7 +469,7 @@ function StudentNotesContent() {
                       {g.studentPhone}
                     </p>
                   </div>
-                  <Badge variant="secondary">{g.entries.length} note(s)</Badge>
+                  <Badge variant="secondary">{g.entries.length} {t("notesCount")}</Badge>
                 </div>
                 <div className="space-y-2">
                   {g.entries.map((e) => (

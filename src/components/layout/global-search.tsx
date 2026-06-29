@@ -3,6 +3,7 @@
 import { useEffect, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/contexts/auth-context";
+import { useLanguage } from "@/contexts/language-context";
 import { subscribeToStudents } from "@/lib/services/student-service";
 import { Student } from "@/lib/types";
 import { StudentStatusBadge } from "@/components/students/student-status-badge";
@@ -24,6 +25,7 @@ interface GlobalSearchProps {
 export function GlobalSearch({ open, onOpenChange }: GlobalSearchProps) {
   const router = useRouter();
   const { role, firebaseUser } = useAuth();
+  const { t } = useLanguage();
   const [query, setQuery] = useState("");
   const [students, setStudents] = useState<Student[]>([]);
 
@@ -58,17 +60,17 @@ export function GlobalSearch({ open, onOpenChange }: GlobalSearchProps) {
     <CommandDialog
       open={open}
       onOpenChange={onOpenChange}
-      title="Search Students"
-      description="Search for a student by name or phone"
+      title={t("searchStudents")}
+      description={t("searchStudentByNameOrPhone")}
     >
       <CommandInput
-        placeholder="Search by name or phone..."
+        placeholder={t("searchByNameOrPhone")}
         value={query}
         onValueChange={setQuery}
       />
       <CommandList>
-        <CommandEmpty>No students found.</CommandEmpty>
-        <CommandGroup heading="Students">
+        <CommandEmpty>{t("noStudents")}</CommandEmpty>
+        <CommandGroup heading={t("students")}>
           {students.map((student) => (
             <CommandItem
               key={student.id}

@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { RoleGate } from "@/components/auth/role-gate";
 import { useAuth } from "@/contexts/auth-context";
+import { useLanguage } from "@/contexts/language-context";
 import {
   buildReport,
   ReportResult,
@@ -54,6 +55,7 @@ import {
 } from "lucide-react";
 
 function ReportsContent() {
+  const { t } = useLanguage();
   const { userData } = useAuth();
   const [courses, setCourses] = useState<RegCourse[]>([]);
   const [agents, setAgents] = useState<User[]>([]);
@@ -97,11 +99,11 @@ function ReportsContent() {
     const fromDate = fromInputDate(from, "start");
     const toDate = fromInputDate(to, "end");
     if (!fromDate || !toDate) {
-      toast.error("Pick a start and end date");
+      toast.error(t("pickStartAndEndDate"));
       return;
     }
     if (fromDate > toDate) {
-      toast.error("Start date must be before end date");
+      toast.error(t("startDateBeforeEndDate"));
       return;
     }
 
@@ -116,7 +118,7 @@ function ReportsContent() {
       setReport(r);
     } catch (e) {
       console.error("[reports] runReport failed:", e);
-      toast.error("Failed to load report");
+      toast.error(t("failedToLoadReport"));
     } finally {
       setLoading(false);
     }
@@ -141,22 +143,22 @@ function ReportsContent() {
 
   async function handleToggleDisbursed(studentId: string, currentlyDisbursed: boolean) {
     if (!actor) {
-      toast.error("Session not ready — try again in a moment");
+      toast.error(t("sessionNotReady"));
       return;
     }
     withBusy(studentId, true);
     try {
       if (currentlyDisbursed) {
         await unmarkCommissionDisbursed(studentId, actor);
-        toast.success("Reverted to pending");
+        toast.success(t("revertedToPending"));
       } else {
         await markCommissionDisbursed(studentId, {}, actor);
-        toast.success("Commission marked as disbursed");
+        toast.success(t("commissionMarkedDisbursed"));
       }
       await runReport();
     } catch (e) {
       console.error("[reports] toggle disbursed failed:", e);
-      toast.error("Couldn't update — please retry");
+      toast.error(t("couldntUpdateRetry"));
     } finally {
       withBusy(studentId, false);
     }
@@ -168,13 +170,13 @@ function ReportsContent() {
       .filter((s) => commissionStatusOf(s) === "pending" && commissionFor(s) > 0)
       .map((s) => s.id);
     if (pendingIds.length === 0) {
-      toast.info("Nothing pending in this view");
+      toast.info(t("nothingPendingInView"));
       return;
     }
     if (
       typeof window !== "undefined" &&
       !window.confirm(
-        `Mark ${pendingIds.length} commission(s) as disbursed? This records a payout for every pending student currently shown.`
+        `${t("markCommissionsConfirmPrefix")} ${pendingIds.length} ${t("markCommissionsConfirmSuffix")}`
       )
     ) {
       return;
@@ -182,12 +184,12 @@ function ReportsContent() {
     setLoading(true);
     try {
       const { ok, failed } = await markManyCommissionsDisbursed(pendingIds, {}, actor);
-      if (failed === 0) toast.success(`${ok} commission(s) marked disbursed`);
-      else toast.warning(`${ok} done, ${failed} failed — retry the rest`);
+      if (failed === 0) toast.success(`${ok} ${t("commissionsMarkedDisbursed")}`);
+      else toast.warning(`${ok} ${t("doneCount")}، ${failed} ${t("failedRetryRest")}`);
       await runReport();
     } catch (e) {
       console.error("[reports] settle all failed:", e);
-      toast.error("Bulk disbursement failed");
+      toast.error(t("bulkDisbursementFailed"));
     } finally {
       setLoading(false);
     }
@@ -195,31 +197,29 @@ function ReportsContent() {
 
   function handleExcel() {
     if (!report) {
-      toast.error("Run the report first");
+      toast.error(t("runReportFirst"));
       return;
     }
     if (report.totals.studentCount === 0) {
-      toast.info("Report is empty — no students in this range");
+      toast.info(t("reportEmptyNoStudents"));
       return;
     }
     exportReportToExcel(report, "acceptix-report");
-    toast.success("Excel downloaded");
+    toast.success(t("excelDownloaded"));
   }
 
   function handlePdf() {
     if (!report) {
-      toast.error("Run the report first");
+      toast.error(t("runReportFirst"));
       return;
     }
     if (report.totals.studentCount === 0) {
-      toast.info("Report is empty — no students in this range");
+      toast.info(t("reportEmptyNoStudents"));
       return;
     }
     const ok = exportReportToPdf(report);
     if (!ok) {
-      toast.error(
-        "Your browser is blocking new windows — allow pop-ups for Langford."
-      );
+      toast.error(t("browserBlockingPopups"));
     }
   }
 
@@ -235,21 +235,21 @@ function ReportsContent() {
         <div>
           <h1 className="flex items-center gap-2 text-2xl font-semibold">
             <FileBarChart className="h-6 w-6 text-primary" />
-            Reports
+            {t("reports")}
           </h1>
           <p className="mt-1 text-sm text-muted-foreground">
-            Monthly commission report + grouping by agent and course + Excel & PDF export.
+            {t("reportsPageSubtitle")}
           </p>
         </div>
 
         <div className="flex gap-2">
           <Button variant="outline" onClick={handleExcel} disabled={!report || loading}>
             <FileSpreadsheet className="ml-2 h-4 w-4" />
-            Export Excel
+            {t("exportExcel")}
           </Button>
           <Button variant="outline" onClick={handlePdf} disabled={!report || loading}>
             <Printer className="ml-2 h-4 w-4" />
-            Export PDF
+            {t("exportPdf")}
           </Button>
         </div>
       </div>
@@ -259,13 +259,13 @@ function ReportsContent() {
         <CardHeader className="pb-3">
           <CardTitle className="flex items-center gap-2 text-base">
             <Filter className="h-4 w-4" />
-            Filters
+            {t("filters")}
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-3">
           <div className="grid gap-3 lg:grid-cols-5">
             <div className="space-y-2">
-              <Label>Range</Label>
+              <Label>{t("range")}</Label>
               <Select
                 value={presetId}
                 onValueChange={(v) => applyPreset(v ?? "this-month")}
@@ -279,13 +279,13 @@ function ReportsContent() {
                       {p.labelAr}
                     </SelectItem>
                   ))}
-                  <SelectItem value="custom">Custom</SelectItem>
+                  <SelectItem value="custom">{t("custom")}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="from">From</Label>
+              <Label htmlFor="from">{t("from")}</Label>
               <Input
                 id="from"
                 type="date"
@@ -298,7 +298,7 @@ function ReportsContent() {
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="to">To</Label>
+              <Label htmlFor="to">{t("to")}</Label>
               <Input
                 id="to"
                 type="date"
@@ -312,7 +312,7 @@ function ReportsContent() {
             </div>
 
             <div className="space-y-2">
-              <Label>Agent</Label>
+              <Label>{t("agent")}</Label>
               <Select
                 value={agentFilter}
                 onValueChange={(v) => setAgentFilter(v ?? "all")}
@@ -321,7 +321,7 @@ function ReportsContent() {
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">All agents</SelectItem>
+                  <SelectItem value="all">{t("allAgents")}</SelectItem>
                   {agents.map((a) => (
                     <SelectItem key={a.uid} value={a.uid}>
                       {a.displayName}
@@ -332,7 +332,7 @@ function ReportsContent() {
             </div>
 
             <div className="space-y-2">
-              <Label>Course</Label>
+              <Label>{t("course")}</Label>
               <Select
                 value={courseFilter}
                 onValueChange={(v) => setCourseFilter(v ?? "all")}
@@ -341,7 +341,7 @@ function ReportsContent() {
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">All courses</SelectItem>
+                  <SelectItem value="all">{t("allCourses")}</SelectItem>
                   {courses.map((c) => (
                     <SelectItem key={c.id} value={c.id}>
                       {c.name}
@@ -355,7 +355,7 @@ function ReportsContent() {
           <div className="flex justify-start">
             <Button onClick={runReport} disabled={loading}>
               {loading && <Loader2 className="ml-2 h-4 w-4 animate-spin" />}
-              Run Report
+              {t("runReport")}
             </Button>
           </div>
         </CardContent>
@@ -365,7 +365,7 @@ function ReportsContent() {
       <div className="grid gap-3 sm:grid-cols-3">
         <Card>
           <CardContent className="p-4">
-            <p className="text-xs text-muted-foreground">Students</p>
+            <p className="text-xs text-muted-foreground">{t("students")}</p>
             <p className="mt-1 text-2xl font-bold">
               {loading ? "—" : totals?.studentCount.toLocaleString("en-US")}
             </p>
@@ -373,7 +373,7 @@ function ReportsContent() {
         </Card>
         <Card>
           <CardContent className="p-4">
-            <p className="text-xs text-muted-foreground">Total Fees</p>
+            <p className="text-xs text-muted-foreground">{t("totalFees")}</p>
             <p className="mt-1 text-2xl font-bold" dir="ltr">
               {loading
                 ? "—"
@@ -383,7 +383,7 @@ function ReportsContent() {
         </Card>
         <Card className="border-primary/30 bg-primary/5">
           <CardContent className="p-4">
-            <p className="text-xs text-muted-foreground">Total Commission (10%)</p>
+            <p className="text-xs text-muted-foreground">{t("totalCommission10")}</p>
             <p className="mt-1 text-2xl font-bold text-primary" dir="ltr">
               {loading
                 ? "—"
@@ -398,7 +398,7 @@ function ReportsContent() {
         <Card className="border-emerald-500/30 bg-emerald-500/5">
           <CardContent className="flex items-center justify-between p-4">
             <div>
-              <p className="text-xs text-muted-foreground">Commission Disbursed</p>
+              <p className="text-xs text-muted-foreground">{t("commissionDisbursed")}</p>
               <p className="mt-1 text-2xl font-bold text-emerald-600 dark:text-emerald-400" dir="ltr">
                 {loading
                   ? "—"
@@ -411,7 +411,7 @@ function ReportsContent() {
         <Card className="border-amber-500/30 bg-amber-500/5">
           <CardContent className="flex items-center justify-between p-4">
             <div>
-              <p className="text-xs text-muted-foreground">Commission Outstanding</p>
+              <p className="text-xs text-muted-foreground">{t("commissionOutstanding")}</p>
               <p className="mt-1 text-2xl font-bold text-amber-600 dark:text-amber-400" dir="ltr">
                 {loading
                   ? "—"
@@ -426,7 +426,7 @@ function ReportsContent() {
       {/* Breakdowns */}
       <div className="grid gap-4 lg:grid-cols-2">
         <BreakdownTable
-          title="Agent Summary"
+          title={t("agentSummary")}
           loading={loading}
           showOutstanding
           rows={memoAgents.map((a) => ({
@@ -439,7 +439,7 @@ function ReportsContent() {
           }))}
         />
         <BreakdownTable
-          title="Course Summary"
+          title={t("courseSummary")}
           loading={loading}
           rows={memoCourses.map((c) => ({
             name: c.courseName,
@@ -479,6 +479,7 @@ function DisbursementTable({
   onToggle: (studentId: string, currentlyDisbursed: boolean) => void;
   onSettleAll: () => void;
 }) {
+  const { t } = useLanguage();
   const pendingCount = students.filter(
     (s) => commissionStatusOf(s) === "pending" && commissionFor(s) > 0
   ).length;
@@ -488,7 +489,7 @@ function DisbursementTable({
       <CardHeader className="flex flex-row items-center justify-between gap-2 pb-3">
         <CardTitle className="flex items-center gap-2 text-base">
           <Wallet className="h-4 w-4" />
-          Commission Disbursement
+          {t("commissionDisbursement")}
         </CardTitle>
         <Button
           size="sm"
@@ -497,7 +498,7 @@ function DisbursementTable({
           disabled={loading || pendingCount === 0}
         >
           <BadgeCheck className="ml-2 h-4 w-4" />
-          Settle all pending ({pendingCount})
+          {t("settleAllPending")} ({pendingCount})
         </Button>
       </CardHeader>
       <CardContent className="p-0">
@@ -509,18 +510,18 @@ function DisbursementTable({
           </div>
         ) : students.length === 0 ? (
           <p className="py-8 text-center text-sm text-muted-foreground">
-            No students in this range
+            {t("noStudentsInRange")}
           </p>
         ) : (
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Student</TableHead>
-                <TableHead>Agent</TableHead>
-                <TableHead>Course</TableHead>
-                <TableHead className="text-right">Commission</TableHead>
-                <TableHead>Payout</TableHead>
-                <TableHead className="text-right">Action</TableHead>
+                <TableHead>{t("student")}</TableHead>
+                <TableHead>{t("agent")}</TableHead>
+                <TableHead>{t("course")}</TableHead>
+                <TableHead className="text-right">{t("commission")}</TableHead>
+                <TableHead>{t("payout")}</TableHead>
+                <TableHead className="text-right">{t("action")}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -543,11 +544,11 @@ function DisbursementTable({
                       {disbursed ? (
                         <span className="inline-flex items-center gap-1 rounded-full bg-emerald-100 px-2 py-0.5 text-xs font-medium text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-400">
                           <BadgeCheck className="h-3 w-3" />
-                          Disbursed
+                          {t("disbursed")}
                         </span>
                       ) : (
                         <span className="inline-flex items-center gap-1 rounded-full bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-700 dark:bg-amber-500/15 dark:text-amber-400">
-                          Pending
+                          {t("pending")}
                         </span>
                       )}
                     </TableCell>
@@ -563,12 +564,12 @@ function DisbursementTable({
                         ) : disbursed ? (
                           <>
                             <RotateCcw className="ml-1 h-3.5 w-3.5" />
-                            Undo
+                            {t("undo")}
                           </>
                         ) : (
                           <>
                             <BadgeCheck className="ml-1 h-3.5 w-3.5" />
-                            Mark paid
+                            {t("markPaid")}
                           </>
                         )}
                       </Button>
