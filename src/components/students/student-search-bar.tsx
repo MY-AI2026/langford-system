@@ -209,7 +209,7 @@ export function StudentSearchBar({
         <div className="flex flex-wrap items-center gap-2">
           <Filter className="h-4 w-4 text-muted-foreground" />
 
-          <Select value={leadSourceFilter} onValueChange={onLeadSourceFilterChange}>
+          <Select value={leadSourceFilter} onValueChange={(val) => onLeadSourceFilterChange(val ?? "all")}>
             <SelectTrigger className="h-8 w-full text-xs sm:w-48">
               <SelectValue placeholder={t("leadSource")} />
             </SelectTrigger>
@@ -224,7 +224,7 @@ export function StudentSearchBar({
           </Select>
 
           {onPaymentFilterChange && (
-            <Select value={paymentFilter} onValueChange={onPaymentFilterChange}>
+            <Select value={paymentFilter} onValueChange={(val) => onPaymentFilterChange(val ?? "all")}>
               <SelectTrigger className="h-8 w-full text-xs sm:w-44">
                 <SelectValue placeholder={t("paymentStatus")} />
               </SelectTrigger>
