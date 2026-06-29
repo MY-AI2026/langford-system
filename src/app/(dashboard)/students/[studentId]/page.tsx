@@ -492,14 +492,14 @@ export default function StudentDetailPage() {
             <Card>
               <CardHeader className="pb-2">
                 <CardTitle className="flex items-center justify-between text-sm text-muted-foreground">
-                  Payment Summary
+                  {t("paymentSummary")}
                   {role !== "accountant" && (
                     <Button
                       variant="ghost"
                       size="sm"
                       onClick={() => setFeesDialogOpen(true)}
                     >
-                      Set Fees
+                      {t("setFees")}
                     </Button>
                   )}
                 </CardTitle>
@@ -507,19 +507,19 @@ export default function StudentDetailPage() {
               <CardContent>
                 <div className="space-y-1 text-sm">
                   <div className="flex justify-between">
-                    <span className="text-muted-foreground">Total Fees:</span>
+                    <span className="text-muted-foreground">{t("totalFees")}:</span>
                     <span className="font-medium">
                       {formatCurrency((student.paymentSummary?.totalFees || 0))}
                     </span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-muted-foreground">Paid:</span>
+                    <span className="text-muted-foreground">{t("paid")}:</span>
                     <span className="font-medium text-green-600">
                       {formatCurrency((student.paymentSummary?.amountPaid || 0))}
                     </span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-muted-foreground">Remaining:</span>
+                    <span className="text-muted-foreground">{t("remaining")}:</span>
                     <span className="font-medium text-langford-red">
                       {formatCurrency((student.paymentSummary?.remainingBalance || 0))}
                     </span>
@@ -534,7 +534,7 @@ export default function StudentDetailPage() {
                 <CardTitle className="flex items-center justify-between text-sm text-muted-foreground">
                   <span className="flex items-center gap-2">
                     <span className="inline-block h-2 w-2 rounded-full bg-blue-500" />
-                    IELTS Exam Fees
+                    {t("ieltsExamFees")}
                   </span>
                   {(role === "admin" || role === "sales") && (
                     <Button
@@ -543,7 +543,7 @@ export default function StudentDetailPage() {
                       onClick={() => setIeltsDialogOpen(true)}
                     >
                       <Plus className="mr-1 h-3 w-3" />
-                      Add
+                      {t("add")}
                     </Button>
                   )}
                 </CardTitle>
@@ -551,19 +551,19 @@ export default function StudentDetailPage() {
               <CardContent>
                 <div className="space-y-1 text-sm">
                   <div className="flex justify-between">
-                    <span className="text-muted-foreground">Total Paid:</span>
+                    <span className="text-muted-foreground">{t("totalPaid")}:</span>
                     <span className="font-medium text-blue-600">
                       {formatCurrency(student.ieltsSummary?.totalPaid || 0)}
                     </span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-muted-foreground">Payments:</span>
+                    <span className="text-muted-foreground">{t("payments")}:</span>
                     <span className="font-medium">
                       {student.ieltsSummary?.paymentsCount || 0}
                     </span>
                   </div>
                   <p className="pt-1 text-xs text-muted-foreground">
-                    Separate from course fees
+                    {t("separateFromCourseFees")}
                   </p>
                 </div>
               </CardContent>
@@ -574,24 +574,24 @@ export default function StudentDetailPage() {
           {student.evaluation?.evaluatedAt && (
             <Card>
               <CardHeader>
-                <CardTitle className="text-base">Evaluation Summary</CardTitle>
+                <CardTitle className="text-base">{t("evaluationSummary")}</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="grid gap-4 sm:grid-cols-4">
                   <div>
-                    <p className="text-xs text-muted-foreground">Test Score</p>
+                    <p className="text-xs text-muted-foreground">{t("placementScore")}</p>
                     <p className="text-lg font-semibold">
                       {student.evaluation?.placementTestScore ?? "N/A"}
                     </p>
                   </div>
                   <div>
-                    <p className="text-xs text-muted-foreground">Level</p>
+                    <p className="text-xs text-muted-foreground">{t("level")}</p>
                     <p className="text-lg font-semibold">
                       {student.evaluation?.finalLevel ?? "N/A"}
                     </p>
                   </div>
                   <div>
-                    <p className="text-xs text-muted-foreground">Interview</p>
+                    <p className="text-xs text-muted-foreground">{t("interviewStatus")}</p>
                     <Badge
                       variant={
                         student.evaluation?.interviewStatus === "completed"
@@ -600,12 +600,12 @@ export default function StudentDetailPage() {
                       }
                     >
                       {student.evaluation?.interviewStatus === "completed"
-                        ? "Completed"
-                        : "Not Completed"}
+                        ? t("completed")
+                        : t("notCompleted")}
                     </Badge>
                   </div>
                   <div>
-                    <p className="text-xs text-muted-foreground">Date</p>
+                    <p className="text-xs text-muted-foreground">{t("date")}</p>
                     <p className="text-sm">
                       {formatDate(student.evaluation?.evaluatedAt)}
                     </p>
@@ -625,26 +625,26 @@ export default function StudentDetailPage() {
         <TabsContent value="evaluation">
           <Card>
             <CardHeader>
-              <CardTitle className="text-base">Student Evaluation</CardTitle>
+              <CardTitle className="text-base">{t("studentEvaluation")}</CardTitle>
             </CardHeader>
             <CardContent>
               {role === "accountant" ? (
                 <div className="space-y-3">
                   <div className="grid gap-4 sm:grid-cols-2">
                     <div>
-                      <p className="text-xs text-muted-foreground">Test Score</p>
+                      <p className="text-xs text-muted-foreground">{t("placementScore")}</p>
                       <p className="text-sm font-medium">{student.evaluation?.placementTestScore ?? "N/A"}</p>
                     </div>
                     <div>
-                      <p className="text-xs text-muted-foreground">Level</p>
+                      <p className="text-xs text-muted-foreground">{t("level")}</p>
                       <p className="text-sm font-medium">{student.evaluation?.finalLevel ?? "N/A"}</p>
                     </div>
                     <div>
-                      <p className="text-xs text-muted-foreground">Interview Status</p>
-                      <p className="text-sm font-medium">{student.evaluation?.interviewStatus === "completed" ? "Completed" : "Not Completed"}</p>
+                      <p className="text-xs text-muted-foreground">{t("interviewStatus")}</p>
+                      <p className="text-sm font-medium">{student.evaluation?.interviewStatus === "completed" ? t("completed") : t("notCompleted")}</p>
                     </div>
                     <div>
-                      <p className="text-xs text-muted-foreground">Interview Notes</p>
+                      <p className="text-xs text-muted-foreground">{t("interviewNotes")}</p>
                       <p className="text-sm font-medium">{student.evaluation?.interviewNotes || "N/A"}</p>
                     </div>
                   </div>
@@ -670,12 +670,12 @@ export default function StudentDetailPage() {
                   className="border-blue-200 text-blue-700 hover:bg-blue-50 dark:border-blue-800 dark:text-blue-300 dark:hover:bg-blue-950"
                 >
                   <Plus className="mr-2 h-4 w-4" />
-                  Record IELTS Payment
+                  {t("recordIeltsPayment")}
                 </Button>
               )}
               <Button onClick={() => setPaymentDialogOpen(true)}>
                 <Plus className="mr-2 h-4 w-4" />
-                Record Payment
+                {t("recordPayment")}
               </Button>
             </div>
           )}
@@ -719,7 +719,7 @@ export default function StudentDetailPage() {
           {role !== "accountant" && (
             <Card>
               <CardHeader>
-                <CardTitle className="text-base">Add Note / Follow-up</CardTitle>
+                <CardTitle className="text-base">{t("addNoteFollowUp")}</CardTitle>
               </CardHeader>
               <CardContent>
                 <AddNoteForm onSubmit={handleAddNote} />
@@ -744,10 +744,10 @@ export default function StudentDetailPage() {
       <Dialog open={feesDialogOpen} onOpenChange={setFeesDialogOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Set Total Fees</DialogTitle>
+            <DialogTitle>{t("setTotalFees")}</DialogTitle>
           </DialogHeader>
           <div className="space-y-2">
-            <Label>Total Fees (KWD)</Label>
+            <Label>{t("totalFees")} (KWD)</Label>
             <Input
               type="number"
               step="0.001"
@@ -758,9 +758,9 @@ export default function StudentDetailPage() {
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setFeesDialogOpen(false)}>
-              Cancel
+              {t("cancel")}
             </Button>
-            <Button onClick={handleSetTotalFees}>Save</Button>
+            <Button onClick={handleSetTotalFees}>{t("save")}</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -769,22 +769,22 @@ export default function StudentDetailPage() {
       <Dialog open={lostDialogOpen} onOpenChange={setLostDialogOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Why was this student lost?</DialogTitle>
+            <DialogTitle>{t("whyStudentLost")}</DialogTitle>
           </DialogHeader>
           <div className="space-y-2">
-            <Label>Reason</Label>
+            <Label>{t("reason")}</Label>
             <Textarea
               value={lostReason}
               onChange={(e) => setLostReason(e.target.value)}
-              placeholder="e.g., Price too high, Chose competitor, Schedule conflict..."
+              placeholder={t("lostReasonPlaceholder")}
             />
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setLostDialogOpen(false)}>
-              Cancel
+              {t("cancel")}
             </Button>
             <Button variant="destructive" onClick={handleLostConfirm}>
-              Mark as Lost
+              {t("markAsLost")}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -794,18 +794,17 @@ export default function StudentDetailPage() {
       <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Delete Student Permanently?</DialogTitle>
+            <DialogTitle>{t("deleteStudentPermanentlyTitle")}</DialogTitle>
           </DialogHeader>
           <p className="text-sm text-muted-foreground">
-            This will permanently delete <strong>{student?.fullName}</strong> and all their
-            payments, activity logs, and evaluation data. This action cannot be undone.
+            {t("deleteStudentWarningStart")} <strong>{student?.fullName}</strong> {t("deleteStudentWarningEnd")}
           </p>
           <DialogFooter>
             <Button variant="outline" onClick={() => setDeleteDialogOpen(false)}>
-              Cancel
+              {t("cancel")}
             </Button>
             <Button variant="destructive" onClick={handleDelete}>
-              Delete Permanently
+              {t("deletePermanently")}
             </Button>
           </DialogFooter>
         </DialogContent>
