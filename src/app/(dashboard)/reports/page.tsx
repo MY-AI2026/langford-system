@@ -21,7 +21,9 @@ import {
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Download } from "lucide-react";
+import { Download, FileText } from "lucide-react";
+import { toast } from "sonner";
+import { exportToPdf } from "@/lib/utils/pdf-report";
 import {
   BarChart,
   Bar,
@@ -133,16 +135,85 @@ function ReportsContent() {
     URL.revokeObjectURL(url);
   }
 
+  function exportPDF() {
+    const totalRevenue = students.reduce(
+      (sum, s) => sum + (s.paymentSummary?.amountPaid || 0),
+      0
+    );
+    const enrolledCount = students.filter(
+      (s) => s.status === "enrolled" || s.status === "paid"
+    ).length;
+    const conversion =
+      students.length > 0
+        ? ((enrolledCount / students.length) * 100).toFixed(1)
+        : "0";
+
+    const ok = exportToPdf({
+      title: t("reportsAndAnalytics"),
+      summary: [
+        { label: t("totalStudents"), value: String(students.length) },
+        { label: t("totalRevenue"), value: formatCurrency(totalRevenue), tone: "green" },
+        { label: t("conversionRate"), value: `${conversion}%`, tone: "primary" },
+      ],
+      sections: [
+        {
+          title: t("salesPerformance"),
+          columns: [
+            { label: t("salesRep") },
+            { label: t("totalStudents"), align: "end" },
+            { label: t("enrolled"), align: "end" },
+            { label: t("conversion"), align: "end" },
+            { label: t("revenue"), align: "end" },
+            { label: t("target"), align: "end" },
+          ],
+          rows: salesPerformance.map((r) => [
+            r.name,
+            r.students,
+            r.enrolled,
+            `${r.conversion}%`,
+            formatCurrency(r.revenue),
+            formatCurrency(r.target),
+          ]),
+          emptyText: t("noSalesUsersFound"),
+        },
+        {
+          title: t("leadSources"),
+          columns: [
+            { label: t("source") },
+            { label: t("count"), align: "end" },
+            { label: t("enrolled"), align: "end" },
+            { label: t("conversion"), align: "end" },
+          ],
+          rows: leadSourceData.map((d) => [d.name, d.count, d.enrolled, `${d.conversion}%`]),
+          emptyText: t("noData"),
+        },
+        {
+          title: t("statusDistribution"),
+          columns: [{ label: t("status") }, { label: t("count"), align: "end" }],
+          rows: statusData.map((d) => [d.name, d.value]),
+          emptyText: t("noData"),
+        },
+      ],
+    });
+    if (!ok) toast.error(t("browserBlockingPopups"));
+  }
+
   return (
     <div className="space-y-6">
       <PageHeader
         title={t("reportsAndAnalytics")}
         description={t("reportsDescription")}
         action={
-          <Button variant="outline" onClick={exportCSV}>
-            <Download className="me-2 h-4 w-4" />
-            {t("exportCSV")}
-          </Button>
+          <div className="flex flex-wrap gap-2">
+            <Button variant="outline" onClick={exportPDF}>
+              <FileText className="me-2 h-4 w-4" />
+              {t("exportPdf")}
+            </Button>
+            <Button variant="outline" onClick={exportCSV}>
+              <Download className="me-2 h-4 w-4" />
+              {t("exportCSV")}
+            </Button>
+          </div>
         }
       />
 
