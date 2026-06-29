@@ -258,6 +258,56 @@ export default function DashboardPage() {
       .slice(0, 10);
   }, [students]);
 
+  // ── Month-over-month trends (current calendar month vs previous) ───────────
+  // Based on createdAt, independent of the month picker, so each card shows
+  // real momentum. A trend is hidden when the prior month had no baseline.
+  const trends = useMemo(() => {
+    const toDateSafe = (v: unknown): Date | null => {
+      try {
+        const d = (v as { toDate?: () => Date })?.toDate?.();
+        if (d) return d;
+        if (typeof v === "string") return new Date(v);
+        if (v instanceof Date) return v;
+      } catch {
+        /* ignore */
+      }
+      return null;
+    };
+    const now = new Date();
+    const curStart = new Date(now.getFullYear(), now.getMonth(), 1);
+    const curEnd = new Date(now.getFullYear(), now.getMonth() + 1, 1);
+    const prevStart = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+    const inRange = (d: Date | null, s: Date, e: Date) => !!d && d >= s && d < e;
+
+    let curCount = 0,
+      prevCount = 0,
+      curRev = 0,
+      prevRev = 0,
+      curIelts = 0,
+      prevIelts = 0;
+    for (const s of students) {
+      const c = toDateSafe(s.createdAt);
+      if (inRange(c, curStart, curEnd)) {
+        if (s.status !== "lost") curCount++;
+        curRev += s.paymentSummary?.amountPaid ?? 0;
+        curIelts += s.ieltsSummary?.totalPaid ?? 0;
+      } else if (inRange(c, prevStart, curStart)) {
+        if (s.status !== "lost") prevCount++;
+        prevRev += s.paymentSummary?.amountPaid ?? 0;
+        prevIelts += s.ieltsSummary?.totalPaid ?? 0;
+      }
+    }
+    const mk = (cur: number, prev: number) =>
+      prev > 0
+        ? { value: ((cur - prev) / prev) * 100, positive: cur >= prev }
+        : undefined;
+    return {
+      studentsTrend: mk(curCount, prevCount),
+      revenueTrend: mk(curRev, prevRev),
+      ieltsTrend: mk(curIelts, prevIelts),
+    };
+  }, [students]);
+
   // ── Stats ────────────────────────────────────────────────────────────────────
   // monthStudents is scoped to the selected month for sales/accountant; for admin
   // (or when filter is off) it falls back to the full students list.
@@ -549,6 +599,9 @@ export default function DashboardPage() {
         ieltsRevenue={ieltsRevenue}
         ieltsBookingsCount={ieltsBookingsCount}
         embassyPaid={embassyPaid}
+        studentsTrend={trends.studentsTrend}
+        revenueTrend={trends.revenueTrend}
+        ieltsTrend={trends.ieltsTrend}
       />
 
       <div className="grid gap-6 lg:grid-cols-2">

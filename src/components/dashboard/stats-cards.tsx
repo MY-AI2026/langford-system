@@ -15,6 +15,11 @@ import {
 import type { LucideIcon } from "lucide-react";
 import { formatCurrency } from "@/lib/utils/format";
 
+interface Trend {
+  value: number;
+  positive: boolean;
+}
+
 interface StatsCardsProps {
   totalStudents: number;
   totalRevenue: number;
@@ -23,6 +28,10 @@ interface StatsCardsProps {
   ieltsRevenue: number;
   ieltsBookingsCount: number;
   embassyPaid: number;
+  /** Optional month-over-month deltas, attached to the matching cards. */
+  studentsTrend?: Trend;
+  revenueTrend?: Trend;
+  ieltsTrend?: Trend;
 }
 
 /** Tone → token-aware classes that stay legible in both light and dark mode
@@ -55,6 +64,9 @@ export function StatsCards({
   ieltsRevenue,
   ieltsBookingsCount,
   embassyPaid,
+  studentsTrend,
+  revenueTrend,
+  ieltsTrend,
 }: StatsCardsProps) {
   const netIelts = ieltsRevenue - embassyPaid;
   const stats: StatItem[] = [
@@ -63,6 +75,7 @@ export function StatsCards({
       value: totalStudents.toString(),
       icon: GraduationCap,
       tone: "blue",
+      trend: studentsTrend,
     },
     {
       title: "Total Revenue",
@@ -70,6 +83,7 @@ export function StatsCards({
       subtitle: "Course fees only",
       icon: DollarSign,
       tone: "green",
+      trend: revenueTrend,
     },
     {
       title: "IELTS Bookings",
@@ -77,6 +91,7 @@ export function StatsCards({
       subtitle: `${ieltsBookingsCount} booking${ieltsBookingsCount !== 1 ? "s" : ""}`,
       icon: FileCheck,
       tone: "purple",
+      trend: ieltsTrend,
     },
     {
       title: "Paid to Embassy",
