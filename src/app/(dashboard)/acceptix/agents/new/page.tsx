@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useLanguage } from "@/contexts/language-context";
 import { RoleGate } from "@/components/auth/role-gate";
 import { createAcceptixAgent } from "@/lib/services/reg-agent-service";
 import {
@@ -18,6 +19,7 @@ import { toast } from "sonner";
 import { ArrowRight, Loader2, UserPlus } from "lucide-react";
 
 function NewAgentContent() {
+  const { t } = useLanguage();
   const router = useRouter();
   const {
     register,
@@ -41,8 +43,8 @@ function NewAgentContent() {
         phone: data.phone,
         password: data.password,
       });
-      toast.success("Account created ✓", {
-        description: `${result.fullName} can sign in now with ${result.email}`,
+      toast.success(t("accountCreated"), {
+        description: `${result.fullName} ${t("canSignInNowWith")} ${result.email}`,
         duration: 6000,
       });
       router.push(REG_ROUTES.adminAgents);
@@ -51,7 +53,7 @@ function NewAgentContent() {
       console.error("[new-agent] failed:", err);
       // Cloud Functions HttpsError → message contains the Arabic text we
       // set on the server. Surface it directly.
-      toast.error(err.message || "Account creation failed");
+      toast.error(err.message || t("accountCreationFailed"));
     }
   }
 
@@ -61,33 +63,33 @@ function NewAgentContent() {
         <div>
           <h1 className="flex items-center gap-2 text-2xl font-semibold">
             <UserPlus className="h-6 w-6 text-primary" />
-            New Acceptix Agent
+            {t("newAcceptixAgent")}
           </h1>
           <p className="mt-1 text-sm text-muted-foreground">
-            Create an account that can sign in and register students. The agent can log in immediately with these credentials.
+            {t("newAcceptixAgentSubtitle")}
           </p>
         </div>
 
         <Button variant="ghost" size="sm" onClick={() => router.push(REG_ROUTES.adminAgents)}>
           <ArrowRight className="ml-2 h-4 w-4" />
-          Back to list
+          {t("backToList")}
         </Button>
       </div>
 
       <Card>
         <CardHeader>
-          <CardTitle className="text-base">Agent Details</CardTitle>
+          <CardTitle className="text-base">{t("agentDetails")}</CardTitle>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
             <div className="grid gap-4 sm:grid-cols-2">
               <div className="space-y-2">
                 <Label htmlFor="fullName">
-                  Full Name <span className="text-destructive">*</span>
+                  {t("fullName")} <span className="text-destructive">*</span>
                 </Label>
                 <Input
                   id="fullName"
-                  placeholder="Agent name"
+                  placeholder={t("agentNamePlaceholder")}
                   autoComplete="off"
                   {...register("fullName")}
                   aria-invalid={!!errors.fullName}
@@ -99,7 +101,7 @@ function NewAgentContent() {
 
               <div className="space-y-2">
                 <Label htmlFor="email">
-                  Email <span className="text-destructive">*</span>
+                  {t("email")} <span className="text-destructive">*</span>
                 </Label>
                 <Input
                   id="email"
@@ -117,12 +119,12 @@ function NewAgentContent() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="phone">Phone (optional)</Label>
+                <Label htmlFor="phone">{t("phoneOptional")}</Label>
                 <Input
                   id="phone"
                   type="tel"
                   inputMode="tel"
-                  placeholder="e.g. 9XXXXXXX"
+                  placeholder={t("phonePlaceholderExample")}
                   autoComplete="off"
                   dir="ltr"
                   className="text-left"
@@ -132,12 +134,12 @@ function NewAgentContent() {
 
               <div className="space-y-2">
                 <Label htmlFor="password">
-                  Initial Password <span className="text-destructive">*</span>
+                  {t("initialPassword")} <span className="text-destructive">*</span>
                 </Label>
                 <Input
                   id="password"
                   type="password"
-                  placeholder="12 chars minimum"
+                  placeholder={t("passwordPlaceholderMin")}
                   autoComplete="new-password"
                   dir="ltr"
                   className="text-left"
@@ -148,7 +150,7 @@ function NewAgentContent() {
                   <p className="text-sm text-destructive">{errors.password.message}</p>
                 )}
                 <p className="text-xs text-muted-foreground">
-                  Required: 12+ chars, uppercase, lowercase, digit, and special character.
+                  {t("passwordRequirements")}
                 </p>
               </div>
             </div>
@@ -156,7 +158,7 @@ function NewAgentContent() {
             <div className="flex justify-start gap-2 pt-2">
               <Button type="submit" disabled={isSubmitting} size="lg">
                 {isSubmitting && <Loader2 className="ml-2 h-4 w-4 animate-spin" />}
-                Create Account
+                {t("createAccount")}
               </Button>
               <Button
                 type="button"
@@ -165,7 +167,7 @@ function NewAgentContent() {
                 onClick={() => router.push(REG_ROUTES.adminAgents)}
                 disabled={isSubmitting}
               >
-                Cancel
+                {t("cancel")}
               </Button>
             </div>
           </form>

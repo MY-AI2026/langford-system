@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Bell } from "lucide-react";
 import { formatDate } from "@/lib/utils/format";
+import { useLanguage } from "@/contexts/language-context";
 import Link from "next/link";
 
 export interface FollowUpItem {
@@ -21,13 +22,14 @@ interface FollowUpRemindersWidgetProps {
 }
 
 export function FollowUpRemindersWidget({ items }: FollowUpRemindersWidgetProps) {
+  const { t } = useLanguage();
   const overdueCount = items.filter((i) => i.isOverdue).length;
   const todayCount = items.filter((i) => !i.isOverdue).length;
 
   return (
     <Card>
       <CardHeader className="flex flex-row items-center justify-between pb-2">
-        <CardTitle className="text-base">Follow-up Reminders</CardTitle>
+        <CardTitle className="text-base">{t("followUpReminders")}</CardTitle>
         <div className="flex items-center gap-2">
           <Bell className="h-4 w-4 text-orange-500" />
           {items.length > 0 && (
@@ -42,19 +44,19 @@ export function FollowUpRemindersWidget({ items }: FollowUpRemindersWidgetProps)
       </CardHeader>
       <CardContent>
         {items.length === 0 ? (
-          <p className="text-sm text-muted-foreground">No pending follow-ups today</p>
+          <p className="text-sm text-muted-foreground">{t("noPendingFollowUps")}</p>
         ) : (
           <div className="space-y-2">
             {(overdueCount > 0 || todayCount > 0) && (
               <div className="flex gap-3 text-xs mb-2">
                 {overdueCount > 0 && (
                   <span className="text-red-600 font-medium">
-                    {overdueCount} overdue
+                    {overdueCount} {t("overdue")}
                   </span>
                 )}
                 {todayCount > 0 && (
                   <span className="text-orange-600 font-medium">
-                    {todayCount} due today
+                    {todayCount} {t("dueToday")}
                   </span>
                 )}
               </div>
@@ -79,7 +81,7 @@ export function FollowUpRemindersWidget({ items }: FollowUpRemindersWidgetProps)
                         : "text-orange-600 font-medium"
                     }`}
                   >
-                    {item.isOverdue ? `↑ ${formatDate(item.followUpDate)}` : "Today"}
+                    {item.isOverdue ? `↑ ${formatDate(item.followUpDate)}` : t("today")}
                   </span>
                 </Link>
               ))}

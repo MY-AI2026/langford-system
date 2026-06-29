@@ -10,6 +10,7 @@ import {
 } from "@/components/ui/select";
 import { STUDENT_STATUS_CONFIG, STUDENT_STATUSES } from "@/lib/utils/constants";
 import { StudentStatus } from "@/lib/types";
+import { useLanguage } from "@/contexts/language-context";
 import { Search, X, CalendarRange } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
@@ -30,10 +31,10 @@ interface StudentSearchBarProps {
 }
 
 const QUICK_RANGES = [
-  { label: "All", value: "all" },
-  { label: "This Month", value: "this_month" },
-  { label: "Last Month", value: "last_month" },
-  { label: "This Year", value: "this_year" },
+  { labelKey: "all", value: "all" },
+  { labelKey: "thisMonth", value: "this_month" },
+  { labelKey: "lastMonth", value: "last_month" },
+  { labelKey: "thisYear", value: "this_year" },
 ];
 
 function getQuickRange(value: string): { from: string; to: string } {
@@ -70,6 +71,7 @@ export function StudentSearchBar({
   onDateToChange,
   isAdmin,
 }: StudentSearchBarProps) {
+  const { t } = useLanguage();
 
   function applyQuickRange(value: string) {
     if (value === "all") {
@@ -95,7 +97,7 @@ export function StudentSearchBar({
         <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <Input
-            placeholder="Search by name or phone..."
+            placeholder={t("searchByNameOrPhone")}
             value={search}
             onChange={(e) => onSearchChange(e.target.value)}
             className="pl-9"
@@ -117,10 +119,10 @@ export function StudentSearchBar({
           onValueChange={(val) => onStatusFilterChange(val as StudentStatus | "all")}
         >
           <SelectTrigger className="w-full sm:w-40">
-            <SelectValue placeholder="All Statuses" />
+            <SelectValue placeholder={t("allStatuses")} />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">All Statuses</SelectItem>
+            <SelectItem value="all">{t("allStatuses")}</SelectItem>
             {STUDENT_STATUSES.map((status) => (
               <SelectItem key={status} value={status}>
                 {STUDENT_STATUS_CONFIG[status].label}
@@ -137,7 +139,7 @@ export function StudentSearchBar({
               onCheckedChange={onShowArchivedChange}
             />
             <Label htmlFor="show-archived" className="text-sm whitespace-nowrap">
-              Show archived
+              {t("showArchived")}
             </Label>
           </div>
         )}
@@ -156,12 +158,12 @@ export function StudentSearchBar({
             className="h-8 text-xs"
             onClick={() => applyQuickRange(r.value)}
           >
-            {r.label}
+            {t(r.labelKey)}
           </Button>
         ))}
 
         {/* Divider */}
-        <span className="text-muted-foreground text-xs">or custom:</span>
+        <span className="text-muted-foreground text-xs">{t("orCustom")}</span>
 
         {/* Custom range */}
         <div className="flex items-center gap-1">

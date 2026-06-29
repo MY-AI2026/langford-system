@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useAuth } from "@/contexts/auth-context";
+import { useLanguage } from "@/contexts/language-context";
 import {
   SummerClubPayment,
   SummerClubStudent,
@@ -46,6 +47,7 @@ interface Props {
 
 export function SummerClubPayments({ student, canEdit, onChanged }: Props) {
   const { firebaseUser, userData } = useAuth();
+  const { t } = useLanguage();
   const [payments, setPayments] = useState<SummerClubPayment[]>([]);
   const [showForm, setShowForm] = useState(false);
   const [submitting, setSubmitting] = useState(false);
@@ -73,7 +75,7 @@ export function SummerClubPayments({ student, canEdit, onChanged }: Props) {
       notes: p.notes,
       isInstallment: false,
       installmentNumber: null,
-      courseName: "النادي الصيفي",
+      courseName: t("summerClub"),
       category: "main",
       createdBy: p.createdBy,
       createdAt: p.createdAt,
@@ -90,7 +92,7 @@ export function SummerClubPayments({ student, canEdit, onChanged }: Props) {
     e.preventDefault();
     if (!firebaseUser || !userData) return;
     if (amount <= 0) {
-      toast.error("المبلغ يجب أن يكون أكبر من صفر");
+      toast.error(t("amountMustBePositive"));
       return;
     }
     setSubmitting(true);
@@ -106,13 +108,13 @@ export function SummerClubPayments({ student, canEdit, onChanged }: Props) {
         firebaseUser.uid,
         userData.displayName
       );
-      toast.success("تم إضافة الدفعة");
+      toast.success(t("paymentAdded"));
       setAmount(0);
       setNotes("");
       setShowForm(false);
       onChanged?.();
     } catch (err) {
-      toast.error("فشل في إضافة الدفعة");
+      toast.error(t("paymentAddFailed"));
       console.error(err);
     } finally {
       setSubmitting(false);
@@ -121,7 +123,7 @@ export function SummerClubPayments({ student, canEdit, onChanged }: Props) {
 
   async function handleDelete(p: SummerClubPayment) {
     if (!firebaseUser || !userData) return;
-    if (!confirm(`حذف دفعة بمبلغ ${formatCurrency(p.amount)}؟`)) return;
+    if (!confirm(`${t("deletePaymentConfirm")} ${formatCurrency(p.amount)}؟`)) return;
     try {
       await deleteSummerClubPayment(
         student.id,
@@ -129,10 +131,10 @@ export function SummerClubPayments({ student, canEdit, onChanged }: Props) {
         firebaseUser.uid,
         userData.displayName
       );
-      toast.success("تم الحذف");
+      toast.success(t("deleted"));
       onChanged?.();
     } catch (err) {
-      toast.error("فشل الحذف");
+      toast.error(t("deleteFailed"));
       console.error(err);
     }
   }
@@ -140,11 +142,11 @@ export function SummerClubPayments({ student, canEdit, onChanged }: Props) {
   return (
     <Card>
       <CardHeader className="flex flex-row items-center justify-between">
-        <CardTitle>المدفوعات</CardTitle>
+        <CardTitle>{t("payments")}</CardTitle>
         {canEdit && (
           <Button size="sm" onClick={() => setShowForm((v) => !v)}>
             <Plus className="mr-2 h-4 w-4" />
-            إضافة دفعة
+            {t("addPayment")}
           </Button>
         )}
       </CardHeader>
@@ -155,7 +157,7 @@ export function SummerClubPayments({ student, canEdit, onChanged }: Props) {
             className="rounded-lg border bg-muted/30 p-4 grid gap-3 md:grid-cols-2"
           >
             <div>
-              <Label>المبلغ *</Label>
+              <Label>{t("amount")} *</Label>
               <Input
                 type="number"
                 min={0}
@@ -165,21 +167,21 @@ export function SummerClubPayments({ student, canEdit, onChanged }: Props) {
               />
             </div>
             <div>
-              <Label>طريقة الدفع</Label>
+              <Label>{t("paymentMethod")}</Label>
               <Select value={method} onValueChange={(v) => setMethod(v as PaymentMethod)}>
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="cash">نقدي</SelectItem>
-                  <SelectItem value="card">بطاقة</SelectItem>
-                  <SelectItem value="bank_transfer">تحويل بنكي</SelectItem>
-                  <SelectItem value="online">أونلاين</SelectItem>
+                  <SelectItem value="cash">{t("cash")}</SelectItem>
+                  <SelectItem value="card">{t("card")}</SelectItem>
+                  <SelectItem value="bank_transfer">{t("bankTransfer")}</SelectItem>
+                  <SelectItem value="online">{t("online")}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
             <div>
-              <Label>تاريخ الدفع</Label>
+              <Label>{t("paymentDate")}</Label>
               <Input
                 type="date"
                 value={paymentDate}
@@ -187,7 +189,7 @@ export function SummerClubPayments({ student, canEdit, onChanged }: Props) {
               />
             </div>
             <div className="md:col-span-2">
-              <Label>ملاحظات</Label>
+              <Label>{t("notes")}</Label>
               <Textarea
                 rows={2}
                 value={notes}
@@ -196,10 +198,10 @@ export function SummerClubPayments({ student, canEdit, onChanged }: Props) {
             </div>
             <div className="md:col-span-2 flex justify-end gap-2">
               <Button type="button" variant="outline" onClick={() => setShowForm(false)}>
-                إلغاء
+                {t("cancel")}
               </Button>
               <Button type="submit" disabled={submitting}>
-                حفظ
+                {t("save")}
               </Button>
             </div>
           </form>
@@ -207,17 +209,17 @@ export function SummerClubPayments({ student, canEdit, onChanged }: Props) {
 
         {payments.length === 0 ? (
           <div className="flex h-32 items-center justify-center rounded-lg border border-dashed">
-            <p className="text-sm text-muted-foreground">لا توجد مدفوعات</p>
+            <p className="text-sm text-muted-foreground">{t("noPayments")}</p>
           </div>
         ) : (
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>التاريخ</TableHead>
-                <TableHead>المبلغ</TableHead>
-                <TableHead>الطريقة</TableHead>
-                <TableHead>الإيصال</TableHead>
-                <TableHead>ملاحظات</TableHead>
+                <TableHead>{t("date")}</TableHead>
+                <TableHead>{t("amount")}</TableHead>
+                <TableHead>{t("method")}</TableHead>
+                <TableHead>{t("receipt")}</TableHead>
+                <TableHead>{t("notes")}</TableHead>
                 {canEdit && <TableHead className="w-12" />}
               </TableRow>
             </TableHeader>
@@ -241,7 +243,7 @@ export function SummerClubPayments({ student, canEdit, onChanged }: Props) {
                         <Button
                           variant="ghost"
                           size="icon"
-                          title="الإيصال"
+                          title={t("receipt")}
                           onClick={() => openReceipt(p)}
                         >
                           <Printer className="h-4 w-4" />

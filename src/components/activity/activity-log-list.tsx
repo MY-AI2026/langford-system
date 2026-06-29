@@ -3,6 +3,7 @@
 import { ActivityLogEntry } from "@/lib/types";
 import { formatRelativeTime, formatDate } from "@/lib/utils/format";
 import { ACTIVITY_TYPE_CONFIG } from "@/lib/utils/constants";
+import { useLanguage } from "@/contexts/language-context";
 import { Badge } from "@/components/ui/badge";
 import {
   MessageSquare,
@@ -28,10 +29,11 @@ interface ActivityLogListProps {
 }
 
 export function ActivityLogList({ activities }: ActivityLogListProps) {
+  const { t } = useLanguage();
   if (activities.length === 0) {
     return (
       <div className="flex h-32 items-center justify-center rounded-lg border border-dashed">
-        <p className="text-sm text-muted-foreground">No activity yet</p>
+        <p className="text-sm text-muted-foreground">{t("noActivityYet")}</p>
       </div>
     );
   }
@@ -69,7 +71,7 @@ export function ActivityLogList({ activities }: ActivityLogListProps) {
                     ) : (
                       <Clock className="h-3 w-3 text-yellow-500" />
                     )}
-                    Follow-up: {formatDate(activity.followUpDate)}
+                    {t("followUp")}: {formatDate(activity.followUpDate)}
                   </span>
                 )}
               </div>

@@ -7,6 +7,7 @@ import {
   deleteDocument,
   StorageDocument,
 } from "@/lib/services/document-service";
+import { useLanguage } from "@/contexts/language-context";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -34,6 +35,7 @@ function fileIcon(name: string) {
 }
 
 export function DocumentUpload({ studentId, readOnly = false }: DocumentUploadProps) {
+  const { t } = useLanguage();
   const [documents, setDocuments] = useState<StorageDocument[]>([]);
   const [loading, setLoading] = useState(true);
   const [uploading, setUploading] = useState(false);
@@ -58,7 +60,7 @@ export function DocumentUpload({ studentId, readOnly = false }: DocumentUploadPr
 
     const allowed = ["application/pdf", "image/jpeg", "image/jpg", "image/png"];
     if (!allowed.includes(file.type)) {
-      toast.error("Only PDF, JPG, and PNG files are allowed");
+      toast.error(t("onlyPdfJpgPngAllowed"));
       return;
     }
 
@@ -67,10 +69,10 @@ export function DocumentUpload({ studentId, readOnly = false }: DocumentUploadPr
 
     try {
       await uploadDocument(studentId, file, (p) => setProgress(p));
-      toast.success("Document uploaded");
+      toast.success(t("documentUploaded"));
       await loadDocuments();
     } catch {
-      toast.error("Failed to upload document");
+      toast.error(t("failedToUploadDocument"));
     } finally {
       setUploading(false);
       setProgress(0);
@@ -83,9 +85,9 @@ export function DocumentUpload({ studentId, readOnly = false }: DocumentUploadPr
     try {
       await deleteDocument(doc.path);
       setDocuments((prev) => prev.filter((d) => d.path !== doc.path));
-      toast.success("Document deleted");
+      toast.success(t("documentDeleted"));
     } catch {
-      toast.error("Failed to delete document");
+      toast.error(t("failedToDeleteDocument"));
     } finally {
       setDeleting(null);
     }
@@ -94,7 +96,7 @@ export function DocumentUpload({ studentId, readOnly = false }: DocumentUploadPr
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <h3 className="text-base font-semibold">Documents</h3>
+        <h3 className="text-base font-semibold">{t("documents")}</h3>
         {!readOnly && (
           <div>
             <input
@@ -112,7 +114,7 @@ export function DocumentUpload({ studentId, readOnly = false }: DocumentUploadPr
               disabled={uploading}
             >
               <Upload className="mr-2 h-4 w-4" />
-              {uploading ? "Uploading..." : "Upload Document"}
+              {uploading ? t("uploading") : t("uploadDocument")}
             </Button>
           </div>
         )}
@@ -120,7 +122,7 @@ export function DocumentUpload({ studentId, readOnly = false }: DocumentUploadPr
 
       {uploading && (
         <div className="space-y-1">
-          <p className="text-xs text-muted-foreground">Uploading... {progress}%</p>
+          <p className="text-xs text-muted-foreground">{t("uploading")} {progress}%</p>
           <Progress value={progress} className="h-2" />
         </div>
       )}
@@ -131,7 +133,7 @@ export function DocumentUpload({ studentId, readOnly = false }: DocumentUploadPr
 
       {!loading && documents.length === 0 && !uploading ? (
         <div className="flex h-24 items-center justify-center rounded-lg border border-dashed">
-          <p className="text-sm text-muted-foreground">No documents uploaded</p>
+          <p className="text-sm text-muted-foreground">{t("noDocuments")}</p>
         </div>
       ) : (
         <div className="space-y-2">
@@ -141,7 +143,7 @@ export function DocumentUpload({ studentId, readOnly = false }: DocumentUploadPr
                 {fileIcon(doc.name)}
                 <span className="flex-1 text-sm truncate">{doc.name}</span>
                 <a href={doc.url} target="_blank" rel="noopener noreferrer">
-                  <Button size="icon" variant="ghost" title="Download">
+                  <Button size="icon" variant="ghost" title={t("download")}>
                     <Download className="h-4 w-4" />
                   </Button>
                 </a>
@@ -149,7 +151,7 @@ export function DocumentUpload({ studentId, readOnly = false }: DocumentUploadPr
                   <Button
                     size="icon"
                     variant="ghost"
-                    title="Delete"
+                    title={t("delete")}
                     disabled={deleting === doc.path}
                     onClick={() => handleDelete(doc)}
                   >

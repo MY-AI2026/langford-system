@@ -6,6 +6,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { changePassword } from "@/lib/firebase/auth";
 import { useAuth } from "@/contexts/auth-context";
+import { useLanguage } from "@/contexts/language-context";
 import { PageHeader } from "@/components/layout/page-header";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -30,6 +31,7 @@ type PasswordFormData = z.infer<typeof passwordSchema>;
 
 export default function ProfilePage() {
   const { userData, role } = useAuth();
+  const { t } = useLanguage();
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState("");
 
@@ -50,18 +52,18 @@ export default function ProfilePage() {
     } catch (err: unknown) {
       const code = (err as { code?: string })?.code;
       if (code === "auth/wrong-password" || code === "auth/invalid-credential") {
-        setError("Current password is incorrect.");
+        setError(t("currentPasswordIncorrect"));
       } else if (code === "auth/weak-password") {
-        setError("New password is too weak. Use at least 6 characters.");
+        setError(t("newPasswordTooWeak"));
       } else {
-        setError("Something went wrong. Please try again.");
+        setError(t("somethingWentWrong"));
       }
     }
   }
 
   return (
     <div className="space-y-6">
-      <PageHeader title="My Profile" description="View your account info and change your password" />
+      <PageHeader title={t("myProfile")} description={t("myProfileDescription")} />
 
       <div className="grid gap-6 lg:grid-cols-2">
         {/* Account Info */}
@@ -69,20 +71,20 @@ export default function ProfilePage() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-base">
               <User className="h-4 w-4" />
-              Account Info
+              {t("accountInfo")}
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <div>
-              <p className="text-xs text-muted-foreground mb-1">Name</p>
+              <p className="text-xs text-muted-foreground mb-1">{t("name")}</p>
               <p className="font-medium">{userData?.displayName || "—"}</p>
             </div>
             <div>
-              <p className="text-xs text-muted-foreground mb-1">Email</p>
+              <p className="text-xs text-muted-foreground mb-1">{t("email")}</p>
               <p className="font-medium">{userData?.email || "—"}</p>
             </div>
             <div>
-              <p className="text-xs text-muted-foreground mb-1">Role</p>
+              <p className="text-xs text-muted-foreground mb-1">{t("role")}</p>
               <Badge variant="secondary" className="capitalize">{role || "—"}</Badge>
             </div>
           </CardContent>
@@ -93,14 +95,14 @@ export default function ProfilePage() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-base">
               <KeyRound className="h-4 w-4" />
-              Change Password
+              {t("changePassword")}
             </CardTitle>
           </CardHeader>
           <CardContent>
             {success && (
               <Alert className="mb-4 border-green-500 bg-green-50 text-green-700">
                 <CheckCircle2 className="h-4 w-4" />
-                <AlertDescription>Password changed successfully!</AlertDescription>
+                <AlertDescription>{t("passwordChangedSuccessfully")}</AlertDescription>
               </Alert>
             )}
             {error && (
@@ -112,7 +114,7 @@ export default function ProfilePage() {
 
             <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
               <div className="space-y-1.5">
-                <Label htmlFor="currentPassword">Current Password</Label>
+                <Label htmlFor="currentPassword">{t("currentPassword")}</Label>
                 <Input id="currentPassword" type="password" {...register("currentPassword")} />
                 {errors.currentPassword && (
                   <p className="text-xs text-destructive">{errors.currentPassword.message}</p>
@@ -120,7 +122,7 @@ export default function ProfilePage() {
               </div>
 
               <div className="space-y-1.5">
-                <Label htmlFor="newPassword">New Password</Label>
+                <Label htmlFor="newPassword">{t("newPassword")}</Label>
                 <Input id="newPassword" type="password" {...register("newPassword")} />
                 {errors.newPassword && (
                   <p className="text-xs text-destructive">{errors.newPassword.message}</p>
@@ -128,7 +130,7 @@ export default function ProfilePage() {
               </div>
 
               <div className="space-y-1.5">
-                <Label htmlFor="confirmPassword">Confirm New Password</Label>
+                <Label htmlFor="confirmPassword">{t("confirmNewPassword")}</Label>
                 <Input id="confirmPassword" type="password" {...register("confirmPassword")} />
                 {errors.confirmPassword && (
                   <p className="text-xs text-destructive">{errors.confirmPassword.message}</p>
@@ -139,10 +141,10 @@ export default function ProfilePage() {
                 {isSubmitting ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Saving...
+                    {t("saving")}
                   </>
                 ) : (
-                  "Update Password"
+                  t("updatePassword")
                 )}
               </Button>
             </form>

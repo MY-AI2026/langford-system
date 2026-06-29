@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { subscribeToEnrollments, completeEnrollment, deleteEnrollment } from "@/lib/services/enrollment-service";
 import { useAuth } from "@/contexts/auth-context";
+import { useLanguage } from "@/contexts/language-context";
 import { Enrollment } from "@/lib/types";
 import { formatDate, formatCurrency } from "@/lib/utils/format";
 import { Card, CardContent } from "@/components/ui/card";
@@ -28,26 +29,27 @@ const STATUS_BADGE_VARIANT: Record<string, "default" | "secondary" | "destructiv
   on_hold: "outline",
 };
 
-const STATUS_LABELS: Record<string, string> = {
-  active: "Active",
-  completed: "Completed",
-  dropped: "Dropped",
-  on_hold: "On Hold",
+const STATUS_LABEL_KEYS: Record<string, string> = {
+  active: "active",
+  completed: "completed",
+  dropped: "dropped",
+  on_hold: "onHold",
 };
 
-const CATEGORY_LABELS: Record<string, string> = {
-  general_english: "General English",
-  exam_prep: "Exam Prep",
-  professional: "Professional",
-  diploma: "Diploma",
-  esp: "ESP",
-  conversation: "Conversation",
-  school: "School",
-  other: "Other",
+const CATEGORY_LABEL_KEYS: Record<string, string> = {
+  general_english: "generalEnglish",
+  exam_prep: "examPrep",
+  professional: "professional",
+  diploma: "diploma",
+  esp: "esp",
+  conversation: "conversation",
+  school: "school",
+  other: "other",
 };
 
 export function EnrollmentTab({ studentId, studentName, studentCivilId, readOnly = false }: EnrollmentTabProps) {
   const { role, firebaseUser, userData } = useAuth();
+  const { t } = useLanguage();
   const [enrollments, setEnrollments] = useState<Enrollment[]>([]);
   const [loading, setLoading] = useState(true);
   const [enrollDialogOpen, setEnrollDialogOpen] = useState(false);
@@ -73,9 +75,9 @@ export function EnrollmentTab({ studentId, studentName, studentCivilId, readOnly
     setCompleting(enrollment.id);
     try {
       await completeEnrollment(studentId, enrollment.id, firebaseUser.uid, userData.displayName);
-      toast.success("Enrollment marked as completed");
+      toast.success(t("enrollmentCompleted"));
     } catch {
-      toast.error("Failed to complete enrollment");
+      toast.error(t("failedToCompleteEnrollment"));
     } finally {
       setCompleting(null);
     }
@@ -83,7 +85,7 @@ export function EnrollmentTab({ studentId, studentName, studentCivilId, readOnly
 
   async function handleDelete(enrollment: Enrollment) {
     if (!firebaseUser || !userData) return;
-    if (!confirm(`Are you sure you want to remove "${enrollment.courseName}" enrollment?`)) return;
+    if (!confirm(`${t("confirmRemoveEnrollment")} "${enrollment.courseName}"؟`)) return;
     setDeleting(enrollment.id);
     try {
       await deleteEnrollment(
@@ -93,9 +95,9 @@ export function EnrollmentTab({ studentId, studentName, studentCivilId, readOnly
         firebaseUser.uid,
         userData.displayName
       );
-      toast.success(`Removed from ${enrollment.courseName}`);
+      toast.success(`${t("removedFrom")} ${enrollment.courseName}`);
     } catch {
-      toast.error("Failed to remove enrollment");
+      toast.error(t("failedToRemoveEnrollment"));
     } finally {
       setDeleting(null);
     }
@@ -114,11 +116,11 @@ export function EnrollmentTab({ studentId, studentName, studentCivilId, readOnly
     <div className="space-y-4">
       {/* Header */}
       <div className="flex items-center justify-between">
-        <h3 className="text-lg font-semibold">Course Enrollments</h3>
+        <h3 className="text-lg font-semibold">{t("courseEnrollments")}</h3>
         {!readOnly && (
           <Button size="sm" onClick={() => setEnrollDialogOpen(true)}>
             <Plus className="mr-2 h-4 w-4" />
-            Enroll in Course
+            {t("enrollInCourse")}
           </Button>
         )}
       </div>
@@ -130,21 +132,21 @@ export function EnrollmentTab({ studentId, studentName, studentCivilId, readOnly
             <div>
               <div className="flex items-center justify-center gap-1 text-muted-foreground">
                 <BookOpen className="h-4 w-4" />
-                <span className="text-xs">Total</span>
+                <span className="text-xs">{t("total")}</span>
               </div>
               <p className="text-2xl font-bold">{totalCourses}</p>
             </div>
             <div>
               <div className="flex items-center justify-center gap-1 text-muted-foreground">
                 <Clock className="h-4 w-4" />
-                <span className="text-xs">Active</span>
+                <span className="text-xs">{t("active")}</span>
               </div>
               <p className="text-2xl font-bold text-blue-600">{activeCourses}</p>
             </div>
             <div>
               <div className="flex items-center justify-center gap-1 text-muted-foreground">
                 <GraduationCap className="h-4 w-4" />
-                <span className="text-xs">Completed</span>
+                <span className="text-xs">{t("completed")}</span>
               </div>
               <p className="text-2xl font-bold text-green-600">{completedCourses}</p>
             </div>
@@ -155,7 +157,7 @@ export function EnrollmentTab({ studentId, studentName, studentCivilId, readOnly
       {/* Enrollments list */}
       {enrollments.length === 0 ? (
         <div className="flex h-24 items-center justify-center rounded-lg border border-dashed">
-          <p className="text-sm text-muted-foreground">No course enrollments yet</p>
+          <p className="text-sm text-muted-foreground">{t("noEnrollmentsYet")}</p>
         </div>
       ) : (
         <div className="space-y-3">
@@ -167,23 +169,27 @@ export function EnrollmentTab({ studentId, studentName, studentCivilId, readOnly
                     <div className="flex items-center gap-2 flex-wrap">
                       <span className="font-medium">{enrollment.courseName}</span>
                       <Badge variant="outline" className="text-xs">
-                        {CATEGORY_LABELS[enrollment.courseCategory] || enrollment.courseCategory}
+                        {CATEGORY_LABEL_KEYS[enrollment.courseCategory]
+                          ? t(CATEGORY_LABEL_KEYS[enrollment.courseCategory])
+                          : enrollment.courseCategory}
                       </Badge>
                       <Badge variant={STATUS_BADGE_VARIANT[enrollment.status] || "secondary"}>
-                        {STATUS_LABELS[enrollment.status] || enrollment.status}
+                        {STATUS_LABEL_KEYS[enrollment.status]
+                          ? t(STATUS_LABEL_KEYS[enrollment.status])
+                          : enrollment.status}
                       </Badge>
                     </div>
                     <div className="flex flex-wrap gap-4 text-xs text-muted-foreground">
                       <span>
-                        Start: {formatDate(enrollment.startDate)}
-                        {enrollment.endDate ? ` — End: ${formatDate(enrollment.endDate)}` : ""}
+                        {t("startDate")}: {formatDate(enrollment.startDate)}
+                        {enrollment.endDate ? ` — ${t("endDate")}: ${formatDate(enrollment.endDate)}` : ""}
                       </span>
                     </div>
                     <div className="flex flex-wrap gap-4 text-xs text-muted-foreground">
-                      <span>Fees: {formatCurrency(enrollment.fees)}</span>
-                      <span>Paid: {formatCurrency(enrollment.amountPaid)}</span>
+                      <span>{t("totalFees")}: {formatCurrency(enrollment.fees)}</span>
+                      <span>{t("amountPaid")}: {formatCurrency(enrollment.amountPaid)}</span>
                       <span>
-                        Remaining: {formatCurrency(enrollment.remainingBalance)}
+                        {t("remaining")}: {formatCurrency(enrollment.remainingBalance)}
                       </span>
                     </div>
                     {enrollment.notes && (
@@ -201,7 +207,7 @@ export function EnrollmentTab({ studentId, studentName, studentCivilId, readOnly
                         onClick={() => handleComplete(enrollment)}
                       >
                         <CheckCircle2 className="mr-1 h-3 w-3" />
-                        {completing === enrollment.id ? "..." : "Complete"}
+                        {completing === enrollment.id ? "..." : t("complete")}
                       </Button>
                     )}
                     {enrollment.status === "completed" && (
@@ -211,7 +217,7 @@ export function EnrollmentTab({ studentId, studentName, studentCivilId, readOnly
                         onClick={() => handleCertificate(enrollment)}
                       >
                         <Award className="mr-1 h-3 w-3" />
-                        Certificate
+                        {t("certificate")}
                       </Button>
                     )}
                     {!readOnly && (role === "admin" || role === "coordinator") && (
@@ -223,7 +229,7 @@ export function EnrollmentTab({ studentId, studentName, studentCivilId, readOnly
                         onClick={() => handleDelete(enrollment)}
                       >
                         <Trash2 className="mr-1 h-3 w-3" />
-                        {deleting === enrollment.id ? "..." : "Remove"}
+                        {deleting === enrollment.id ? "..." : t("remove")}
                       </Button>
                     )}
                   </div>

@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useLanguage } from "@/contexts/language-context";
 import { SummerClubStudent } from "@/lib/types";
 import { formatDate, formatCurrency, formatPhone } from "@/lib/utils/format";
 import {
@@ -21,10 +22,11 @@ interface Props {
 }
 
 export function SummerClubListTable({ students, showSalesRep = false }: Props) {
+  const { t } = useLanguage();
   if (students.length === 0) {
     return (
       <div className="flex h-40 items-center justify-center rounded-lg border border-dashed">
-        <p className="text-sm text-muted-foreground">لا توجد بيانات</p>
+        <p className="text-sm text-muted-foreground">{t("noData")}</p>
       </div>
     );
   }
@@ -34,16 +36,16 @@ export function SummerClubListTable({ students, showSalesRep = false }: Props) {
       <Table>
         <TableHeader>
           <TableRow>
-            <TableHead>الاسم</TableHead>
-            <TableHead>التلفون</TableHead>
-            <TableHead>النوع</TableHead>
-            <TableHead>السن</TableHead>
-            <TableHead>مسجل</TableHead>
-            {showSalesRep && <TableHead>السيلز</TableHead>}
-            <TableHead>الرسوم</TableHead>
-            <TableHead>المدفوع</TableHead>
-            <TableHead>المتبقي</TableHead>
-            <TableHead>تاريخ التسجيل</TableHead>
+            <TableHead>{t("name")}</TableHead>
+            <TableHead>{t("phone")}</TableHead>
+            <TableHead>{t("gender")}</TableHead>
+            <TableHead>{t("age")}</TableHead>
+            <TableHead>{t("registered")}</TableHead>
+            {showSalesRep && <TableHead>{t("salesRep")}</TableHead>}
+            <TableHead>{t("fees")}</TableHead>
+            <TableHead>{t("amountPaid")}</TableHead>
+            <TableHead>{t("remaining")}</TableHead>
+            <TableHead>{t("registrationDate")}</TableHead>
             <TableHead className="w-12" />
           </TableRow>
         </TableHeader>
@@ -77,7 +79,7 @@ export function SummerClubListTable({ students, showSalesRep = false }: Props) {
                         : "bg-blue-100 text-blue-700"
                     }
                   >
-                    {s.gender === "female" ? "أنثى" : "ذكر"}
+                    {s.gender === "female" ? t("female") : t("male")}
                   </Badge>
                 </TableCell>
                 <TableCell className="text-muted-foreground">
@@ -92,7 +94,7 @@ export function SummerClubListTable({ students, showSalesRep = false }: Props) {
                         : "bg-amber-100 text-amber-700"
                     }
                   >
-                    {s.isRegistered ? "نعم" : "لا"}
+                    {s.isRegistered ? t("yes") : t("no")}
                   </Badge>
                 </TableCell>
                 {showSalesRep && (

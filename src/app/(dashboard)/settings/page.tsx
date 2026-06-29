@@ -7,14 +7,16 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Users, Settings2, Database } from "lucide-react";
 import Link from "next/link";
+import { useLanguage } from "@/contexts/language-context";
 
 export default function SettingsPage() {
+  const { t } = useLanguage();
   return (
     <RoleGate allowedRoles={["admin"]}>
       <div className="space-y-6">
         <PageHeader
-          title="Settings"
-          description="System configuration and user management"
+          title={t("settings")}
+          description={t("settingsDescription")}
         />
 
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
@@ -25,12 +27,12 @@ export default function SettingsPage() {
                   <div className="rounded-lg bg-blue-50 p-2">
                     <Users className="h-5 w-5 text-blue-600" />
                   </div>
-                  <CardTitle className="text-base">User Management</CardTitle>
+                  <CardTitle className="text-base">{t("userManagement")}</CardTitle>
                 </div>
               </CardHeader>
               <CardContent>
                 <p className="text-sm text-muted-foreground">
-                  Create, edit, and manage system users and their roles
+                  {t("userManagementDescription")}
                 </p>
               </CardContent>
             </Card>
@@ -42,14 +44,14 @@ export default function SettingsPage() {
                 <div className="rounded-lg bg-muted p-2">
                   <Settings2 className="h-5 w-5 text-muted-foreground" />
                 </div>
-                <CardTitle className="text-base">System Settings</CardTitle>
+                <CardTitle className="text-base">{t("systemSettings")}</CardTitle>
               </div>
             </CardHeader>
             <CardContent>
               <p className="text-sm text-muted-foreground">
-                Configure lead sources, levels, and institute info
+                {t("systemSettingsDescription")}
               </p>
-              <Badge className="mt-2" variant="secondary">Coming Soon</Badge>
+              <Badge className="mt-2" variant="secondary">{t("comingSoon")}</Badge>
             </CardContent>
           </Card>
 
@@ -59,14 +61,14 @@ export default function SettingsPage() {
                 <div className="rounded-lg bg-green-50 p-2">
                   <Database className="h-5 w-5 text-green-600" />
                 </div>
-                <CardTitle className="text-base">Data Export</CardTitle>
+                <CardTitle className="text-base">{t("dataExport")}</CardTitle>
               </div>
             </CardHeader>
             <CardContent>
               <p className="text-sm text-muted-foreground">
-                Export all data for backup or migration
+                {t("dataExportDescription")}
               </p>
-              <Badge className="mt-2" variant="secondary">Coming Soon</Badge>
+              <Badge className="mt-2" variant="secondary">{t("comingSoon")}</Badge>
             </CardContent>
           </Card>
         </div>

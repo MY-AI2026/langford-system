@@ -1,7 +1,8 @@
 "use client";
 
 import { Student, StudentStatus } from "@/lib/types";
-import { STUDENT_STATUS_CONFIG, PIPELINE_STATUSES } from "@/lib/utils/constants";
+import { useLanguage } from "@/contexts/language-context";
+import { PIPELINE_STATUSES } from "@/lib/utils/constants";
 import { PipelineCard } from "./pipeline-card";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
@@ -12,9 +13,9 @@ interface PipelineBoardProps {
 }
 
 export function PipelineBoard({ students, onStatusChange }: PipelineBoardProps) {
+  const { t } = useLanguage();
   const columns = PIPELINE_STATUSES.map((status) => ({
     status,
-    config: STUDENT_STATUS_CONFIG[status],
     students: students.filter((s) => s.status === status),
   }));
 
@@ -36,7 +37,7 @@ export function PipelineBoard({ students, onStatusChange }: PipelineBoardProps) 
 
   return (
     <div className="flex gap-4 overflow-x-auto pb-4">
-      {columns.map(({ status, config, students: columnStudents }) => (
+      {columns.map(({ status, students: columnStudents }) => (
         <div
           key={status}
           className="min-w-64 flex-1"
@@ -55,7 +56,7 @@ export function PipelineBoard({ students, onStatusChange }: PipelineBoardProps) 
                   status === "paid" && "bg-emerald-500"
                 )}
               />
-              <span className="text-sm font-medium">{config.label}</span>
+              <span className="text-sm font-medium">{t(status)}</span>
             </div>
             <Badge variant="secondary" className="text-xs">
               {columnStudents.length}
@@ -74,7 +75,7 @@ export function PipelineBoard({ students, onStatusChange }: PipelineBoardProps) 
             ))}
             {columnStudents.length === 0 && (
               <p className="py-8 text-center text-xs text-muted-foreground">
-                No students
+                {t("noStudents")}
               </p>
             )}
           </div>

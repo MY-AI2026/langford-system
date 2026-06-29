@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useMemo } from "react";
 import { useAuth } from "@/contexts/auth-context";
+import { useLanguage } from "@/contexts/language-context";
 import { PageHeader } from "@/components/layout/page-header";
 import { StudentListTable } from "@/components/students/student-list-table";
 import { StudentSearchBar } from "@/components/students/student-search-bar";
@@ -51,6 +52,7 @@ function downloadStudents(students: Student[]) {
 
 export default function StudentsPage() {
   const { role, firebaseUser, userData } = useAuth();
+  const { t } = useLanguage();
   const [students, setStudents] = useState<Student[]>([]);
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<StudentStatus | "all">("all");
@@ -110,18 +112,18 @@ export default function StudentsPage() {
   return (
     <div className="space-y-6">
       <PageHeader
-        title="Students"
-        description={`${filtered.length} student(s)${dateFrom || dateTo ? " (filtered)" : ""}`}
+        title={t("students")}
+        description={`${filtered.length} ${t("studentsCount")}${dateFrom || dateTo ? ` (${t("filtered")})` : ""}`}
         action={
           <div className="flex gap-2">
             <Button
               variant="outline"
               onClick={() => downloadStudents(filtered)}
               disabled={filtered.length === 0}
-              title="تنزيل ملف Excel"
+              title={t("downloadExcelFile")}
             >
               <Download className="mr-2 h-4 w-4" />
-              تنزيل Excel
+              {t("downloadExcel")}
             </Button>
             {role !== "accountant" && userData && (
               <StudentImportDialog
@@ -133,7 +135,7 @@ export default function StudentsPage() {
               <Link href="/students/new">
                 <Button>
                   <Plus className="mr-2 h-4 w-4" />
-                  Add Student
+                  {t("addStudent")}
                 </Button>
               </Link>
             )}

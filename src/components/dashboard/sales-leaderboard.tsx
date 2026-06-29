@@ -3,6 +3,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { formatCurrency } from "@/lib/utils/format";
+import { useLanguage } from "@/contexts/language-context";
 import { Student, User } from "@/lib/types";
 import { Trophy } from "lucide-react";
 
@@ -12,6 +13,7 @@ interface SalesLeaderboardProps {
 }
 
 export function SalesLeaderboard({ students, salesUsers }: SalesLeaderboardProps) {
+  const { t } = useLanguage();
   const leaderboard = salesUsers
     .map((user) => {
       const mine = students.filter((s) => s.assignedSalesRepId === user.uid);
@@ -37,7 +39,7 @@ export function SalesLeaderboard({ students, salesUsers }: SalesLeaderboardProps
   return (
     <Card>
       <CardHeader className="flex flex-row items-center justify-between pb-2">
-        <CardTitle className="text-base">Sales Performance</CardTitle>
+        <CardTitle className="text-base">{t("salesPerformance")}</CardTitle>
         <Trophy className="h-4 w-4 text-yellow-500" />
       </CardHeader>
       <CardContent>
@@ -58,7 +60,7 @@ export function SalesLeaderboard({ students, salesUsers }: SalesLeaderboardProps
                       {user.displayName}
                     </span>
                     <span className="text-xs text-muted-foreground">
-                      {enrolled}/{total} enrolled
+                      {enrolled}/{total} {t("enrolled")}
                     </span>
                   </div>
                 </div>
@@ -66,7 +68,7 @@ export function SalesLeaderboard({ students, salesUsers }: SalesLeaderboardProps
                   <p className="font-semibold text-sm">{formatCurrency(revenue)}</p>
                   {user.monthlyTarget > 0 && (
                     <p className="text-xs text-muted-foreground">
-                      of {formatCurrency(user.monthlyTarget)}
+                      {t("of")} {formatCurrency(user.monthlyTarget)}
                     </p>
                   )}
                 </div>

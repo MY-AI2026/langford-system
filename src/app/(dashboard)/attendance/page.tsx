@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { useAuth } from "@/contexts/auth-context";
+import { useLanguage } from "@/contexts/language-context";
 import { subscribeToCourses } from "@/lib/services/course-service";
 import { subscribeToEnrollments } from "@/lib/services/enrollment-service";
 import { recordAttendance } from "@/lib/services/attendance-service";
@@ -39,6 +40,7 @@ interface StudentAttendanceRecord {
 
 function AttendanceContent() {
   const { firebaseUser, role } = useAuth();
+  const { t } = useLanguage();
   const searchParams = useSearchParams();
   const courseIdParam = searchParams.get("courseId");
   const [courses, setCourses] = useState<Course[]>([]);
@@ -194,11 +196,11 @@ function AttendanceContent() {
         // Fetch student names in parallel
         const studentRecords: StudentAttendanceRecord[] = await Promise.all(
           activeEnrollments.map(async (enr) => {
-            let studentName = "Unknown Student";
+            let studentName = t("unknownStudent");
             try {
               const studentDoc = await fetchDoc(`students/${enr._studentId}`);
               if (studentDoc) {
-                studentName = studentDoc.fullName || "Unknown Student";
+                studentName = studentDoc.fullName || t("unknownStudent");
               }
             } catch {
               // ignore
@@ -214,7 +216,7 @@ function AttendanceContent() {
         setRecords(studentRecords);
       } catch (e) {
         console.error("Failed to load enrollments:", e);
-        toast.error("Failed to load enrolled students");
+        toast.error(t("failedToLoadStudents"));
       } finally {
         setLoadingEnrollments(false);
       }
@@ -231,11 +233,11 @@ function AttendanceContent() {
 
   async function handleSaveAttendance() {
     if (!attendanceDate) {
-      toast.error("Please select a date");
+      toast.error(t("pleaseSelectDate"));
       return;
     }
     if (records.length === 0) {
-      toast.error("No students to record attendance for");
+      toast.error(t("noStudentsToRecord"));
       return;
     }
 
@@ -254,14 +256,14 @@ function AttendanceContent() {
       );
       const failed = results.filter((r) => r.status === "rejected").length;
       if (failed === 0) {
-        toast.success("Attendance saved for all students");
+        toast.success(t("attendanceSavedAll"));
       } else {
         toast.warning(
-          `Saved ${records.length - failed} of ${records.length}. ${failed} failed — try again.`
+          `${t("saved")} ${records.length - failed} ${t("of")} ${records.length}. ${failed} ${t("failedTryAgain")}`
         );
       }
     } catch {
-      toast.error("Failed to save attendance");
+      toast.error(t("failedToSaveAttendance"));
     } finally {
       setSaving(false);
     }
@@ -269,7 +271,7 @@ function AttendanceContent() {
 
   function handlePrint() {
     if (!selectedCourse || records.length === 0) {
-      toast.error("Nothing to print — select a course with students first.");
+      toast.error(t("nothingToPrint"));
       return;
     }
 
@@ -368,7 +370,7 @@ function AttendanceContent() {
 
     const win = window.open("", "_blank", "width=900,height=700");
     if (!win) {
-      toast.error("Allow pop-ups to print the attendance sheet.");
+      toast.error(t("allowPopups"));
       return;
     }
     win.document.open();
@@ -390,11 +392,11 @@ function AttendanceContent() {
   if (!selectedCourse) {
     return (
       <div className="space-y-4">
-        <h3 className="text-lg font-semibold">Select a Course</h3>
+        <h3 className="text-lg font-semibold">{t("selectACourse")}</h3>
         {courses.length === 0 ? (
           <div className="flex h-32 items-center justify-center rounded-lg border border-dashed">
             <p className="text-sm text-muted-foreground">
-              No courses assigned yet
+              {t("noCoursesAssigned")}
             </p>
           </div>
         ) : (
@@ -439,13 +441,13 @@ function AttendanceContent() {
         </Button>
         <div>
           <h3 className="text-lg font-semibold">{selectedCourse.name}</h3>
-          <p className="text-sm text-muted-foreground">Take Attendance</p>
+          <p className="text-sm text-muted-foreground">{t("takeAttendance")}</p>
         </div>
       </div>
 
       <div className="flex items-center gap-4">
         <div className="space-y-1">
-          <Label>Date</Label>
+          <Label>{t("date")}</Label>
           <Input
             type="date"
             value={attendanceDate}
@@ -455,7 +457,7 @@ function AttendanceContent() {
         <div className="flex gap-2 pt-5">
           <Button onClick={handleSaveAttendance} disabled={saving || records.length === 0}>
             <Save className="mr-2 h-4 w-4" />
-            {saving ? "Saving..." : "Save Attendance"}
+            {saving ? t("saving") : t("saveAttendance")}
           </Button>
           <Button
             variant="outline"
@@ -463,7 +465,7 @@ function AttendanceContent() {
             disabled={records.length === 0}
           >
             <Printer className="mr-2 h-4 w-4" />
-            Print
+            {t("print")}
           </Button>
         </div>
       </div>
@@ -477,7 +479,7 @@ function AttendanceContent() {
       ) : records.length === 0 ? (
         <div className="flex h-24 items-center justify-center rounded-lg border border-dashed">
           <p className="text-sm text-muted-foreground">
-            No students enrolled in this course
+            {t("noStudentsEnrolledCourse")}
           </p>
         </div>
       ) : (
@@ -496,7 +498,7 @@ function AttendanceContent() {
                   className="gap-1"
                 >
                   <Check className="h-3 w-3" />
-                  Present
+                  {t("present")}
                 </Button>
                 <Button
                   size="sm"
@@ -505,7 +507,7 @@ function AttendanceContent() {
                   className="gap-1"
                 >
                   <X className="h-3 w-3" />
-                  Absent
+                  {t("absent")}
                 </Button>
                 <Button
                   size="sm"
@@ -514,7 +516,7 @@ function AttendanceContent() {
                   className="gap-1"
                 >
                   <Clock className="h-3 w-3" />
-                  Late
+                  {t("late")}
                 </Button>
               </div>
             </div>
@@ -526,12 +528,13 @@ function AttendanceContent() {
 }
 
 export default function AttendancePage() {
+  const { t } = useLanguage();
   return (
     <RoleGate allowedRoles={["admin", "instructor", "coordinator"]}>
       <div className="space-y-6">
         <PageHeader
-          title="Take Attendance"
-          description="Record student attendance for your courses"
+          title={t("takeAttendance")}
+          description={t("recordAttendanceDesc")}
         />
         <AttendanceContent />
       </div>

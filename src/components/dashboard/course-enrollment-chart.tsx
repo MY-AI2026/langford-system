@@ -2,6 +2,7 @@
 
 import { useMemo } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { useLanguage } from "@/contexts/language-context";
 import { Student, Course } from "@/lib/types";
 import {
   BarChart,
@@ -33,6 +34,7 @@ export function CourseEnrollmentChart({
   students,
   courses,
 }: CourseEnrollmentChartProps) {
+  const { t } = useLanguage();
   const data = useMemo(() => {
     // Count students interested in each course
     const counts: Record<string, number> = {};
@@ -61,7 +63,7 @@ export function CourseEnrollmentChart({
   return (
     <Card>
       <CardHeader className="pb-2">
-        <CardTitle className="text-base">Students by Course Interest</CardTitle>
+        <CardTitle className="text-base">{t("studentsByCourseInterest")}</CardTitle>
       </CardHeader>
       <CardContent>
         <ResponsiveContainer width="100%" height={250}>
@@ -76,7 +78,7 @@ export function CourseEnrollmentChart({
             />
             <YAxis allowDecimals={false} tick={{ fontSize: 11 }} />
             <Tooltip
-              formatter={(value) => [value, "Students"]}
+              formatter={(value) => [value, t("students")]}
               contentStyle={{ borderRadius: 8, fontSize: 13 }}
             />
             <Bar dataKey="count" radius={[4, 4, 0, 0]} maxBarSize={40}>

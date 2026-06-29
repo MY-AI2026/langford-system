@@ -13,6 +13,7 @@ import {
 import { Pencil, Trash2, ClipboardCheck, MapPin, CalendarRange } from "lucide-react";
 import { ScheduleStudentList } from "./schedule-student-list";
 import { formatDate } from "@/lib/utils/format";
+import { useLanguage } from "@/contexts/language-context";
 
 // Color palette for schedule entries
 const ENTRY_COLORS = [
@@ -50,6 +51,7 @@ export function ScheduleEntryCard({
   onEdit,
   onDelete,
 }: ScheduleEntryCardProps) {
+  const { t } = useLanguage();
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const colorClass = getEntryColor(entry.courseId, entry.courseName);
@@ -129,7 +131,7 @@ export function ScheduleEntryCard({
                 }}
               >
                 <ClipboardCheck className="mr-1.5 h-3.5 w-3.5" />
-                Take Attendance
+                {t("takeAttendance")}
               </Button>
             )}
             {editable && (

@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { ACTIVITY_TYPE_CONFIG } from "@/lib/utils/constants";
 import { formatRelativeTime } from "@/lib/utils/format";
+import { useLanguage } from "@/contexts/language-context";
 import { ActivityLogEntry } from "@/lib/types";
 
 interface RecentActivityFeedProps {
@@ -11,14 +12,15 @@ interface RecentActivityFeedProps {
 }
 
 export function RecentActivityFeed({ activities }: RecentActivityFeedProps) {
+  const { t } = useLanguage();
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="text-base">Recent Activity</CardTitle>
+        <CardTitle className="text-base">{t("recentActivity")}</CardTitle>
       </CardHeader>
       <CardContent>
         {activities.length === 0 ? (
-          <p className="text-sm text-muted-foreground">No recent activity</p>
+          <p className="text-sm text-muted-foreground">{t("noRecentActivity")}</p>
         ) : (
           <div className="space-y-3">
             {activities.map((activity) => (

@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { useAuth } from "@/contexts/auth-context";
+import { useLanguage } from "@/contexts/language-context";
 import { PageHeader } from "@/components/layout/page-header";
 import { StudentStatusBadge } from "@/components/students/student-status-badge";
 import { EvaluationForm } from "@/components/evaluation/evaluation-form";
@@ -76,6 +77,7 @@ export default function StudentDetailPage() {
   const params = useParams();
   const router = useRouter();
   const { firebaseUser, userData, role } = useAuth();
+  const { t } = useLanguage();
   const studentId = params.studentId as string;
 
   const [student, setStudent] = useState<Student | null>(null);
@@ -131,7 +133,7 @@ export default function StudentDetailPage() {
   if (!student) {
     return (
       <div className="flex h-64 items-center justify-center">
-        <p className="text-muted-foreground">Student not found</p>
+        <p className="text-muted-foreground">{t("studentNotFound")}</p>
       </div>
     );
   }
@@ -154,9 +156,9 @@ export default function StudentDetailPage() {
     try {
       await updateStudentStatus(studentId, newStatus, firebaseUser.uid, userData.displayName);
       setStudent({ ...student, status: newStatus });
-      toast.success(`Status updated to ${STUDENT_STATUS_CONFIG[newStatus].label}`);
+      toast.success(`${t("statusUpdatedTo")} ${STUDENT_STATUS_CONFIG[newStatus].label}`);
     } catch {
-      toast.error("Failed to update status");
+      toast.error(t("failedToUpdateStatus"));
     }
   }
 
@@ -165,12 +167,12 @@ export default function StudentDetailPage() {
     try {
       await updateStudentStatus(studentId, pendingStatus, firebaseUser.uid, userData.displayName, lostReason);
       setStudent({ ...student, status: pendingStatus, lostReason });
-      toast.success("Student marked as lost");
+      toast.success(t("studentMarkedAsLost"));
       setLostDialogOpen(false);
       setLostReason("");
       setPendingStatus(null);
     } catch {
-      toast.error("Failed to update status");
+      toast.error(t("failedToUpdateStatus"));
     }
   }
 
@@ -211,9 +213,9 @@ export default function StudentDetailPage() {
 
       const updated = await getStudent(studentId);
       if (updated) setStudent(updated);
-      toast.success("Evaluation saved");
+      toast.success(t("evaluationSaved"));
     } catch {
-      toast.error("Failed to save evaluation");
+      toast.error(t("failedToSaveEvaluation"));
     }
   }
 
@@ -235,9 +237,9 @@ export default function StudentDetailPage() {
       );
       const updated = await getStudent(studentId);
       if (updated) setStudent(updated);
-      toast.success("Payment recorded");
+      toast.success(t("paymentRecorded"));
     } catch {
-      toast.error("Failed to record payment");
+      toast.error(t("failedToRecordPayment"));
     }
   }
 
@@ -257,9 +259,9 @@ export default function StudentDetailPage() {
       );
       const updated = await getStudent(studentId);
       if (updated) setStudent(updated);
-      toast.success("IELTS payment recorded");
+      toast.success(t("ieltsPaymentRecorded"));
     } catch {
-      toast.error("Failed to record IELTS payment");
+      toast.error(t("failedToRecordIeltsPayment"));
     }
   }
 
@@ -269,9 +271,9 @@ export default function StudentDetailPage() {
       await deletePayment(studentId, payment, firebaseUser.uid, userData.displayName);
       const updated = await getStudent(studentId);
       if (updated) setStudent(updated);
-      toast.success("Payment deleted successfully");
+      toast.success(t("paymentDeleted"));
     } catch {
-      toast.error("Failed to delete payment");
+      toast.error(t("failedToDeletePayment"));
     }
   }
 
@@ -279,7 +281,7 @@ export default function StudentDetailPage() {
     if (!firebaseUser || !userData) return;
     const fees = parseFloat(totalFeesInput);
     if (isNaN(fees) || fees <= 0) {
-      toast.error("Please enter a valid amount");
+      toast.error(t("pleaseEnterValidAmount"));
       return;
     }
     try {
@@ -288,9 +290,9 @@ export default function StudentDetailPage() {
       if (updated) setStudent(updated);
       setFeesDialogOpen(false);
       setTotalFeesInput("");
-      toast.success("Total fees updated");
+      toast.success(t("totalFeesUpdated"));
     } catch {
-      toast.error("Failed to update fees");
+      toast.error(t("failedToUpdateFees"));
     }
   }
 
@@ -304,9 +306,9 @@ export default function StudentDetailPage() {
         createdByName: userData.displayName,
         followUpDate: data.followUpDate ?? null,
       });
-      toast.success(data.type === "follow_up" ? "Follow-up scheduled" : "Note added");
+      toast.success(data.type === "follow_up" ? t("followUpScheduled") : t("noteAdded"));
     } catch {
-      toast.error("Failed to add note");
+      toast.error(t("failedToAddNote"));
     }
   }
 
@@ -314,10 +316,10 @@ export default function StudentDetailPage() {
     if (!firebaseUser || !userData) return;
     try {
       await archiveStudent(studentId, firebaseUser.uid, userData.displayName);
-      toast.success("Student archived");
+      toast.success(t("studentArchived"));
       router.push("/students");
     } catch {
-      toast.error("Failed to archive student");
+      toast.error(t("failedToArchiveStudent"));
     }
   }
 
@@ -326,9 +328,9 @@ export default function StudentDetailPage() {
     try {
       await restoreStudent(studentId, firebaseUser.uid, userData.displayName);
       setStudent((prev) => prev ? { ...prev, isArchived: false } : null);
-      toast.success("Student restored");
+      toast.success(t("studentRestored"));
     } catch {
-      toast.error("Failed to restore student");
+      toast.error(t("failedToRestoreStudent"));
     }
   }
 
@@ -336,10 +338,10 @@ export default function StudentDetailPage() {
     if (!firebaseUser || !userData) return;
     try {
       await deleteStudent(studentId, firebaseUser.uid, userData.displayName);
-      toast.success("Student deleted permanently");
+      toast.success(t("studentDeletedPermanently"));
       router.push("/students");
     } catch {
-      toast.error("Failed to delete student");
+      toast.error(t("failedToDeleteStudent"));
     }
   }
 
@@ -347,25 +349,25 @@ export default function StudentDetailPage() {
     <div className="space-y-6">
       <PageHeader
         title={student.fullName}
-        description={student.isArchived ? "Archived" : undefined}
+        description={student.isArchived ? t("archived") : undefined}
         action={
           role !== "accountant" ? (
           <div className="flex gap-2">
             <Link href={`/students/${studentId}/edit`}>
               <Button variant="outline" size="sm">
                 <Pencil className="mr-2 h-4 w-4" />
-                Edit
+                {t("edit")}
               </Button>
             </Link>
             {student.isArchived ? (
               <Button variant="outline" size="sm" onClick={handleRestore}>
                 <RotateCcw className="mr-2 h-4 w-4" />
-                Restore
+                {t("restore")}
               </Button>
             ) : (
               <Button variant="outline" size="sm" onClick={handleArchive}>
                 <Archive className="mr-2 h-4 w-4" />
-                Archive
+                {t("archive")}
               </Button>
             )}
             {role === "admin" && (
@@ -375,7 +377,7 @@ export default function StudentDetailPage() {
                 onClick={() => setDeleteDialogOpen(true)}
               >
                 <Trash2 className="mr-2 h-4 w-4" />
-                Delete
+                {t("delete")}
               </Button>
             )}
           </div>
@@ -400,24 +402,24 @@ export default function StudentDetailPage() {
                   {STUDENT_STATUS_CONFIG[s].label}
                 </SelectItem>
               ))}
-              <SelectItem value="lost">Lost</SelectItem>
+              <SelectItem value="lost">{t("lost")}</SelectItem>
             </SelectContent>
           </Select>
         )}
         {student.lostReason && (
-          <Badge variant="destructive">Lost: {student.lostReason}</Badge>
+          <Badge variant="destructive">{t("lost")}: {student.lostReason}</Badge>
         )}
       </div>
 
       <Tabs defaultValue="overview">
         <TabsList>
-          <TabsTrigger value="overview">Overview</TabsTrigger>
-          <TabsTrigger value="enrollments">Enrollments</TabsTrigger>
-          <TabsTrigger value="evaluation">Evaluation</TabsTrigger>
-          <TabsTrigger value="payments">Payments</TabsTrigger>
-          <TabsTrigger value="activity">Activity</TabsTrigger>
-          <TabsTrigger value="attendance">Attendance</TabsTrigger>
-          <TabsTrigger value="documents">Documents</TabsTrigger>
+          <TabsTrigger value="overview">{t("overview")}</TabsTrigger>
+          <TabsTrigger value="enrollments">{t("enrollments")}</TabsTrigger>
+          <TabsTrigger value="evaluation">{t("evaluation")}</TabsTrigger>
+          <TabsTrigger value="payments">{t("payments")}</TabsTrigger>
+          <TabsTrigger value="activity">{t("activity")}</TabsTrigger>
+          <TabsTrigger value="attendance">{t("attendance")}</TabsTrigger>
+          <TabsTrigger value="documents">{t("documents")}</TabsTrigger>
         </TabsList>
 
         {/* Overview Tab */}
@@ -433,7 +435,7 @@ export default function StudentDetailPage() {
                       href={`https://wa.me/965${student.phone.replace(/\D/g, "").replace(/^965/, "")}`}
                       target="_blank"
                       rel="noopener noreferrer"
-                      title="Open in WhatsApp"
+                      title={t("openInWhatsApp")}
                       className="inline-flex items-center gap-1 rounded-md px-2 py-0.5 text-xs font-medium bg-green-100 text-green-700 hover:bg-green-200 transition-colors"
                     >
                       <MessageCircle className="h-3 w-3" />
@@ -449,26 +451,26 @@ export default function StudentDetailPage() {
                   {student.civilId && (
                     <div className="flex items-center gap-2">
                       <UserCircle className="h-4 w-4 text-muted-foreground" />
-                      <span className="text-sm">Civil ID: {student.civilId}</span>
+                      <span className="text-sm">{t("civilId")}: {student.civilId}</span>
                     </div>
                   )}
                   <div className="flex items-center gap-2">
                     <Calendar className="h-4 w-4 text-muted-foreground" />
                     <span className="text-sm">
-                      Registered: {formatDate(student.registrationDate)}
+                      {t("registrationDate")}: {formatDate(student.registrationDate)}
                     </span>
                   </div>
                   <div className="flex items-center gap-2">
                     <UserCircle className="h-4 w-4 text-muted-foreground" />
                     <span className="text-sm">
-                      Sales Rep: {student.assignedSalesRepName}
+                      {t("salesRep")}: {student.assignedSalesRepName}
                     </span>
                   </div>
                   {student.interestedCourse && (
                     <div className="flex items-center gap-2">
                       <BookOpen className="h-4 w-4 text-muted-foreground" />
                       <span className="text-sm">
-                        Interested In: {student.interestedCourse}
+                        {t("interestedCourse")}: {student.interestedCourse}
                       </span>
                     </div>
                   )}
@@ -479,7 +481,7 @@ export default function StudentDetailPage() {
             <Card>
               <CardHeader className="pb-2">
                 <CardTitle className="text-sm text-muted-foreground">
-                  Lead Source
+                  {t("leadSource")}
                 </CardTitle>
               </CardHeader>
               <CardContent>
@@ -490,14 +492,14 @@ export default function StudentDetailPage() {
             <Card>
               <CardHeader className="pb-2">
                 <CardTitle className="flex items-center justify-between text-sm text-muted-foreground">
-                  Payment Summary
+                  {t("paymentSummary")}
                   {role !== "accountant" && (
                     <Button
                       variant="ghost"
                       size="sm"
                       onClick={() => setFeesDialogOpen(true)}
                     >
-                      Set Fees
+                      {t("setFees")}
                     </Button>
                   )}
                 </CardTitle>
@@ -505,19 +507,19 @@ export default function StudentDetailPage() {
               <CardContent>
                 <div className="space-y-1 text-sm">
                   <div className="flex justify-between">
-                    <span className="text-muted-foreground">Total Fees:</span>
+                    <span className="text-muted-foreground">{t("totalFees")}:</span>
                     <span className="font-medium">
                       {formatCurrency((student.paymentSummary?.totalFees || 0))}
                     </span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-muted-foreground">Paid:</span>
+                    <span className="text-muted-foreground">{t("paid")}:</span>
                     <span className="font-medium text-green-600">
                       {formatCurrency((student.paymentSummary?.amountPaid || 0))}
                     </span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-muted-foreground">Remaining:</span>
+                    <span className="text-muted-foreground">{t("remaining")}:</span>
                     <span className="font-medium text-langford-red">
                       {formatCurrency((student.paymentSummary?.remainingBalance || 0))}
                     </span>
@@ -532,7 +534,7 @@ export default function StudentDetailPage() {
                 <CardTitle className="flex items-center justify-between text-sm text-muted-foreground">
                   <span className="flex items-center gap-2">
                     <span className="inline-block h-2 w-2 rounded-full bg-blue-500" />
-                    IELTS Exam Fees
+                    {t("ieltsExamFees")}
                   </span>
                   {(role === "admin" || role === "sales") && (
                     <Button
@@ -541,7 +543,7 @@ export default function StudentDetailPage() {
                       onClick={() => setIeltsDialogOpen(true)}
                     >
                       <Plus className="mr-1 h-3 w-3" />
-                      Add
+                      {t("add")}
                     </Button>
                   )}
                 </CardTitle>
@@ -549,19 +551,19 @@ export default function StudentDetailPage() {
               <CardContent>
                 <div className="space-y-1 text-sm">
                   <div className="flex justify-between">
-                    <span className="text-muted-foreground">Total Paid:</span>
+                    <span className="text-muted-foreground">{t("totalPaid")}:</span>
                     <span className="font-medium text-blue-600">
                       {formatCurrency(student.ieltsSummary?.totalPaid || 0)}
                     </span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-muted-foreground">Payments:</span>
+                    <span className="text-muted-foreground">{t("payments")}:</span>
                     <span className="font-medium">
                       {student.ieltsSummary?.paymentsCount || 0}
                     </span>
                   </div>
                   <p className="pt-1 text-xs text-muted-foreground">
-                    Separate from course fees
+                    {t("separateFromCourseFees")}
                   </p>
                 </div>
               </CardContent>
@@ -572,24 +574,24 @@ export default function StudentDetailPage() {
           {student.evaluation?.evaluatedAt && (
             <Card>
               <CardHeader>
-                <CardTitle className="text-base">Evaluation Summary</CardTitle>
+                <CardTitle className="text-base">{t("evaluationSummary")}</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="grid gap-4 sm:grid-cols-4">
                   <div>
-                    <p className="text-xs text-muted-foreground">Test Score</p>
+                    <p className="text-xs text-muted-foreground">{t("placementScore")}</p>
                     <p className="text-lg font-semibold">
                       {student.evaluation?.placementTestScore ?? "N/A"}
                     </p>
                   </div>
                   <div>
-                    <p className="text-xs text-muted-foreground">Level</p>
+                    <p className="text-xs text-muted-foreground">{t("level")}</p>
                     <p className="text-lg font-semibold">
                       {student.evaluation?.finalLevel ?? "N/A"}
                     </p>
                   </div>
                   <div>
-                    <p className="text-xs text-muted-foreground">Interview</p>
+                    <p className="text-xs text-muted-foreground">{t("interviewStatus")}</p>
                     <Badge
                       variant={
                         student.evaluation?.interviewStatus === "completed"
@@ -598,12 +600,12 @@ export default function StudentDetailPage() {
                       }
                     >
                       {student.evaluation?.interviewStatus === "completed"
-                        ? "Completed"
-                        : "Not Completed"}
+                        ? t("completed")
+                        : t("notCompleted")}
                     </Badge>
                   </div>
                   <div>
-                    <p className="text-xs text-muted-foreground">Date</p>
+                    <p className="text-xs text-muted-foreground">{t("date")}</p>
                     <p className="text-sm">
                       {formatDate(student.evaluation?.evaluatedAt)}
                     </p>
@@ -623,26 +625,26 @@ export default function StudentDetailPage() {
         <TabsContent value="evaluation">
           <Card>
             <CardHeader>
-              <CardTitle className="text-base">Student Evaluation</CardTitle>
+              <CardTitle className="text-base">{t("studentEvaluation")}</CardTitle>
             </CardHeader>
             <CardContent>
               {role === "accountant" ? (
                 <div className="space-y-3">
                   <div className="grid gap-4 sm:grid-cols-2">
                     <div>
-                      <p className="text-xs text-muted-foreground">Test Score</p>
+                      <p className="text-xs text-muted-foreground">{t("placementScore")}</p>
                       <p className="text-sm font-medium">{student.evaluation?.placementTestScore ?? "N/A"}</p>
                     </div>
                     <div>
-                      <p className="text-xs text-muted-foreground">Level</p>
+                      <p className="text-xs text-muted-foreground">{t("level")}</p>
                       <p className="text-sm font-medium">{student.evaluation?.finalLevel ?? "N/A"}</p>
                     </div>
                     <div>
-                      <p className="text-xs text-muted-foreground">Interview Status</p>
-                      <p className="text-sm font-medium">{student.evaluation?.interviewStatus === "completed" ? "Completed" : "Not Completed"}</p>
+                      <p className="text-xs text-muted-foreground">{t("interviewStatus")}</p>
+                      <p className="text-sm font-medium">{student.evaluation?.interviewStatus === "completed" ? t("completed") : t("notCompleted")}</p>
                     </div>
                     <div>
-                      <p className="text-xs text-muted-foreground">Interview Notes</p>
+                      <p className="text-xs text-muted-foreground">{t("interviewNotes")}</p>
                       <p className="text-sm font-medium">{student.evaluation?.interviewNotes || "N/A"}</p>
                     </div>
                   </div>
@@ -668,12 +670,12 @@ export default function StudentDetailPage() {
                   className="border-blue-200 text-blue-700 hover:bg-blue-50 dark:border-blue-800 dark:text-blue-300 dark:hover:bg-blue-950"
                 >
                   <Plus className="mr-2 h-4 w-4" />
-                  Record IELTS Payment
+                  {t("recordIeltsPayment")}
                 </Button>
               )}
               <Button onClick={() => setPaymentDialogOpen(true)}>
                 <Plus className="mr-2 h-4 w-4" />
-                Record Payment
+                {t("recordPayment")}
               </Button>
             </div>
           )}
@@ -717,7 +719,7 @@ export default function StudentDetailPage() {
           {role !== "accountant" && (
             <Card>
               <CardHeader>
-                <CardTitle className="text-base">Add Note / Follow-up</CardTitle>
+                <CardTitle className="text-base">{t("addNoteFollowUp")}</CardTitle>
               </CardHeader>
               <CardContent>
                 <AddNoteForm onSubmit={handleAddNote} />
@@ -742,10 +744,10 @@ export default function StudentDetailPage() {
       <Dialog open={feesDialogOpen} onOpenChange={setFeesDialogOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Set Total Fees</DialogTitle>
+            <DialogTitle>{t("setTotalFees")}</DialogTitle>
           </DialogHeader>
           <div className="space-y-2">
-            <Label>Total Fees (KWD)</Label>
+            <Label>{t("totalFees")} (KWD)</Label>
             <Input
               type="number"
               step="0.001"
@@ -756,9 +758,9 @@ export default function StudentDetailPage() {
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setFeesDialogOpen(false)}>
-              Cancel
+              {t("cancel")}
             </Button>
-            <Button onClick={handleSetTotalFees}>Save</Button>
+            <Button onClick={handleSetTotalFees}>{t("save")}</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -767,22 +769,22 @@ export default function StudentDetailPage() {
       <Dialog open={lostDialogOpen} onOpenChange={setLostDialogOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Why was this student lost?</DialogTitle>
+            <DialogTitle>{t("whyStudentLost")}</DialogTitle>
           </DialogHeader>
           <div className="space-y-2">
-            <Label>Reason</Label>
+            <Label>{t("reason")}</Label>
             <Textarea
               value={lostReason}
               onChange={(e) => setLostReason(e.target.value)}
-              placeholder="e.g., Price too high, Chose competitor, Schedule conflict..."
+              placeholder={t("lostReasonPlaceholder")}
             />
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setLostDialogOpen(false)}>
-              Cancel
+              {t("cancel")}
             </Button>
             <Button variant="destructive" onClick={handleLostConfirm}>
-              Mark as Lost
+              {t("markAsLost")}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -792,18 +794,17 @@ export default function StudentDetailPage() {
       <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Delete Student Permanently?</DialogTitle>
+            <DialogTitle>{t("deleteStudentPermanentlyTitle")}</DialogTitle>
           </DialogHeader>
           <p className="text-sm text-muted-foreground">
-            This will permanently delete <strong>{student?.fullName}</strong> and all their
-            payments, activity logs, and evaluation data. This action cannot be undone.
+            {t("deleteStudentWarningStart")} <strong>{student?.fullName}</strong> {t("deleteStudentWarningEnd")}
           </p>
           <DialogFooter>
             <Button variant="outline" onClick={() => setDeleteDialogOpen(false)}>
-              Cancel
+              {t("cancel")}
             </Button>
             <Button variant="destructive" onClick={handleDelete}>
-              Delete Permanently
+              {t("deletePermanently")}
             </Button>
           </DialogFooter>
         </DialogContent>

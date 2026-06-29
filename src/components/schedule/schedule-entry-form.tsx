@@ -30,6 +30,7 @@ import {
 } from "@/components/ui/select";
 import { toast } from "sonner";
 import { formatDate } from "@/lib/utils/format";
+import { useLanguage } from "@/contexts/language-context";
 
 const DAY_NAMES: { value: DayOfWeek; label: string; labelAr: string }[] = [
   { value: 6, label: "Saturday", labelAr: "السبت" },
@@ -70,6 +71,7 @@ export function ScheduleEntryForm({
   createdBy,
   onSuccess,
 }: ScheduleEntryFormProps) {
+  const { t } = useLanguage();
   const isEdit = !!editEntry;
 
   // Form state
@@ -143,17 +145,17 @@ export function ScheduleEntryForm({
       : courseName.trim();
 
     if (!finalCourseName) {
-      toast.error("Please select or enter a course name");
+      toast.error(t("selectOrEnterCourseName"));
       return;
     }
 
     if (startTime >= endTime) {
-      toast.error("End time must be after start time");
+      toast.error(t("endTimeAfterStart"));
       return;
     }
 
     if (endTime > "22:00") {
-      toast.error("End time cannot exceed 10:00 PM");
+      toast.error(t("endTimeMaxLimit"));
       return;
     }
 
@@ -170,7 +172,7 @@ export function ScheduleEntryForm({
           editEntry.id
         );
         if (conflict) {
-          toast.error(`Time conflict with "${conflict.courseName}" on this day`);
+          toast.error(`${t("timeConflictWith")} "${conflict.courseName}" ${t("onThisDay")}`);
           setSaving(false);
           return;
         }
@@ -183,7 +185,7 @@ export function ScheduleEntryForm({
           room,
           notes,
         });
-        toast.success("Schedule entry updated");
+        toast.success(t("scheduleEntryUpdated"));
       } else {
         // Create new entries
         const baseData = {
@@ -201,7 +203,7 @@ export function ScheduleEntryForm({
 
         if (dayPattern === "custom") {
           if (customDays.length === 0) {
-            toast.error("Please select at least one day");
+            toast.error(t("selectAtLeastOneDay"));
             setSaving(false);
             return;
           }
@@ -211,7 +213,7 @@ export function ScheduleEntryForm({
             const conflict = await checkTimeConflict(instructorId, day, startTime, endTime);
             if (conflict) {
               const dayName = DAY_NAMES.find((d) => d.value === day)?.label || "";
-              toast.error(`Time conflict on ${dayName} with "${conflict.courseName}"`);
+              toast.error(`${t("timeConflictOn")} ${dayName} ${t("withCourse")} "${conflict.courseName}"`);
               setSaving(false);
               return;
             }
@@ -229,7 +231,7 @@ export function ScheduleEntryForm({
               patternGroupId: groupId,
             });
           }
-          toast.success(`${customDays.length} schedule entries created`);
+          toast.success(`${customDays.length} ${t("scheduleEntriesCreated")}`);
         } else {
           // Pattern-based creation (Sat-Mon-Wed or Sun-Tue-Thu)
           const patternDays = dayPattern === "sat_mon_wed" ? [6, 1, 3] : [0, 2, 4];
@@ -237,7 +239,7 @@ export function ScheduleEntryForm({
             const conflict = await checkTimeConflict(instructorId, day as DayOfWeek, startTime, endTime);
             if (conflict) {
               const dayName = DAY_NAMES.find((d) => d.value === day)?.label || "";
-              toast.error(`Time conflict on ${dayName} with "${conflict.courseName}"`);
+              toast.error(`${t("timeConflictOn")} ${dayName} ${t("withCourse")} "${conflict.courseName}"`);
               setSaving(false);
               return;
             }
@@ -253,7 +255,7 @@ export function ScheduleEntryForm({
             patternData,
             dayPattern as "sat_mon_wed" | "sun_tue_thu"
           );
-          toast.success("3 schedule entries created");
+          toast.success(`3 ${t("scheduleEntriesCreated")}`);
         }
       }
 
@@ -261,7 +263,7 @@ export function ScheduleEntryForm({
       onSuccess();
     } catch (err) {
       console.error("Failed to save schedule:", err);
-      toast.error("Failed to save schedule entry");
+      toast.error(t("failedToSaveSchedule"));
     } finally {
       setSaving(false);
     }
@@ -272,20 +274,20 @@ export function ScheduleEntryForm({
       <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>
-            {isEdit ? "Edit Schedule Entry" : "Add Schedule Entry"}
+            {isEdit ? t("editScheduleEntry") : t("addScheduleEntry")}
           </DialogTitle>
         </DialogHeader>
 
         <div className="space-y-4 py-2">
           {/* Instructor display */}
           <div>
-            <Label className="text-muted-foreground text-xs">Instructor</Label>
+            <Label className="text-muted-foreground text-xs">{t("instructor")}</Label>
             <p className="font-medium">{instructorName}</p>
           </div>
 
           {/* Course Source */}
           <div className="space-y-2">
-            <Label>Course</Label>
+            <Label>{t("course")}</Label>
             <div className="flex gap-2">
               <Button
                 type="button"
@@ -293,7 +295,7 @@ export function ScheduleEntryForm({
                 variant={courseSource === "existing" ? "default" : "outline"}
                 onClick={() => setCourseSource("existing")}
               >
-                From Courses
+                {t("fromCourses")}
               </Button>
               <Button
                 type="button"
@@ -301,7 +303,7 @@ export function ScheduleEntryForm({
                 variant={courseSource === "manual" ? "default" : "outline"}
                 onClick={() => setCourseSource("manual")}
               >
-                Manual Entry
+                {t("manualEntry")}
               </Button>
             </div>
 
@@ -311,7 +313,7 @@ export function ScheduleEntryForm({
                 onValueChange={(val) => setCourseId(val)}
               >
                 <SelectTrigger>
-                  <SelectValue placeholder="Select a course" />
+                  <SelectValue placeholder={t("selectACourse")} />
                 </SelectTrigger>
                 <SelectContent>
                   {courses.map((c) => (
@@ -323,7 +325,7 @@ export function ScheduleEntryForm({
               </Select>
             ) : (
               <Input
-                placeholder="Enter course name"
+                placeholder={t("enterCourseName")}
                 value={courseName}
                 onChange={(e) => setCourseName(e.target.value)}
               />
@@ -333,7 +335,7 @@ export function ScheduleEntryForm({
               if (!c || (!c.startDate && !c.endDate)) return null;
               return (
                 <p className="text-xs text-muted-foreground">
-                  Course period: {c.startDate ? formatDate(c.startDate) : "—"}
+                  {t("coursePeriod")}: {c.startDate ? formatDate(c.startDate) : "—"}
                   {" → "}
                   {c.endDate ? formatDate(c.endDate) : "—"}
                 </p>
@@ -344,7 +346,7 @@ export function ScheduleEntryForm({
           {/* Day Pattern (only for new entries) */}
           {!isEdit && (
             <div className="space-y-2">
-              <Label>Day Pattern</Label>
+              <Label>{t("dayPattern")}</Label>
               <Select
                 value={dayPattern}
                 onValueChange={(val) => setDayPattern(val as DayPattern)}
@@ -359,7 +361,7 @@ export function ScheduleEntryForm({
                   <SelectItem value="sun_tue_thu">
                     Sun - Tue - Thu (أحد - ثلاثاء - خميس)
                   </SelectItem>
-                  <SelectItem value="custom">Custom Days</SelectItem>
+                  <SelectItem value="custom">{t("customDays")}</SelectItem>
                 </SelectContent>
               </Select>
 
@@ -385,7 +387,7 @@ export function ScheduleEntryForm({
           {/* Time */}
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1.5">
-              <Label>Start Time</Label>
+              <Label>{t("startTime")}</Label>
               <Select value={startTime} onValueChange={(val) => val && setStartTime(val)}>
                 <SelectTrigger>
                   <SelectValue />
@@ -400,7 +402,7 @@ export function ScheduleEntryForm({
               </Select>
             </div>
             <div className="space-y-1.5">
-              <Label>End Time</Label>
+              <Label>{t("endTime")}</Label>
               <Select value={endTime} onValueChange={(val) => val && setEndTime(val)}>
                 <SelectTrigger>
                   <SelectValue />
@@ -419,9 +421,9 @@ export function ScheduleEntryForm({
 
           {/* Room */}
           <div className="space-y-1.5">
-            <Label>Room</Label>
+            <Label>{t("room")}</Label>
             <Input
-              placeholder="e.g., Room 101"
+              placeholder={t("roomPlaceholder")}
               value={room}
               onChange={(e) => setRoom(e.target.value)}
             />
@@ -429,9 +431,9 @@ export function ScheduleEntryForm({
 
           {/* Notes */}
           <div className="space-y-1.5">
-            <Label>Notes</Label>
+            <Label>{t("notes")}</Label>
             <Textarea
-              placeholder="Optional notes..."
+              placeholder={t("optionalNotes")}
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
               rows={2}
@@ -441,10 +443,10 @@ export function ScheduleEntryForm({
 
         <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)}>
-            Cancel
+            {t("cancel")}
           </Button>
           <Button onClick={handleSubmit} disabled={saving}>
-            {saving ? "Saving..." : isEdit ? "Update" : "Add to Schedule"}
+            {saving ? t("saving") : isEdit ? t("update") : t("addToSchedule")}
           </Button>
         </DialogFooter>
       </DialogContent>

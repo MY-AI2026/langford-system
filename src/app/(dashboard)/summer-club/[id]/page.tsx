@@ -3,6 +3,7 @@
 import { useEffect, useState, useCallback } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { useAuth } from "@/contexts/auth-context";
+import { useLanguage } from "@/contexts/language-context";
 import { PageHeader } from "@/components/layout/page-header";
 import { RoleGate } from "@/components/auth/role-gate";
 import {
@@ -30,6 +31,7 @@ export default function SummerClubStudentDetailPage() {
   const params = useParams<{ id: string }>();
   const router = useRouter();
   const { firebaseUser, userData, role } = useAuth();
+  const { t } = useLanguage();
   const [student, setStudent] = useState<SummerClubStudent | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -86,35 +88,35 @@ export default function SummerClubStudentDetailPage() {
         firebaseUser.uid,
         userData.displayName
       );
-      toast.success("تم التحديث");
+      toast.success(t("updated"));
       await load();
     } catch (err) {
       console.error("[summer-club/edit] update failed:", err);
       const msg = err instanceof Error ? err.message : String(err);
       if (msg.startsWith("PHONE_DUPLICATE:")) {
         const name = msg.substring("PHONE_DUPLICATE:".length);
-        toast.error(`رقم التلفون مسجل مسبقاً للطالب: ${name}`);
+        toast.error(`${t("phoneDuplicate")}: ${name}`);
       } else if (msg === "PHONE_INVALID") {
-        toast.error("رقم التلفون مش صحيح — لازم 6 أرقام على الأقل");
+        toast.error(t("phoneInvalid"));
       } else if (msg === "Not authenticated" || msg.includes("UNAUTHENTICATED")) {
-        toast.error("الجلسة انتهت — اعمل تسجيل دخول تاني");
+        toast.error(t("sessionExpired"));
       } else if (msg.includes("PERMISSION_DENIED")) {
-        toast.error("مفيش صلاحية لتعديل الطالب — كلّم الأدمن");
+        toast.error(t("noPermissionEditStudent"));
       } else {
-        toast.error(`فشل التحديث: ${msg}`);
+        toast.error(`${t("updateFailed")}: ${msg}`);
       }
     }
   }
 
   async function handleDelete() {
     if (!firebaseUser || !userData || !student) return;
-    if (!confirm(`حذف الطالب ${student.fullName}؟ كل الدفعات هتتمسح كمان.`)) return;
+    if (!confirm(`${t("deleteStudentConfirm")} ${student.fullName}؟ ${t("allPaymentsWillBeDeleted")}`)) return;
     try {
       await deleteSummerClubStudent(student.id, firebaseUser.uid, userData.displayName);
-      toast.success("تم الحذف");
+      toast.success(t("deleted"));
       router.push("/summer-club");
     } catch (err) {
-      toast.error("فشل الحذف");
+      toast.error(t("deleteFailed"));
       console.error(err);
     }
   }
@@ -130,11 +132,11 @@ export default function SummerClubStudentDetailPage() {
   if (!student) {
     return (
       <div className="flex h-64 flex-col items-center justify-center gap-3">
-        <p className="text-muted-foreground">الطالب غير موجود</p>
+        <p className="text-muted-foreground">{t("studentNotFound")}</p>
         <Link href="/summer-club">
           <Button variant="outline">
             <ArrowLeft className="mr-2 h-4 w-4" />
-            رجوع
+            {t("back")}
           </Button>
         </Link>
       </div>
@@ -145,11 +147,11 @@ export default function SummerClubStudentDetailPage() {
   if (role === "sales" && student.assignedSalesRepId !== firebaseUser?.uid) {
     return (
       <div className="flex h-64 flex-col items-center justify-center gap-3">
-        <p className="text-muted-foreground">ليس لديك صلاحية لعرض هذا الطالب</p>
+        <p className="text-muted-foreground">{t("noPermissionViewStudent")}</p>
         <Link href="/summer-club">
           <Button variant="outline">
             <ArrowLeft className="mr-2 h-4 w-4" />
-            رجوع
+            {t("back")}
           </Button>
         </Link>
       </div>
@@ -168,12 +170,12 @@ export default function SummerClubStudentDetailPage() {
       <div className="space-y-6">
         <PageHeader
           title={student.fullName}
-          description={`النادي الصيفي • سجل في ${formatDate(student.registrationDate || student.createdAt)}`}
+          description={`${t("summerClub")} • ${t("registeredOn")} ${formatDate(student.registrationDate || student.createdAt)}`}
           action={
             canDelete && (
               <Button variant="destructive" size="sm" onClick={handleDelete}>
                 <Trash2 className="mr-2 h-4 w-4" />
-                حذف
+                {t("delete")}
               </Button>
             )
           }
@@ -183,13 +185,13 @@ export default function SummerClubStudentDetailPage() {
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           <Card>
             <CardContent className="pt-6">
-              <p className="text-xs text-muted-foreground">التلفون</p>
+              <p className="text-xs text-muted-foreground">{t("phone")}</p>
               <p className="text-lg font-semibold">{formatPhone(student.phone)}</p>
             </CardContent>
           </Card>
           <Card>
             <CardContent className="pt-6">
-              <p className="text-xs text-muted-foreground">الحالة</p>
+              <p className="text-xs text-muted-foreground">{t("status")}</p>
               <div className="flex gap-2 mt-1">
                 <Badge
                   className={
@@ -198,7 +200,7 @@ export default function SummerClubStudentDetailPage() {
                       : "bg-blue-100 text-blue-700"
                   }
                 >
-                  {student.gender === "female" ? "أنثى" : "ذكر"}
+                  {student.gender === "female" ? t("female") : t("male")}
                 </Badge>
                 <Badge
                   className={
@@ -207,14 +209,14 @@ export default function SummerClubStudentDetailPage() {
                       : "bg-amber-100 text-amber-700"
                   }
                 >
-                  {student.isRegistered ? "مسجل" : "غير مسجل"}
+                  {student.isRegistered ? t("registered") : t("notRegistered")}
                 </Badge>
               </div>
             </CardContent>
           </Card>
           <Card>
             <CardContent className="pt-6">
-              <p className="text-xs text-muted-foreground">المدفوع / الإجمالي</p>
+              <p className="text-xs text-muted-foreground">{t("paidOfTotal")}</p>
               <p className="text-lg font-semibold text-emerald-700">
                 {formatCurrency(ps.amountPaid)} / {formatCurrency(ps.totalFees)}
               </p>
@@ -222,7 +224,7 @@ export default function SummerClubStudentDetailPage() {
           </Card>
           <Card>
             <CardContent className="pt-6">
-              <p className="text-xs text-muted-foreground">المتبقي</p>
+              <p className="text-xs text-muted-foreground">{t("remaining")}</p>
               <p className="text-lg font-semibold text-red-700">
                 {formatCurrency(ps.remainingBalance)}
               </p>
@@ -232,14 +234,14 @@ export default function SummerClubStudentDetailPage() {
 
         <Tabs defaultValue="info">
           <TabsList>
-            <TabsTrigger value="info">البيانات</TabsTrigger>
-            <TabsTrigger value="payments">المدفوعات</TabsTrigger>
+            <TabsTrigger value="info">{t("data")}</TabsTrigger>
+            <TabsTrigger value="payments">{t("payments")}</TabsTrigger>
           </TabsList>
 
           <TabsContent value="info" className="mt-4">
             <Card>
               <CardHeader>
-                <CardTitle>بيانات الطالب</CardTitle>
+                <CardTitle>{t("studentData")}</CardTitle>
               </CardHeader>
               <CardContent>
                 {canEdit ? (
@@ -257,7 +259,7 @@ export default function SummerClubStudentDetailPage() {
                       assignedSalesRepId: student.assignedSalesRepId,
                     }}
                     onSubmit={handleUpdate}
-                    submitLabel="تحديث البيانات"
+                    submitLabel={t("updateData")}
                   />
                 ) : (
                   <ReadOnlyView student={student} />
@@ -280,17 +282,18 @@ export default function SummerClubStudentDetailPage() {
 }
 
 function ReadOnlyView({ student }: { student: SummerClubStudent }) {
+  const { t } = useLanguage();
   const rows: Array<[string, string]> = [
-    ["الاسم", student.fullName],
-    ["التلفون", formatPhone(student.phone)],
-    ["النوع", student.gender === "female" ? "أنثى" : "ذكر"],
-    ["السن", student.age?.toString() ?? "—"],
-    ["ولي الأمر", student.guardianName || "—"],
-    ["تلفون ولي الأمر", student.guardianPhone ? formatPhone(student.guardianPhone) : "—"],
-    ["مسجل", student.isRegistered ? "نعم" : "لا"],
-    ["السيلز المسؤول", student.assignedSalesRepName],
-    ["تاريخ التسجيل", formatDate(student.registrationDate || student.createdAt)],
-    ["ملاحظات", student.notes || "—"],
+    [t("name"), student.fullName],
+    [t("phone"), formatPhone(student.phone)],
+    [t("gender"), student.gender === "female" ? t("female") : t("male")],
+    [t("age"), student.age?.toString() ?? "—"],
+    [t("guardian"), student.guardianName || "—"],
+    [t("guardianPhone"), student.guardianPhone ? formatPhone(student.guardianPhone) : "—"],
+    [t("registered"), student.isRegistered ? t("yes") : t("no")],
+    [t("assignedSalesRep"), student.assignedSalesRepName],
+    [t("registrationDate"), formatDate(student.registrationDate || student.createdAt)],
+    [t("notes"), student.notes || "—"],
   ];
 
   return (

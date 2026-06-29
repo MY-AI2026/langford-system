@@ -5,6 +5,7 @@ import { ScheduleStudent } from "@/lib/types";
 import { fetchStudentsForCourse } from "@/lib/services/schedule-service";
 import { deleteEnrollment } from "@/lib/services/enrollment-service";
 import { useAuth } from "@/contexts/auth-context";
+import { useLanguage } from "@/contexts/language-context";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -18,6 +19,7 @@ interface ScheduleStudentListProps {
 
 export function ScheduleStudentList({ courseId, courseName }: ScheduleStudentListProps) {
   const { role, firebaseUser, userData } = useAuth();
+  const { t } = useLanguage();
   const [students, setStudents] = useState<ScheduleStudent[]>([]);
   const [loading, setLoading] = useState(false);
   const [removing, setRemoving] = useState<string | null>(null);
@@ -37,7 +39,7 @@ export function ScheduleStudentList({ courseId, courseName }: ScheduleStudentLis
 
   async function handleRemove(s: ScheduleStudent) {
     if (!firebaseUser || !userData || !courseId) return;
-    if (!confirm(`Remove "${s.studentName}" from ${courseName || "this course"}?`)) return;
+    if (!confirm(`${t("removeStudentConfirm")} "${s.studentName}"?`)) return;
     setRemoving(s.studentId);
     try {
       await deleteEnrollment(
@@ -51,9 +53,9 @@ export function ScheduleStudentList({ courseId, courseName }: ScheduleStudentLis
       // in the same course should still appear after deleting just one of them.
       const fresh = await fetchStudentsForCourse(courseId);
       setStudents(fresh);
-      toast.success(`${s.studentName} removed`);
+      toast.success(`${s.studentName} ${t("removed")}`);
     } catch {
-      toast.error("Failed to remove student");
+      toast.error(t("failedToRemoveStudent"));
     } finally {
       setRemoving(null);
     }
@@ -62,7 +64,7 @@ export function ScheduleStudentList({ courseId, courseName }: ScheduleStudentLis
   if (!courseId) {
     return (
       <div className="py-3 text-center text-sm text-muted-foreground">
-        Manual course — no enrolled students
+        {t("manualCourseNoStudents")}
       </div>
     );
   }
@@ -81,7 +83,7 @@ export function ScheduleStudentList({ courseId, courseName }: ScheduleStudentLis
     return (
       <div className="flex items-center gap-2 py-3 text-sm text-muted-foreground">
         <Users className="h-4 w-4" />
-        No students enrolled
+        {t("noStudentsEnrolled")}
       </div>
     );
   }
@@ -90,7 +92,7 @@ export function ScheduleStudentList({ courseId, courseName }: ScheduleStudentLis
     <div className="space-y-1.5">
       <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
         <Users className="h-4 w-4" />
-        {students.length} student{students.length !== 1 ? "s" : ""}
+        {students.length} {students.length !== 1 ? t("students") : t("student")}
       </div>
       <div className="space-y-1">
         {students.map((s) => (
@@ -112,7 +114,7 @@ export function ScheduleStudentList({ courseId, courseName }: ScheduleStudentLis
                   className="h-6 w-6 text-destructive hover:text-destructive"
                   disabled={removing === s.studentId}
                   onClick={() => handleRemove(s)}
-                  title="Remove from course"
+                  title={t("removeFromCourse")}
                 >
                   <Trash2 className="h-3.5 w-3.5" />
                 </Button>

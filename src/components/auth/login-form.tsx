@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { signIn, signInWithGoogle } from "@/lib/firebase/auth";
+import { useLanguage } from "@/contexts/language-context";
 import { logUserLogin } from "@/lib/services/user-service";
 import { doc, getDoc } from "firebase/firestore";
 import { db } from "@/lib/firebase/config";
@@ -32,7 +33,7 @@ function landingRouteForRole(
     return {
       href: "/login",
       blocked: true,
-      reason: "حسابك معطّل — تواصل مع الإدارة.",
+      reason: "ACCOUNT_DISABLED",
     };
   }
   if (role === "acceptix_agent") {
@@ -43,6 +44,7 @@ function landingRouteForRole(
 
 export function LoginForm() {
   const router = useRouter();
+  const { t } = useLanguage();
   const [error, setError] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const {
@@ -71,7 +73,11 @@ export function LoginForm() {
 
     const route = landingRouteForRole(role, isActive);
     if (route.blocked) {
-      setError(route.reason ?? "Sign-in blocked.");
+      setError(
+        route.reason === "ACCOUNT_DISABLED"
+          ? t("accountDisabled")
+          : t("signInBlocked")
+      );
       return;
     }
     router.push(route.href);
@@ -83,7 +89,7 @@ export function LoginForm() {
       const result = await signIn(data.email, data.password);
       await postSignIn(result.user.uid, data.email, data.email);
     } catch {
-      setError("Invalid email or password. Please try again.");
+      setError(t("invalidEmailOrPassword"));
     }
   }
 
@@ -97,7 +103,7 @@ export function LoginForm() {
         result.user.displayName || result.user.email || ""
       );
     } catch {
-      setError("Google sign-in failed. Make sure your account has access.");
+      setError(t("googleSignInFailed"));
     }
   }
 
@@ -112,12 +118,12 @@ export function LoginForm() {
 
       <div className="space-y-2">
         <Label htmlFor="email" className="text-gray-300">
-          Email
+          {t("email")}
         </Label>
         <Input
           id="email"
           type="email"
-          placeholder="Enter your email"
+          placeholder={t("enterYourEmail")}
           className="h-11 border-white/15 bg-white/[0.04] text-white placeholder:text-gray-500 focus-visible:border-langford-red focus-visible:ring-langford-red/40"
           {...register("email")}
         />
@@ -128,20 +134,20 @@ export function LoginForm() {
 
       <div className="space-y-2">
         <Label htmlFor="password" className="text-gray-300">
-          Password
+          {t("password")}
         </Label>
         <div className="relative">
           <Input
             id="password"
             type={showPassword ? "text" : "password"}
-            placeholder="Enter your password"
+            placeholder={t("enterYourPassword")}
             className="h-11 border-white/15 bg-white/[0.04] pr-11 text-white placeholder:text-gray-500 focus-visible:border-langford-red focus-visible:ring-langford-red/40"
             {...register("password")}
           />
           <button
             type="button"
             onClick={() => setShowPassword((v) => !v)}
-            aria-label={showPassword ? "Hide password" : "Show password"}
+            aria-label={showPassword ? t("hidePassword") : t("showPassword")}
             className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 transition-colors hover:text-gray-200"
           >
             {showPassword ? (
@@ -164,10 +170,10 @@ export function LoginForm() {
         {isSubmitting ? (
           <>
             <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-            Signing in...
+            {t("signingIn")}
           </>
         ) : (
-          "Sign In"
+          t("signIn")
         )}
       </Button>
 
@@ -176,7 +182,7 @@ export function LoginForm() {
           <span className="w-full border-t border-white/10" />
         </div>
         <div className="relative flex justify-center text-xs uppercase">
-          <span className="bg-[#141414] px-2 text-gray-400">Or</span>
+          <span className="bg-[#141414] px-2 text-gray-400">{t("or")}</span>
         </div>
       </div>
 
@@ -204,7 +210,7 @@ export function LoginForm() {
             fill="#EA4335"
           />
         </svg>
-        Sign in with Google
+        {t("signInWithGoogle")}
       </Button>
 
       <div className="text-center">
@@ -212,7 +218,7 @@ export function LoginForm() {
           href="/forgot-password"
           className="text-sm text-gray-400 transition-colors hover:text-langford-red"
         >
-          Forgot your password?
+          {t("forgotPassword")}
         </Link>
       </div>
     </form>

@@ -6,6 +6,7 @@ import { AuditLogEntry } from "@/lib/types";
 import { formatDateTime } from "@/lib/utils/format";
 import { RoleGate } from "@/components/auth/role-gate";
 import { PageHeader } from "@/components/layout/page-header";
+import { useLanguage } from "@/contexts/language-context";
 import {
   fetchCollection,
   createSubscription,
@@ -22,6 +23,7 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 
 function AuditLogContent() {
+  const { t } = useLanguage();
   const [entries, setEntries] = useState<AuditLogEntry[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -68,7 +70,7 @@ function AuditLogContent() {
   if (entries.length === 0) {
     return (
       <div className="flex h-32 items-center justify-center rounded-lg border border-dashed">
-        <p className="text-sm text-muted-foreground">No audit log entries found</p>
+        <p className="text-sm text-muted-foreground">{t("noAuditLogEntries")}</p>
       </div>
     );
   }
@@ -97,12 +99,12 @@ function AuditLogContent() {
       <Table>
         <TableHeader>
           <TableRow>
-            <TableHead>Date</TableHead>
-            <TableHead>Action</TableHead>
-            <TableHead>Entity Type</TableHead>
-            <TableHead>Entity ID</TableHead>
-            <TableHead>User</TableHead>
-            <TableHead>Changes</TableHead>
+            <TableHead>{t("date")}</TableHead>
+            <TableHead>{t("action")}</TableHead>
+            <TableHead>{t("entityType")}</TableHead>
+            <TableHead>{t("entityId")}</TableHead>
+            <TableHead>{t("user")}</TableHead>
+            <TableHead>{t("changes")}</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -133,12 +135,13 @@ function AuditLogContent() {
 }
 
 export default function AuditLogPage() {
+  const { t } = useLanguage();
   return (
     <RoleGate allowedRoles={["admin"]}>
       <div className="space-y-6">
         <PageHeader
-          title="Audit Log"
-          description="Track all system actions and changes"
+          title={t("auditLog")}
+          description={t("auditLogDescription")}
         />
         <AuditLogContent />
       </div>

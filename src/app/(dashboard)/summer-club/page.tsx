@@ -3,6 +3,7 @@
 import { useEffect, useState, useMemo } from "react";
 import Link from "next/link";
 import { useAuth } from "@/contexts/auth-context";
+import { useLanguage } from "@/contexts/language-context";
 import { PageHeader } from "@/components/layout/page-header";
 import { RoleGate } from "@/components/auth/role-gate";
 import { SummerClubListTable } from "@/components/summer-club/summer-club-list-table";
@@ -68,6 +69,7 @@ function exportCSV(students: SummerClubStudent[]) {
 
 export default function SummerClubPage() {
   const { role, firebaseUser } = useAuth();
+  const { t } = useLanguage();
   const [students, setStudents] = useState<SummerClubStudent[]>([]);
   const [search, setSearch] = useState("");
   const [genderFilter, setGenderFilter] = useState<Gender | "all">("all");
@@ -112,8 +114,8 @@ export default function SummerClubPage() {
     <RoleGate allowedRoles={["admin", "sales", "accountant", "coordinator"]}>
       <div className="space-y-6">
         <PageHeader
-          title="النادي الصيفي"
-          description={`${stats.total} طالب${role === "sales" ? " (بياناتك فقط)" : ""}`}
+          title={t("summerClub")}
+          description={`${stats.total} ${t("studentsCountLabel")}${role === "sales" ? ` (${t("yourDataOnly")})` : ""}`}
           action={
             <div className="flex gap-2">
               <Button
@@ -122,13 +124,13 @@ export default function SummerClubPage() {
                 disabled={students.length === 0}
               >
                 <Download className="mr-2 h-4 w-4" />
-                تصدير
+                {t("export")}
               </Button>
               {role !== "accountant" && (
                 <Link href="/summer-club/new">
                   <Button>
                     <Plus className="mr-2 h-4 w-4" />
-                    إضافة طالب
+                    {t("addStudent")}
                   </Button>
                 </Link>
               )}
@@ -142,39 +144,39 @@ export default function SummerClubPage() {
             <CardContent className="pt-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-xs text-muted-foreground">إجمالي الطلاب</p>
+                  <p className="text-xs text-muted-foreground">{t("totalStudents")}</p>
                   <p className="text-2xl font-bold">{stats.total}</p>
                 </div>
                 <Sun className="h-8 w-8 text-amber-500" />
               </div>
               <p className="mt-2 text-xs text-muted-foreground">
-                ذكور: {stats.males} • إناث: {stats.females}
+                {t("males")}: {stats.males} • {t("females")}: {stats.females}
               </p>
             </CardContent>
           </Card>
           <Card>
             <CardContent className="pt-6">
-              <p className="text-xs text-muted-foreground">المسجلين</p>
+              <p className="text-xs text-muted-foreground">{t("registeredCount")}</p>
               <p className="text-2xl font-bold text-emerald-700">{stats.registered}</p>
               <p className="mt-2 text-xs text-muted-foreground">
-                من {stats.total} طالب
+                {t("from")} {stats.total} {t("studentsCountLabel")}
               </p>
             </CardContent>
           </Card>
           <Card>
             <CardContent className="pt-6">
-              <p className="text-xs text-muted-foreground">إجمالي المدفوع</p>
+              <p className="text-xs text-muted-foreground">{t("totalPaid")}</p>
               <p className="text-2xl font-bold text-emerald-700">
                 {formatCurrency(stats.totalPaid)}
               </p>
               <p className="mt-2 text-xs text-muted-foreground">
-                من {formatCurrency(stats.totalFees)}
+                {t("from")} {formatCurrency(stats.totalFees)}
               </p>
             </CardContent>
           </Card>
           <Card>
             <CardContent className="pt-6">
-              <p className="text-xs text-muted-foreground">إجمالي المتبقي</p>
+              <p className="text-xs text-muted-foreground">{t("totalRemaining")}</p>
               <p className="text-2xl font-bold text-red-700">
                 {formatCurrency(stats.totalRemaining)}
               </p>
@@ -185,7 +187,7 @@ export default function SummerClubPage() {
         {/* Filters */}
         <div className="flex flex-wrap gap-3">
           <Input
-            placeholder="بحث بالاسم أو التلفون..."
+            placeholder={t("searchByNameOrPhone")}
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             className="max-w-xs"
@@ -195,9 +197,9 @@ export default function SummerClubPage() {
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">كل الأنواع</SelectItem>
-              <SelectItem value="male">ذكر</SelectItem>
-              <SelectItem value="female">أنثى</SelectItem>
+              <SelectItem value="all">{t("allGenders")}</SelectItem>
+              <SelectItem value="male">{t("male")}</SelectItem>
+              <SelectItem value="female">{t("female")}</SelectItem>
             </SelectContent>
           </Select>
           <Select
@@ -208,9 +210,9 @@ export default function SummerClubPage() {
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">الكل</SelectItem>
-              <SelectItem value="yes">مسجل</SelectItem>
-              <SelectItem value="no">غير مسجل</SelectItem>
+              <SelectItem value="all">{t("all")}</SelectItem>
+              <SelectItem value="yes">{t("registered")}</SelectItem>
+              <SelectItem value="no">{t("notRegistered")}</SelectItem>
             </SelectContent>
           </Select>
         </div>

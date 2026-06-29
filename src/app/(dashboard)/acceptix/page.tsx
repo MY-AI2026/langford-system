@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
+import { useLanguage } from "@/contexts/language-context";
 import { RoleGate } from "@/components/auth/role-gate";
 import { subscribeToAllStudents, commissionFor } from "@/lib/services/reg-student-service";
 import { subscribeToActiveCourses } from "@/lib/services/reg-course-service";
@@ -29,6 +30,7 @@ import {
 } from "lucide-react";
 
 function AcceptixAdminDashboardContent() {
+  const { t } = useLanguage();
   const router = useRouter();
   const [students, setStudents] = useState<RegStudent[]>([]);
   const [courses, setCourses] = useState<RegCourse[]>([]);
@@ -102,14 +104,14 @@ function AcceptixAdminDashboardContent() {
             priority
           />
           <div>
-            <h1 className="text-2xl font-semibold">Acceptix Admin</h1>
+            <h1 className="text-2xl font-semibold">{t("acceptixAdmin")}</h1>
             <p className="mt-1 text-sm text-muted-foreground">
-              Registrations, agents, courses, and reports — all in one place.
+              {t("acceptixAdminSubtitle")}
             </p>
           </div>
         </div>
         <div className="flex items-center gap-2 text-xs text-muted-foreground">
-          <span>Powered by</span>
+          <span>{t("poweredBy")}</span>
           <Image src="/logo.png" alt="Langford" width={28} height={28} />
           <span className="font-medium">Langford</span>
         </div>
@@ -120,27 +122,27 @@ function AcceptixAdminDashboardContent() {
         <QuickAction
           href={REG_ROUTES.adminAgentNew}
           icon={UserPlus}
-          label="Add New Agent"
-          description="Create a login for an Acceptix employee"
+          label={t("addNewAgent")}
+          description={t("addNewAgentDesc")}
           tone="primary"
         />
         <QuickAction
           href={REG_ROUTES.adminAgents}
           icon={Users}
-          label="Manage Agents"
-          description="View, disable, or reset passwords"
+          label={t("manageAgents")}
+          description={t("manageAgentsDesc")}
         />
         <QuickAction
           href={REG_ROUTES.adminCourses}
           icon={BookOpen}
-          label="Manage Courses"
-          description="Catalogue, prices, and seed defaults"
+          label={t("manageCourses")}
+          description={t("manageCoursesDesc")}
         />
         <QuickAction
           href={REG_ROUTES.adminReports}
           icon={FileBarChart}
-          label="Reports"
-          description="Monthly commissions, Excel + PDF"
+          label={t("reports")}
+          description={t("reportsQuickDesc")}
         />
       </div>
 
@@ -148,25 +150,25 @@ function AcceptixAdminDashboardContent() {
         <StatCard
           loading={loadingStudents}
           icon={Users}
-          label="Total Registrations"
+          label={t("totalRegistrations")}
           value={stats.total.toLocaleString("en-US")}
         />
         <StatCard
           loading={loadingStudents}
           icon={CalendarDays}
-          label="This Month"
+          label={t("thisMonth")}
           value={stats.thisMonth.toLocaleString("en-US")}
         />
         <StatCard
           loading={loadingAgents}
           icon={Users}
-          label="Active Agents"
+          label={t("activeAgents")}
           value={stats.activeAgents.toLocaleString("en-US")}
         />
         <StatCard
           loading={loadingStudents}
           icon={TrendingUp}
-          label="Total Commission"
+          label={t("totalCommission")}
           value={`${stats.totalCommission.toLocaleString("en-US")} ${REG_DEFAULT_CURRENCY}`}
         />
       </div>
@@ -176,7 +178,7 @@ function AcceptixAdminDashboardContent() {
           <CardHeader className="pb-2">
             <CardTitle className="flex items-center gap-2 text-sm text-muted-foreground">
               <GraduationCap className="h-4 w-4" />
-              Top Course
+              {t("topCourse")}
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -186,11 +188,11 @@ function AcceptixAdminDashboardContent() {
               <>
                 <p className="text-lg font-semibold">{stats.topCourse.name}</p>
                 <p className="text-sm text-muted-foreground">
-                  {stats.topCourse.count.toLocaleString("en-US")} students
+                  {stats.topCourse.count.toLocaleString("en-US")} {t("studentsLower")}
                 </p>
               </>
             ) : (
-              <p className="text-sm text-muted-foreground">No registrations yet</p>
+              <p className="text-sm text-muted-foreground">{t("noRegistrationsYet")}</p>
             )}
           </CardContent>
         </Card>
@@ -199,7 +201,7 @@ function AcceptixAdminDashboardContent() {
           <CardHeader className="pb-2">
             <CardTitle className="flex items-center gap-2 text-sm text-muted-foreground">
               <GraduationCap className="h-4 w-4" />
-              Available Courses
+              {t("availableCourses")}
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -208,13 +210,13 @@ function AcceptixAdminDashboardContent() {
             ) : (
               <>
                 <p className="text-lg font-semibold">
-                  {courses.length.toLocaleString("en-US")} courses
+                  {courses.length.toLocaleString("en-US")} {t("coursesLower")}
                 </p>
                 <Link
                   href={REG_ROUTES.adminCourses}
                   className="text-sm text-primary hover:underline"
                 >
-                  Manage courses
+                  {t("manageCoursesLink")}
                   <ArrowRight className="ml-1 inline h-3 w-3" />
                 </Link>
               </>
@@ -226,12 +228,12 @@ function AcceptixAdminDashboardContent() {
       <Card>
         <CardHeader>
           <div className="flex items-center justify-between">
-            <CardTitle className="text-base">Recent Registrations</CardTitle>
+            <CardTitle className="text-base">{t("recentRegistrations")}</CardTitle>
             <Link
               href={REG_ROUTES.adminStudents}
               className="text-sm text-primary hover:underline"
             >
-              View all
+              {t("viewAll")}
               <ArrowRight className="ml-1 inline h-3 w-3" />
             </Link>
           </div>
@@ -245,7 +247,7 @@ function AcceptixAdminDashboardContent() {
             </div>
           ) : recent.length === 0 ? (
             <p className="py-6 text-center text-sm text-muted-foreground">
-              No registrations yet.
+              {t("noRegistrationsYet")}
             </p>
           ) : (
             <div className="divide-y">

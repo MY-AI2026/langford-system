@@ -8,6 +8,7 @@ import {
   AttendanceSession,
 } from "@/lib/services/attendance-service";
 import { formatDate } from "@/lib/utils/format";
+import { useLanguage } from "@/contexts/language-context";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -31,6 +32,7 @@ interface AttendanceTrackerProps {
 }
 
 export function AttendanceTracker({ studentId }: AttendanceTrackerProps) {
+  const { t } = useLanguage();
   const [sessions, setSessions] = useState<AttendanceSession[]>([]);
   const [loading, setLoading] = useState(true);
   const [addDialogOpen, setAddDialogOpen] = useState(false);
@@ -56,18 +58,18 @@ export function AttendanceTracker({ studentId }: AttendanceTrackerProps) {
 
   async function handleAddSession() {
     if (!sessionDate) {
-      toast.error("Please select a date");
+      toast.error(t("pleaseSelectDate"));
       return;
     }
     setSaving(true);
     try {
       await addSession(studentId, new Date(sessionDate), sessionPresent);
-      toast.success("Session added");
+      toast.success(t("sessionAdded"));
       setAddDialogOpen(false);
       setSessionDate(new Date().toISOString().split("T")[0]);
       setSessionPresent(true);
     } catch {
-      toast.error("Failed to add session");
+      toast.error(t("failedToAddSession"));
     } finally {
       setSaving(false);
     }
@@ -78,7 +80,7 @@ export function AttendanceTracker({ studentId }: AttendanceTrackerProps) {
     try {
       await updateSession(studentId, session.id, !session.isPresent);
     } catch {
-      toast.error("Failed to update session");
+      toast.error(t("failedToUpdateSession"));
     } finally {
       setToggling(null);
     }
@@ -95,15 +97,15 @@ export function AttendanceTracker({ studentId }: AttendanceTrackerProps) {
         <CardContent className="pt-4">
           <div className="flex items-center justify-between mb-3">
             <div>
-              <p className="text-sm font-medium">Attendance Rate</p>
+              <p className="text-sm font-medium">{t("attendanceRate")}</p>
               <p className="text-2xl font-bold">{attendanceRate}%</p>
               <p className="text-xs text-muted-foreground">
-                {presentSessions} / {totalSessions} sessions
+                {presentSessions} / {totalSessions} {t("sessions")}
               </p>
             </div>
             <Button size="sm" variant="outline" onClick={() => setAddDialogOpen(true)}>
               <Plus className="mr-2 h-4 w-4" />
-              Add Session
+              {t("addSession")}
             </Button>
           </div>
           <Progress value={attendanceRate} className="h-2" />
@@ -113,7 +115,7 @@ export function AttendanceTracker({ studentId }: AttendanceTrackerProps) {
       {/* Sessions list */}
       {sessions.length === 0 ? (
         <div className="flex h-24 items-center justify-center rounded-lg border border-dashed">
-          <p className="text-sm text-muted-foreground">No sessions recorded</p>
+          <p className="text-sm text-muted-foreground">{t("noSessionsRecorded")}</p>
         </div>
       ) : (
         <div className="space-y-2">
@@ -127,14 +129,14 @@ export function AttendanceTracker({ studentId }: AttendanceTrackerProps) {
                 variant={session.isPresent ? "default" : "destructive"}
                 className="w-16 justify-center"
               >
-                {session.isPresent ? "Present" : "Absent"}
+                {session.isPresent ? t("present") : t("absent")}
               </Badge>
               <Button
                 size="icon"
                 variant="ghost"
                 disabled={toggling === session.id}
                 onClick={() => handleToggle(session)}
-                title={session.isPresent ? "Mark as absent" : "Mark as present"}
+                title={session.isPresent ? t("markAsAbsent") : t("markAsPresent")}
               >
                 {session.isPresent ? (
                   <CheckCircle2 className="h-4 w-4 text-green-500" />
@@ -151,11 +153,11 @@ export function AttendanceTracker({ studentId }: AttendanceTrackerProps) {
       <Dialog open={addDialogOpen} onOpenChange={setAddDialogOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Add Session</DialogTitle>
+            <DialogTitle>{t("addSession")}</DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
             <div className="space-y-2">
-              <Label>Date</Label>
+              <Label>{t("date")}</Label>
               <Input
                 type="date"
                 value={sessionDate}
@@ -163,31 +165,31 @@ export function AttendanceTracker({ studentId }: AttendanceTrackerProps) {
               />
             </div>
             <div className="flex items-center gap-3">
-              <Label>Attendance</Label>
+              <Label>{t("attendance")}</Label>
               <div className="flex gap-2">
                 <Button
                   size="sm"
                   variant={sessionPresent ? "default" : "outline"}
                   onClick={() => setSessionPresent(true)}
                 >
-                  Present
+                  {t("present")}
                 </Button>
                 <Button
                   size="sm"
                   variant={!sessionPresent ? "destructive" : "outline"}
                   onClick={() => setSessionPresent(false)}
                 >
-                  Absent
+                  {t("absent")}
                 </Button>
               </div>
             </div>
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setAddDialogOpen(false)}>
-              Cancel
+              {t("cancel")}
             </Button>
             <Button onClick={handleAddSession} disabled={saving}>
-              {saving ? "Saving..." : "Add"}
+              {saving ? t("saving") : t("add")}
             </Button>
           </DialogFooter>
         </DialogContent>

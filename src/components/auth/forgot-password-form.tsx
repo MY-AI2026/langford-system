@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useLanguage } from "@/contexts/language-context";
 import { resetPassword } from "@/lib/firebase/auth";
 import {
   forgotPasswordSchema,
@@ -16,6 +17,7 @@ import { AlertCircle, CheckCircle, Loader2 } from "lucide-react";
 import Link from "next/link";
 
 export function ForgotPasswordForm() {
+  const { t } = useLanguage();
   const [error, setError] = useState("");
   const [success, setSuccess] = useState(false);
   const {
@@ -32,7 +34,7 @@ export function ForgotPasswordForm() {
       await resetPassword(data.email);
       setSuccess(true);
     } catch {
-      setError("Failed to send reset email. Please check your email address.");
+      setError(t("resetEmailFailed"));
     }
   }
 
@@ -42,8 +44,7 @@ export function ForgotPasswordForm() {
         <Alert>
           <CheckCircle className="h-4 w-4 text-green-600" />
           <AlertDescription>
-            Password reset email sent. Check your inbox for further
-            instructions.
+            {t("resetEmailSent")}
           </AlertDescription>
         </Alert>
         <div className="text-center">
@@ -51,7 +52,7 @@ export function ForgotPasswordForm() {
             href="/login"
             className="text-sm text-primary hover:underline"
           >
-            Back to Sign In
+            {t("backToSignIn")}
           </Link>
         </div>
       </div>
@@ -68,11 +69,11 @@ export function ForgotPasswordForm() {
       )}
 
       <div className="space-y-2">
-        <Label htmlFor="email">Email</Label>
+        <Label htmlFor="email">{t("email")}</Label>
         <Input
           id="email"
           type="email"
-          placeholder="Enter your email"
+          placeholder={t("enterYourEmail")}
           {...register("email")}
         />
         {errors.email && (
@@ -84,10 +85,10 @@ export function ForgotPasswordForm() {
         {isSubmitting ? (
           <>
             <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-            Sending...
+            {t("sending")}
           </>
         ) : (
-          "Send Reset Email"
+          t("sendResetEmail")
         )}
       </Button>
 
@@ -96,7 +97,7 @@ export function ForgotPasswordForm() {
           href="/login"
           className="text-sm text-muted-foreground hover:text-primary"
         >
-          Back to Sign In
+          {t("backToSignIn")}
         </Link>
       </div>
     </form>

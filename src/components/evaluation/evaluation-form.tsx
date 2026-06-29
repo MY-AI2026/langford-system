@@ -5,6 +5,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { evaluationSchema, EvaluationFormData } from "@/lib/utils/validators";
 import { DEFAULT_LEVELS } from "@/lib/utils/constants";
 import { Evaluation } from "@/lib/types";
+import { useLanguage } from "@/contexts/language-context";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -28,6 +29,7 @@ export function EvaluationForm({
   defaultValues,
   onSubmit,
 }: EvaluationFormProps) {
+  const { t } = useLanguage();
   const {
     register,
     handleSubmit,
@@ -49,7 +51,7 @@ export function EvaluationForm({
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
       <div className="grid gap-4 sm:grid-cols-2">
         <div className="space-y-2">
-          <Label htmlFor="placementTestScore">Placement Test Score</Label>
+          <Label htmlFor="placementTestScore">{t("placementScore")}</Label>
           <Input
             id="placementTestScore"
             type="number"
@@ -66,13 +68,13 @@ export function EvaluationForm({
         </div>
 
         <div className="space-y-2">
-          <Label>Final Level</Label>
+          <Label>{t("finalLevel")}</Label>
           <Select
             value={watch("finalLevel") || ""}
             onValueChange={(val) => setValue("finalLevel", val || null)}
           >
             <SelectTrigger>
-              <SelectValue placeholder="Select level" />
+              <SelectValue placeholder={t("selectLevel")} />
             </SelectTrigger>
             <SelectContent>
               {DEFAULT_LEVELS.map((level) => (
@@ -94,14 +96,14 @@ export function EvaluationForm({
               )
             }
           />
-          <Label>Interview Completed</Label>
+          <Label>{t("interviewCompleted")}</Label>
         </div>
 
         <div className="space-y-2 sm:col-span-2">
-          <Label htmlFor="interviewNotes">Interview Notes</Label>
+          <Label htmlFor="interviewNotes">{t("interviewNotes")}</Label>
           <Textarea
             id="interviewNotes"
-            placeholder="Notes from the interview..."
+            placeholder={t("interviewNotesPlaceholder")}
             rows={4}
             {...register("interviewNotes")}
           />
@@ -111,7 +113,7 @@ export function EvaluationForm({
       <div className="flex justify-end">
         <Button type="submit" disabled={isSubmitting}>
           {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-          Save Evaluation
+          {t("saveEvaluation")}
         </Button>
       </div>
     </form>

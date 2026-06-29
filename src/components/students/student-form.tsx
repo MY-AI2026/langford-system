@@ -8,6 +8,7 @@ import { DEFAULT_LEAD_SOURCES } from "@/lib/utils/constants";
 import { getSalesUsers } from "@/lib/services/user-service";
 import { subscribeToCourses } from "@/lib/services/course-service";
 import { useAuth } from "@/contexts/auth-context";
+import { useLanguage } from "@/contexts/language-context";
 import { User, Course } from "@/lib/types";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -30,9 +31,10 @@ interface StudentFormProps {
 export function StudentForm({
   defaultValues,
   onSubmit,
-  submitLabel = "Save Student",
+  submitLabel,
 }: StudentFormProps) {
   const { role, firebaseUser, userData } = useAuth();
+  const { t } = useLanguage();
   const [salesUsers, setSalesUsers] = useState<User[]>([]);
   const [courses, setCourses] = useState<Course[]>([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -89,10 +91,10 @@ export function StudentForm({
     <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-4">
       <div className="grid gap-4 sm:grid-cols-2">
         <div className="space-y-2">
-          <Label htmlFor="fullName">Full Name *</Label>
+          <Label htmlFor="fullName">{t("fullName")} *</Label>
           <Input
             id="fullName"
-            placeholder="Student full name"
+            placeholder={t("studentFullNamePlaceholder")}
             {...register("fullName")}
           />
           {errors.fullName && (
@@ -101,7 +103,7 @@ export function StudentForm({
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="phone">Phone Number *</Label>
+          <Label htmlFor="phone">{t("phone")} *</Label>
           <Input
             id="phone"
             placeholder="e.g., 9XXXXXXX"
@@ -122,7 +124,7 @@ export function StudentForm({
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="email">Email</Label>
+          <Label htmlFor="email">{t("email")}</Label>
           <Input
             id="email"
             type="email"
@@ -135,13 +137,13 @@ export function StudentForm({
         </div>
 
         <div className="space-y-2">
-          <Label>Lead Source *</Label>
+          <Label>{t("leadSource")} *</Label>
           <Select
             value={watch("leadSource")}
             onValueChange={(val) => setValue("leadSource", val ?? "")}
           >
             <SelectTrigger>
-              <SelectValue placeholder="Select lead source" />
+              <SelectValue placeholder={t("selectLeadSource")} />
             </SelectTrigger>
             <SelectContent>
               {DEFAULT_LEAD_SOURCES.map((source) => (
@@ -157,13 +159,13 @@ export function StudentForm({
         </div>
 
         <div className="space-y-2">
-          <Label>Interested In</Label>
+          <Label>{t("interestedCourse")}</Label>
           <Select
             value={watch("interestedCourse") || ""}
             onValueChange={(val) => { if (val) setValue("interestedCourse", val); }}
           >
             <SelectTrigger>
-              <SelectValue placeholder="Select course interest" />
+              <SelectValue placeholder={t("selectCourseInterest")} />
             </SelectTrigger>
             <SelectContent>
               {courses.map((course) => (
@@ -176,14 +178,14 @@ export function StudentForm({
         </div>
 
         <div className="space-y-2 sm:col-span-2">
-          <Label>Assigned Sales Representative *</Label>
+          <Label>{t("assignedSalesRep")} *</Label>
           <Select
             value={watch("assignedSalesRepId")}
             onValueChange={(val) => setValue("assignedSalesRepId", val ?? "")}
             disabled={role === "sales"}
           >
             <SelectTrigger>
-              <SelectValue placeholder="Select sales rep" />
+              <SelectValue placeholder={t("selectSalesRep")} />
             </SelectTrigger>
             <SelectContent>
               {salesUsers.map((user) => (
@@ -206,7 +208,7 @@ export function StudentForm({
           {(isSubmitting || isLoading) && (
             <Loader2 className="mr-2 h-4 w-4 animate-spin" />
           )}
-          {submitLabel}
+          {submitLabel ?? t("saveStudent")}
         </Button>
       </div>
     </form>

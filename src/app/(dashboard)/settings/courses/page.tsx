@@ -11,6 +11,7 @@ import {
 import { subscribeToUsers } from "@/lib/services/user-service";
 import { Course, CourseCategory, User } from "@/lib/types";
 import { useAuth } from "@/contexts/auth-context";
+import { useLanguage } from "@/contexts/language-context";
 import { RoleGate } from "@/components/auth/role-gate";
 import { PageHeader } from "@/components/layout/page-header";
 import { Card, CardContent } from "@/components/ui/card";
@@ -105,6 +106,7 @@ function CourseForm({
   onSave: (data: CourseInput) => Promise<void>;
   onCancel: () => void;
 }) {
+  const { t } = useLanguage();
   const [form, setForm] = useState<CourseInput>(initial);
   const [startDateStr, setStartDateStr] = useState<string>(
     toDateInputValue(initial.startDate)
@@ -117,11 +119,11 @@ function CourseForm({
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!form.name.trim()) {
-      toast.error("Course name is required");
+      toast.error(t("courseNameRequired"));
       return;
     }
     if (startDateStr && endDateStr && endDateStr < startDateStr) {
-      toast.error("End date must be after start date");
+      toast.error(t("endDateAfterStartDate"));
       return;
     }
     setSaving(true);
@@ -139,15 +141,15 @@ function CourseForm({
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       <div className="space-y-2">
-        <Label>Name *</Label>
+        <Label>{t("name")} *</Label>
         <Input
           value={form.name}
           onChange={(e) => setForm({ ...form, name: e.target.value })}
-          placeholder="Course name"
+          placeholder={t("courseNamePlaceholder")}
         />
       </div>
       <div className="space-y-2">
-        <Label>Category</Label>
+        <Label>{t("category")}</Label>
         <Select
           value={form.category || "general_english"}
           onValueChange={(val) => setForm({ ...form, category: val as CourseCategory })}
@@ -165,35 +167,35 @@ function CourseForm({
         </Select>
       </div>
       <div className="space-y-2">
-        <Label>Description</Label>
+        <Label>{t("description")}</Label>
         <Textarea
           value={form.description}
           onChange={(e) => setForm({ ...form, description: e.target.value })}
-          placeholder="Course description"
+          placeholder={t("courseDescriptionPlaceholder")}
           rows={3}
         />
       </div>
       <div className="grid grid-cols-2 gap-3">
         <div className="space-y-2">
-          <Label>Duration</Label>
+          <Label>{t("duration")}</Label>
           <Input
             value={form.duration}
             onChange={(e) => setForm({ ...form, duration: e.target.value })}
-            placeholder="e.g., 3 months"
+            placeholder={t("durationPlaceholder")}
           />
         </div>
         <div className="space-y-2">
-          <Label>Level</Label>
+          <Label>{t("level")}</Label>
           <Input
             value={form.level}
             onChange={(e) => setForm({ ...form, level: e.target.value })}
-            placeholder="e.g., A1, B2"
+            placeholder={t("levelPlaceholder")}
           />
         </div>
       </div>
       <div className="grid grid-cols-2 gap-3">
         <div className="space-y-2">
-          <Label>Start Date</Label>
+          <Label>{t("startDate")}</Label>
           <Input
             type="date"
             value={startDateStr}
@@ -201,7 +203,7 @@ function CourseForm({
           />
         </div>
         <div className="space-y-2">
-          <Label>End Date</Label>
+          <Label>{t("endDate")}</Label>
           <Input
             type="date"
             value={endDateStr}
@@ -211,11 +213,10 @@ function CourseForm({
         </div>
       </div>
       <p className="text-xs text-muted-foreground -mt-2">
-        These dates apply automatically to all students enrolled in this course
-        and appear on the instructor&apos;s schedule.
+        {t("courseDatesHint")}
       </p>
       <div className="space-y-2">
-        <Label>Assigned Instructor</Label>
+        <Label>{t("assignedInstructor")}</Label>
         <Select
           value={form.instructorId || UNASSIGNED_INSTRUCTOR}
           onValueChange={(val) => {
@@ -233,10 +234,10 @@ function CourseForm({
           }}
         >
           <SelectTrigger>
-            <SelectValue placeholder="Select instructor (optional)" />
+            <SelectValue placeholder={t("selectInstructorOptional")} />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value={UNASSIGNED_INSTRUCTOR}>— Unassigned —</SelectItem>
+            <SelectItem value={UNASSIGNED_INSTRUCTOR}>{t("unassigned")}</SelectItem>
             {instructors.map((u) => (
               <SelectItem key={u.uid} value={u.uid}>
                 {u.displayName}
@@ -245,13 +246,13 @@ function CourseForm({
           </SelectContent>
         </Select>
         <p className="text-xs text-muted-foreground">
-          The assigned instructor will see this course under their Attendance page.
+          {t("assignedInstructorHint")}
         </p>
       </div>
 
       <div className="grid grid-cols-2 gap-3">
         <div className="space-y-2">
-          <Label>Default Fees (KWD)</Label>
+          <Label>{t("defaultFees")} (KWD)</Label>
           <Input
             type="number"
             step="0.001"
@@ -264,7 +265,7 @@ function CourseForm({
           />
         </div>
         <div className="space-y-2">
-          <Label>Max Students</Label>
+          <Label>{t("maxStudents")}</Label>
           <Input
             type="number"
             min="1"
@@ -280,14 +281,14 @@ function CourseForm({
           checked={form.isActive}
           onCheckedChange={(checked) => setForm({ ...form, isActive: checked })}
         />
-        <Label>Active</Label>
+        <Label>{t("active")}</Label>
       </div>
       <div className="flex justify-end gap-2 pt-2">
         <Button type="button" variant="outline" onClick={onCancel}>
-          Cancel
+          {t("cancel")}
         </Button>
         <Button type="submit" disabled={saving}>
-          {saving ? "Saving..." : "Save"}
+          {saving ? t("saving") : t("save")}
         </Button>
       </div>
     </form>
@@ -296,6 +297,7 @@ function CourseForm({
 
 function CoursesContent() {
   const { role } = useAuth();
+  const { t } = useLanguage();
   const isReadOnly = role === "accountant";
   const [courses, setCourses] = useState<Course[]>([]);
   const [instructors, setInstructors] = useState<User[]>([]);
@@ -329,15 +331,15 @@ function CoursesContent() {
     try {
       if (editingCourse) {
         await updateCourse(editingCourse.id, data);
-        toast.success("Course updated");
+        toast.success(t("courseUpdated"));
       } else {
         await createCourse(data);
-        toast.success("Course created");
+        toast.success(t("courseCreated"));
       }
       setDialogOpen(false);
       setEditingCourse(null);
     } catch {
-      toast.error("Failed to save course");
+      toast.error(t("failedToSaveCourse"));
     }
   }
 
@@ -345,9 +347,9 @@ function CoursesContent() {
     if (!deleteTarget) return;
     try {
       await deleteCourse(deleteTarget.id);
-      toast.success("Course deleted");
+      toast.success(t("courseDeleted"));
     } catch {
-      toast.error("Failed to delete course");
+      toast.error(t("failedToDeleteCourse"));
     } finally {
       setDeleteTarget(null);
     }
@@ -382,7 +384,7 @@ function CoursesContent() {
       {/* Header with count and add button */}
       <div className="flex items-center justify-between">
         <p className="text-sm text-muted-foreground">
-          {filteredCourses.length} course(s)
+          {filteredCourses.length} {t("coursesCount")}
         </p>
         {!isReadOnly && (
           <Button
@@ -392,14 +394,14 @@ function CoursesContent() {
             }}
           >
             <Plus className="mr-2 h-4 w-4" />
-            Add Course
+            {t("addCourse")}
           </Button>
         )}
       </div>
 
       {filteredCourses.length === 0 ? (
         <div className="flex h-32 items-center justify-center rounded-lg border border-dashed">
-          <p className="text-sm text-muted-foreground">No courses found</p>
+          <p className="text-sm text-muted-foreground">{t("noCoursesFound")}</p>
         </div>
       ) : (
         <div className="space-y-3">
@@ -410,7 +412,7 @@ function CoursesContent() {
                   <div className="flex items-center gap-2 flex-wrap">
                     <span className="font-medium">{course.name}</span>
                     <Badge variant={course.isActive ? "default" : "secondary"}>
-                      {course.isActive ? "Active" : "Inactive"}
+                      {course.isActive ? t("active") : t("inactive")}
                     </Badge>
                     {course.category && (
                       <Badge variant="outline">
@@ -433,10 +435,10 @@ function CoursesContent() {
                       </span>
                     ) : (
                       <span className="text-amber-700 dark:text-amber-400">
-                        ⚠️ No instructor assigned
+                        ⚠️ {t("noInstructorAssigned")}
                       </span>
                     )}
-                    {course.duration && <span>Duration: {course.duration}</span>}
+                    {course.duration && <span>{t("duration")}: {course.duration}</span>}
                     {(course.startDate || course.endDate) && (
                       <span>
                         📅 {course.startDate ? formatDate(course.startDate) : "—"}
@@ -444,9 +446,9 @@ function CoursesContent() {
                         {course.endDate ? formatDate(course.endDate) : "—"}
                       </span>
                     )}
-                    <span>Max: {course.maxStudents} students</span>
+                    <span>{t("max")}: {course.maxStudents} {t("studentsLabel")}</span>
                     {course.defaultFees > 0 && (
-                      <span>Fees: {formatCurrency(course.defaultFees)}</span>
+                      <span>{t("feesLabel")}: {formatCurrency(course.defaultFees)}</span>
                     )}
                   </div>
                 </div>
@@ -488,7 +490,7 @@ function CoursesContent() {
         <DialogContent className="max-w-lg">
           <DialogHeader>
             <DialogTitle>
-              {editingCourse ? "Edit Course" : "Add Course"}
+              {editingCourse ? t("editCourse") : t("addCourse")}
             </DialogTitle>
           </DialogHeader>
           <CourseForm
@@ -531,18 +533,18 @@ function CoursesContent() {
       >
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Delete Course?</DialogTitle>
+            <DialogTitle>{t("deleteCourseQuestion")}</DialogTitle>
           </DialogHeader>
           <p className="text-sm text-muted-foreground">
-            Are you sure you want to delete{" "}
-            <strong>{deleteTarget?.name}</strong>? This cannot be undone.
+            {t("deleteCourseConfirm")}{" "}
+            <strong>{deleteTarget?.name}</strong>? {t("thisActionCannotBeUndone")}
           </p>
           <DialogFooter>
             <Button variant="outline" onClick={() => setDeleteTarget(null)}>
-              Cancel
+              {t("cancel")}
             </Button>
             <Button variant="destructive" onClick={handleDelete}>
-              Delete
+              {t("delete")}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -552,12 +554,13 @@ function CoursesContent() {
 }
 
 export default function CoursesPage() {
+  const { t } = useLanguage();
   return (
     <RoleGate allowedRoles={["admin", "coordinator", "accountant"]}>
       <div className="space-y-6">
         <PageHeader
-          title="Courses"
-          description="Manage course and program offerings"
+          title={t("courses")}
+          description={t("coursesDescription")}
         />
         <CoursesContent />
       </div>

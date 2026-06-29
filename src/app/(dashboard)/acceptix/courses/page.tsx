@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useAuth } from "@/contexts/auth-context";
+import { useLanguage } from "@/contexts/language-context";
 import { RoleGate } from "@/components/auth/role-gate";
 import {
   subscribeToCourses,
@@ -61,6 +62,7 @@ import {
 } from "lucide-react";
 
 function AdminCoursesContent() {
+  const { t } = useLanguage();
   const { firebaseUser, userData } = useAuth();
   const [courses, setCourses] = useState<RegCourse[]>([]);
   const [loading, setLoading] = useState(true);
@@ -108,23 +110,17 @@ function AdminCoursesContent() {
         displayName: userData.displayName,
         role: "admin",
       });
-      toast.success(course.isActive ? "Course hidden" : "Course activated");
+      toast.success(course.isActive ? t("courseHidden") : t("courseActivated"));
     } catch (e) {
       console.error("[admin-courses] toggle failed:", e);
-      toast.error("Status change failed");
+      toast.error(t("statusChangeFailed"));
     }
   }
 
   async function handleSeed() {
     if (!firebaseUser || !userData) return;
     if (courses.length > 0) {
-      const ok = window.confirm(
-        "Sync default catalogue?\n\n" +
-          "• New courses will be added.\n" +
-          "• Existing courses (matched by name) will be updated with the " +
-          "latest fee, category, description, and tier.\n\n" +
-          "Custom courses you created manually are untouched."
-      );
+      const ok = window.confirm(t("syncCatalogueConfirm"));
       if (!ok) return;
     }
     setSeeding(true);
@@ -190,16 +186,16 @@ function AdminCoursesContent() {
       }
 
       const parts: string[] = [];
-      if (added > 0) parts.push(`added ${added}`);
-      if (updated > 0) parts.push(`updated ${updated}`);
+      if (added > 0) parts.push(`${t("addedCount")} ${added}`);
+      if (updated > 0) parts.push(`${t("updatedCount")} ${updated}`);
       toast.success(
         parts.length > 0
-          ? `Catalogue synced — ${parts.join(", ")}.`
-          : "Catalogue already up to date."
+          ? `${t("catalogueSynced")} — ${parts.join("، ")}.`
+          : t("catalogueUpToDate")
       );
     } catch (e) {
       console.error("[admin-courses] seed failed:", e);
-      toast.error("Seed failed");
+      toast.error(t("seedFailed"));
     } finally {
       setSeeding(false);
     }
@@ -211,10 +207,10 @@ function AdminCoursesContent() {
         <div>
           <h1 className="flex items-center gap-2 text-2xl font-semibold">
             <BookOpen className="h-6 w-6 text-primary" />
-            Manage Courses
+            {t("manageCourses")}
           </h1>
           <p className="mt-1 text-sm text-muted-foreground">
-            Add, edit, or hide courses. Hiding prevents agents from picking the course without deleting the record.
+            {t("manageCoursesPageSubtitle")}
           </p>
         </div>
 
@@ -225,11 +221,11 @@ function AdminCoursesContent() {
             ) : (
               <Sparkles className="ml-2 h-4 w-4" />
             )}
-            Load Default Catalogue
+            {t("loadDefaultCatalogue")}
           </Button>
           <Button onClick={openCreate}>
             <Plus className="ml-2 h-4 w-4" />
-            New Course
+            {t("newCourse")}
           </Button>
         </div>
       </div>
@@ -244,19 +240,18 @@ function AdminCoursesContent() {
         <Card>
           <CardContent className="flex flex-col items-center justify-center py-12 text-center">
             <BookOpen className="mb-3 h-10 w-10 text-muted-foreground" />
-            <h3 className="text-base font-semibold">No courses yet</h3>
+            <h3 className="text-base font-semibold">{t("noCoursesYet")}</h3>
             <p className="mt-1 max-w-sm text-sm text-muted-foreground">
-              Load the default catalogue from the Acceptix agreement, or add a
-              course manually.
+              {t("noCoursesYetDesc")}
             </p>
             <div className="mt-4 flex gap-2">
               <Button variant="outline" onClick={handleSeed} disabled={seeding}>
                 <Sparkles className="ml-2 h-4 w-4" />
-                Load Defaults
+                {t("loadDefaults")}
               </Button>
               <Button onClick={openCreate}>
                 <Plus className="ml-2 h-4 w-4" />
-                New Course
+                {t("newCourse")}
               </Button>
             </div>
           </CardContent>
@@ -280,11 +275,11 @@ function AdminCoursesContent() {
                   <Table>
                     <TableHeader>
                       <TableRow>
-                        <TableHead>Name</TableHead>
-                        <TableHead>Fee</TableHead>
-                        <TableHead>Duration</TableHead>
-                        <TableHead>Exclusive</TableHead>
-                        <TableHead>Status</TableHead>
+                        <TableHead>{t("name")}</TableHead>
+                        <TableHead>{t("fee")}</TableHead>
+                        <TableHead>{t("duration")}</TableHead>
+                        <TableHead>{t("exclusive")}</TableHead>
+                        <TableHead>{t("status")}</TableHead>
                         <TableHead className="w-32"></TableHead>
                       </TableRow>
                     </TableHeader>
@@ -301,7 +296,7 @@ function AdminCoursesContent() {
                           <TableCell>
                             {c.isExclusiveAcceptix ? (
                               <Badge variant="secondary" className="border-0">
-                                Acceptix Exclusive
+                                {t("acceptixExclusive")}
                               </Badge>
                             ) : (
                               "—"
@@ -310,11 +305,11 @@ function AdminCoursesContent() {
                           <TableCell>
                             {c.isActive ? (
                               <Badge className="border-0 bg-green-100 text-green-700">
-                                Active
+                                {t("active")}
                               </Badge>
                             ) : (
                               <Badge className="border-0 bg-muted text-muted-foreground">
-                                Hidden
+                                {t("hidden")}
                               </Badge>
                             )}
                           </TableCell>
@@ -324,7 +319,7 @@ function AdminCoursesContent() {
                                 variant="ghost"
                                 size="icon"
                                 onClick={() => openEdit(c)}
-                                aria-label="Edit"
+                                aria-label={t("edit")}
                               >
                                 <Pencil className="h-4 w-4" />
                               </Button>
@@ -332,7 +327,7 @@ function AdminCoursesContent() {
                                 variant="ghost"
                                 size="icon"
                                 onClick={() => handleToggleActive(c)}
-                                aria-label={c.isActive ? "Hide" : "Show"}
+                                aria-label={c.isActive ? t("hide") : t("show")}
                               >
                                 {c.isActive ? (
                                   <EyeOff className="h-4 w-4" />
@@ -371,6 +366,7 @@ function CourseDialog({
   onOpenChange: (open: boolean) => void;
   editing: RegCourse | null;
 }) {
+  const { t } = useLanguage();
   const { firebaseUser, userData } = useAuth();
 
   const {
@@ -442,7 +438,7 @@ function CourseDialog({
           },
           { uid: firebaseUser.uid, displayName: userData.displayName, role: "admin" }
         );
-        toast.success("Course updated");
+        toast.success(t("courseUpdated"));
       } else {
         await createCourse(
           {
@@ -458,12 +454,12 @@ function CourseDialog({
           },
           { uid: firebaseUser.uid, displayName: userData.displayName, role: "admin" }
         );
-        toast.success("Course created");
+        toast.success(t("courseCreated"));
       }
       onOpenChange(false);
     } catch (e) {
       console.error("[course-dialog] save failed:", e);
-      toast.error("Save failed");
+      toast.error(t("saveFailed"));
     }
   }
 
@@ -471,12 +467,12 @@ function CourseDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent dir="ltr" className="max-w-lg">
         <DialogHeader>
-          <DialogTitle>{editing ? "Edit course(s)" : "New Course"}</DialogTitle>
+          <DialogTitle>{editing ? t("editCourse") : t("newCourse")}</DialogTitle>
         </DialogHeader>
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
           <div className="space-y-2">
             <Label htmlFor="c-name">
-              Name <span className="text-destructive">*</span>
+              {t("name")} <span className="text-destructive">*</span>
             </Label>
             <Input id="c-name" {...register("name")} aria-invalid={!!errors.name} />
             {errors.name && (
@@ -486,7 +482,7 @@ function CourseDialog({
 
           <div className="grid gap-3 sm:grid-cols-2">
             <div className="space-y-2">
-              <Label>Category</Label>
+              <Label>{t("category")}</Label>
               <Select
                 value={watch("category")}
                 onValueChange={(v) => setValue("category", v as RegCourseCategory)}
@@ -505,12 +501,12 @@ function CourseDialog({
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="c-currency">Currency</Label>
+              <Label htmlFor="c-currency">{t("currency")}</Label>
               <Input id="c-currency" {...register("currency")} dir="ltr" />
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="c-fee">Fee</Label>
+              <Label htmlFor="c-fee">{t("fee")}</Label>
               <Input
                 id="c-fee"
                 type="number"
@@ -526,25 +522,25 @@ function CourseDialog({
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="c-dur">Duration (label)</Label>
+              <Label htmlFor="c-dur">{t("durationLabel")}</Label>
               <Input
                 id="c-dur"
-                placeholder="e.g. 3 months / 160 hours"
+                placeholder={t("durationPlaceholderExample")}
                 {...register("durationLabel")}
               />
             </div>
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="c-desc">Description</Label>
+            <Label htmlFor="c-desc">{t("description")}</Label>
             <Textarea id="c-desc" rows={3} {...register("description")} />
           </div>
 
           <div className="flex items-center justify-between rounded-md border p-3">
             <div>
-              <p className="text-sm font-medium">Acceptix Exclusive</p>
+              <p className="text-sm font-medium">{t("acceptixExclusive")}</p>
               <p className="text-xs text-muted-foreground">
-                Check if the course is exclusive to Acceptix (e.g. ESP).
+                {t("acceptixExclusiveDesc")}
               </p>
             </div>
             <Switch
@@ -555,9 +551,9 @@ function CourseDialog({
 
           <div className="flex items-center justify-between rounded-md border p-3">
             <div>
-              <p className="text-sm font-medium">Active</p>
+              <p className="text-sm font-medium">{t("active")}</p>
               <p className="text-xs text-muted-foreground">
-                If disabled, agents won't see this course when registering students.
+                {t("activeCourseDesc")}
               </p>
             </div>
             <Switch
@@ -573,11 +569,11 @@ function CourseDialog({
               onClick={() => onOpenChange(false)}
               disabled={isSubmitting}
             >
-              Cancel
+              {t("cancel")}
             </Button>
             <Button type="submit" disabled={isSubmitting}>
               {isSubmitting && <Loader2 className="ml-2 h-4 w-4 animate-spin" />}
-              Save
+              {t("save")}
             </Button>
           </DialogFooter>
         </form>

@@ -4,6 +4,7 @@ import { useState } from "react";
 import { ScheduleEntry, DayOfWeek, Course } from "@/lib/types";
 import { ScheduleEntryCard } from "./schedule-entry-card";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { useLanguage } from "@/contexts/language-context";
 import { cn } from "@/lib/utils";
 
 // Kuwait work week: Saturday to Thursday
@@ -45,6 +46,7 @@ export function WeeklyCalendarGrid({
   onEdit,
   onDelete,
 }: WeeklyCalendarGridProps) {
+  const { t } = useLanguage();
   const courseById = new Map(courses.map((c) => [c.id, c]));
   const [mobileDay, setMobileDay] = useState<string>(String(WEEK_DAYS[0].value));
 
@@ -85,7 +87,7 @@ export function WeeklyCalendarGrid({
                 <p className="text-sm font-semibold">{day.short}</p>
                 {dayEntries.length > 0 && (
                   <span className="text-xs text-muted-foreground">
-                    {dayEntries.length} class{dayEntries.length !== 1 ? "es" : ""}
+                    {dayEntries.length} {dayEntries.length !== 1 ? t("classes") : t("class")}
                   </span>
                 )}
               </div>
@@ -182,7 +184,7 @@ export function WeeklyCalendarGrid({
             <TabsContent key={day.value} value={String(day.value)} className="mt-3">
               {dayEntries.length === 0 ? (
                 <div className="flex h-32 items-center justify-center rounded-lg border border-dashed">
-                  <p className="text-sm text-muted-foreground">No classes</p>
+                  <p className="text-sm text-muted-foreground">{t("noClasses")}</p>
                 </div>
               ) : (
                 <div className="space-y-2">

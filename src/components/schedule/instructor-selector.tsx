@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { User } from "@/lib/types";
+import { useLanguage } from "@/contexts/language-context";
 import { getInstructors } from "@/lib/services/schedule-service";
 import {
   Select,
@@ -18,6 +19,7 @@ interface InstructorSelectorProps {
 }
 
 export function InstructorSelector({ value, onChange }: InstructorSelectorProps) {
+  const { t } = useLanguage();
   const [instructors, setInstructors] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -40,7 +42,7 @@ export function InstructorSelector({ value, onChange }: InstructorSelectorProps)
       }}
     >
       <SelectTrigger className="w-64">
-        <SelectValue placeholder="Select Instructor" />
+        <SelectValue placeholder={t("selectInstructor")} />
       </SelectTrigger>
       <SelectContent>
         {instructors.map((inst) => (

@@ -2,6 +2,7 @@
 
 import { useMemo } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { useLanguage } from "@/contexts/language-context";
 import { Student } from "@/lib/types";
 import {
   PieChart,
@@ -28,24 +29,25 @@ interface LeadSourceChartProps {
 }
 
 export function LeadSourceChart({ students }: LeadSourceChartProps) {
+  const { t } = useLanguage();
   const data = useMemo(() => {
     const counts: Record<string, number> = {};
     for (const s of students) {
-      const src = s.leadSource || "Unknown";
+      const src = s.leadSource || t("unknown");
       counts[src] = (counts[src] || 0) + 1;
     }
 
     return Object.entries(counts)
       .map(([name, value]) => ({ name, value }))
       .sort((a, b) => b.value - a.value);
-  }, [students]);
+  }, [students, t]);
 
   if (data.length === 0) return null;
 
   return (
     <Card>
       <CardHeader className="pb-2">
-        <CardTitle className="text-base">Lead Sources</CardTitle>
+        <CardTitle className="text-base">{t("leadSources")}</CardTitle>
       </CardHeader>
       <CardContent>
         <ResponsiveContainer width="100%" height={250}>

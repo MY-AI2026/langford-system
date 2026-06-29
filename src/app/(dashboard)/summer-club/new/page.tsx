@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/contexts/auth-context";
+import { useLanguage } from "@/contexts/language-context";
 import { PageHeader } from "@/components/layout/page-header";
 import { RoleGate } from "@/components/auth/role-gate";
 import {
@@ -16,6 +17,7 @@ import { toast } from "sonner";
 export default function NewSummerClubStudentPage() {
   const router = useRouter();
   const { firebaseUser, userData, role } = useAuth();
+  const { t } = useLanguage();
 
   async function handleSubmit(data: SummerClubFormData) {
     if (!firebaseUser || !userData) return;
@@ -45,7 +47,7 @@ export default function NewSummerClubStudentPage() {
         firebaseUser.uid,
         userData.displayName
       );
-      toast.success("تم إضافة الطالب بنجاح");
+      toast.success(t("studentAddedSuccess"));
       router.push(`/summer-club/${id}`);
     } catch (err) {
       console.error("[summer-club/new] create failed:", err);
@@ -53,21 +55,21 @@ export default function NewSummerClubStudentPage() {
 
       if (msg.startsWith("PHONE_DUPLICATE:")) {
         const name = msg.substring("PHONE_DUPLICATE:".length);
-        toast.error(`رقم التلفون مسجل مسبقاً للطالب: ${name}`);
+        toast.error(`${t("phoneDuplicate")}: ${name}`);
       } else if (msg === "PHONE_INVALID") {
-        toast.error("رقم التلفون مش صحيح — لازم 6 أرقام على الأقل");
+        toast.error(t("phoneInvalid"));
       } else if (msg.startsWith("PHONE_LOOKUP_FAILED")) {
         // Permission / network / auth issue during phone uniqueness check
-        toast.error("مفيش اتصال بالسيرفر للتحقق من الرقم — حاول تاني");
+        toast.error(t("phoneLookupFailed"));
       } else if (msg === "Not authenticated" || msg.includes("UNAUTHENTICATED")) {
-        toast.error("الجلسة انتهت — اعمل تسجيل دخول تاني");
+        toast.error(t("sessionExpired"));
       } else if (msg.includes("PERMISSION_DENIED")) {
-        toast.error("مفيش صلاحية لإضافة طالب — كلّم الأدمن");
+        toast.error(t("noPermissionAddStudent"));
       } else if (!data.assignedSalesRepId) {
-        toast.error("لازم تختار السيلز المسؤول");
+        toast.error(t("mustSelectSalesRep"));
       } else {
         // Show the real reason instead of the generic message
-        toast.error(`فشل في إضافة الطالب: ${msg}`);
+        toast.error(`${t("addStudentFailed")}: ${msg}`);
       }
     }
   }
@@ -76,12 +78,12 @@ export default function NewSummerClubStudentPage() {
     <RoleGate allowedRoles={["admin", "sales", "coordinator"]}>
       <div className="space-y-6">
         <PageHeader
-          title="إضافة طالب جديد - النادي الصيفي"
-          description="املأ بيانات الطالب"
+          title={t("newSummerClubStudent")}
+          description={t("fillStudentData")}
         />
         <Card>
           <CardContent className="pt-6">
-            <SummerClubForm onSubmit={handleSubmit} submitLabel="حفظ الطالب" />
+            <SummerClubForm onSubmit={handleSubmit} submitLabel={t("saveStudent")} />
           </CardContent>
         </Card>
       </div>

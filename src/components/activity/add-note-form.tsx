@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { noteSchema, NoteFormData } from "@/lib/utils/validators";
+import { useLanguage } from "@/contexts/language-context";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
@@ -22,6 +23,7 @@ interface AddNoteFormProps {
 }
 
 export function AddNoteForm({ onSubmit }: AddNoteFormProps) {
+  const { t } = useLanguage();
   const {
     register,
     handleSubmit,
@@ -59,8 +61,8 @@ export function AddNoteForm({ onSubmit }: AddNoteFormProps) {
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="note">Note</SelectItem>
-              <SelectItem value="follow_up">Follow-up</SelectItem>
+              <SelectItem value="note">{t("note")}</SelectItem>
+              <SelectItem value="follow_up">{t("followUp")}</SelectItem>
             </SelectContent>
           </Select>
         </div>
@@ -77,8 +79,8 @@ export function AddNoteForm({ onSubmit }: AddNoteFormProps) {
       <Textarea
         placeholder={
           noteType === "follow_up"
-            ? "What needs to be followed up?"
-            : "Add a note..."
+            ? t("whatNeedsFollowUp")
+            : t("notesPlaceholder")
         }
         {...register("description")}
       />
@@ -89,7 +91,7 @@ export function AddNoteForm({ onSubmit }: AddNoteFormProps) {
       <div className="flex justify-end">
         <Button type="submit" size="sm" disabled={isSubmitting}>
           {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-          Add {noteType === "follow_up" ? "Follow-up" : "Note"}
+          {t("add")} {noteType === "follow_up" ? t("followUp") : t("note")}
         </Button>
       </div>
     </form>

@@ -1,6 +1,7 @@
 "use client";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { useLanguage } from "@/contexts/language-context";
 import { Student, StudentStatus } from "@/lib/types";
 import { STUDENT_STATUS_CONFIG } from "@/lib/utils/constants";
 import {
@@ -36,6 +37,7 @@ interface PipelineFunnelProps {
 }
 
 export function PipelineFunnel({ students }: PipelineFunnelProps) {
+  const { t } = useLanguage();
   const data = STATUS_ORDER.map((status) => ({
     name: STUDENT_STATUS_CONFIG[status].label,
     count: students.filter((s) => s.status === status).length,
@@ -45,7 +47,7 @@ export function PipelineFunnel({ students }: PipelineFunnelProps) {
   return (
     <Card>
       <CardHeader className="pb-2">
-        <CardTitle className="text-base">Student Pipeline</CardTitle>
+        <CardTitle className="text-base">{t("studentPipeline")}</CardTitle>
       </CardHeader>
       <CardContent>
         <ResponsiveContainer width="100%" height={250}>
@@ -58,7 +60,7 @@ export function PipelineFunnel({ students }: PipelineFunnelProps) {
               tick={{ fontSize: 12 }}
             />
             <Tooltip
-              formatter={(value) => [value, "Students"]}
+              formatter={(value) => [value, t("students")]}
               contentStyle={{ borderRadius: 8, fontSize: 13 }}
             />
             <Bar dataKey="count" radius={[0, 4, 4, 0]} maxBarSize={28}>

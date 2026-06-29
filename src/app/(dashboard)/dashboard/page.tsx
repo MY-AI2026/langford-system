@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import dynamic from "next/dynamic";
 import { useAuth } from "@/contexts/auth-context";
+import { useLanguage } from "@/contexts/language-context";
 import { PageHeader } from "@/components/layout/page-header";
 import { StatsCards } from "@/components/dashboard/stats-cards";
 import { MonthlyTargetProgress } from "@/components/dashboard/monthly-target-progress";
@@ -70,6 +71,7 @@ function formatMonthLabel(value: string): string {
 
 export default function DashboardPage() {
   const { userData, role, firebaseUser } = useAuth();
+  const { t } = useLanguage();
   const [students, setStudents] = useState<Student[]>([]);
   const [activities, setActivities] = useState<ActivityLogEntry[]>([]);
   const [salesUsers, setSalesUsers] = useState<User[]>([]);
@@ -238,7 +240,7 @@ export default function DashboardPage() {
             id: s.id,
             studentId: s.id,
             studentName: s.fullName,
-            description: `No update for ${daysSinceUpdate} days (${s.status})`,
+            description: `${t("noUpdateFor")} ${daysSinceUpdate} ${t("days")} (${s.status})`,
             followUpDate: updated.toISOString(),
             createdByName: s.assignedSalesRepName || "",
             isOverdue,
@@ -367,8 +369,8 @@ export default function DashboardPage() {
     return (
       <div className="space-y-6">
         <PageHeader
-          title={`Welcome back, ${userData?.displayName || "User"}`}
-          description="Your teaching dashboard"
+          title={`${t("welcomeBack")}, ${userData?.displayName || t("user")}`}
+          description={t("teachingDashboard")}
         />
 
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
@@ -379,7 +381,7 @@ export default function DashboardPage() {
                   <BookOpen className="h-5 w-5 text-blue-600" />
                 </div>
                 <div>
-                  <p className="text-sm text-muted-foreground">My Courses</p>
+                  <p className="text-sm text-muted-foreground">{t("myCourses")}</p>
                   <p className="text-2xl font-bold">{courses.length}</p>
                 </div>
               </div>
@@ -392,7 +394,7 @@ export default function DashboardPage() {
                   <Users className="h-5 w-5 text-green-600" />
                 </div>
                 <div>
-                  <p className="text-sm text-muted-foreground">Total Students</p>
+                  <p className="text-sm text-muted-foreground">{t("totalStudents")}</p>
                   <p className="text-2xl font-bold">{students.length}</p>
                 </div>
               </div>
@@ -405,8 +407,8 @@ export default function DashboardPage() {
                   <ClipboardCheck className="h-5 w-5 text-purple-600" />
                 </div>
                 <div>
-                  <p className="text-sm text-muted-foreground">Take Attendance</p>
-                  <p className="text-sm font-medium text-blue-600 group-hover:underline">Go to Attendance</p>
+                  <p className="text-sm text-muted-foreground">{t("takeAttendance")}</p>
+                  <p className="text-sm font-medium text-blue-600 group-hover:underline">{t("goToAttendance")}</p>
                 </div>
               </Link>
             </CardContent>
@@ -415,10 +417,10 @@ export default function DashboardPage() {
 
         {/* My Courses list */}
         <div>
-          <h3 className="text-lg font-semibold mb-3">My Courses</h3>
+          <h3 className="text-lg font-semibold mb-3">{t("myCourses")}</h3>
           {courses.length === 0 ? (
             <div className="flex h-24 items-center justify-center rounded-lg border border-dashed">
-              <p className="text-sm text-muted-foreground">No courses assigned yet</p>
+              <p className="text-sm text-muted-foreground">{t("noCoursesAssigned")}</p>
             </div>
           ) : (
             <div className="grid gap-3 sm:grid-cols-2">
@@ -439,7 +441,7 @@ export default function DashboardPage() {
                         href="/attendance"
                         className="text-xs text-blue-600 hover:underline"
                       >
-                        Take Attendance
+                        {t("takeAttendance")}
                       </Link>
                     </div>
                   </CardContent>
@@ -457,15 +459,15 @@ export default function DashboardPage() {
     return (
       <div className="space-y-6">
         <PageHeader
-          title={`Welcome back, ${userData?.displayName || "User"}`}
-          description="Course coordination dashboard"
+          title={`${t("welcomeBack")}, ${userData?.displayName || t("user")}`}
+          description={t("coordinationDashboard")}
         />
 
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between pb-2">
               <CardTitle className="text-sm font-medium text-muted-foreground">
-                Total Students
+                {t("totalStudents")}
               </CardTitle>
               <div className="rounded-lg p-2 bg-blue-50">
                 <GraduationCap className="h-4 w-4 text-blue-600" />
@@ -478,7 +480,7 @@ export default function DashboardPage() {
           <Card>
             <CardHeader className="flex flex-row items-center justify-between pb-2">
               <CardTitle className="text-sm font-medium text-muted-foreground">
-                Active Courses
+                {t("activeCourses")}
               </CardTitle>
               <div className="rounded-lg p-2 bg-green-50">
                 <BookOpen className="h-4 w-4 text-green-600" />
@@ -491,7 +493,7 @@ export default function DashboardPage() {
           <Card>
             <CardHeader className="flex flex-row items-center justify-between pb-2">
               <CardTitle className="text-sm font-medium text-muted-foreground">
-                Enrolled
+                {t("enrolled")}
               </CardTitle>
               <div className="rounded-lg p-2 bg-emerald-50">
                 <Users className="h-4 w-4 text-emerald-600" />
@@ -508,8 +510,8 @@ export default function DashboardPage() {
                   <CalendarDays className="h-5 w-5 text-purple-600" />
                 </div>
                 <div>
-                  <p className="text-sm text-muted-foreground">Schedule</p>
-                  <p className="text-sm font-medium text-blue-600 group-hover:underline">Manage Schedule</p>
+                  <p className="text-sm text-muted-foreground">{t("schedule")}</p>
+                  <p className="text-sm font-medium text-blue-600 group-hover:underline">{t("manageSchedule")}</p>
                 </div>
               </Link>
             </CardContent>
@@ -533,11 +535,11 @@ export default function DashboardPage() {
   return (
     <div className="space-y-6">
       <PageHeader
-        title={`Welcome back, ${userData?.displayName || "User"}`}
+        title={`${t("welcomeBack")}, ${userData?.displayName || t("user")}`}
         description={
           role === "admin"
-            ? "Overview of all sales and student activities"
-            : "Your personal performance dashboard"
+            ? t("adminDashboardDesc")
+            : t("personalDashboardDesc")
         }
       />
 
@@ -545,7 +547,7 @@ export default function DashboardPage() {
         <Card>
           <CardContent className="flex flex-wrap items-center gap-3 pt-6">
             <Label htmlFor="dashboard-month" className="text-sm">
-              Show data for:
+              {t("showDataFor")}
             </Label>
             <Input
               id="dashboard-month"
@@ -559,9 +561,9 @@ export default function DashboardPage() {
             />
             <Badge variant={isAllTime ? "default" : "secondary"}>
               {isAllTime
-                ? "All time (full)"
+                ? t("allTimeFull")
                 : isCurrentMonth
-                  ? "Current month"
+                  ? t("currentMonth")
                   : formatMonthLabel(selectedMonth)}
             </Badge>
             {!isAllTime && (
@@ -570,7 +572,7 @@ export default function DashboardPage() {
                 variant="ghost"
                 onClick={() => setSelectedMonth("all")}
               >
-                Show all (full amount)
+                {t("showAllFullAmount")}
               </Button>
             )}
             {isAllTime && (
@@ -579,13 +581,13 @@ export default function DashboardPage() {
                 variant="ghost"
                 onClick={() => setSelectedMonth(currentMonthValue())}
               >
-                View current month
+                {t("viewCurrentMonth")}
               </Button>
             )}
             <p className="text-xs text-muted-foreground w-full sm:w-auto sm:ml-auto">
               {isAllTime
-                ? "Showing all-time totals. Pick a month to view it on its own."
-                : "Outstanding balances are always shown across all months."}
+                ? t("allTimeTotalsHint")
+                : t("outstandingAcrossMonthsHint")}
             </p>
           </CardContent>
         </Card>
