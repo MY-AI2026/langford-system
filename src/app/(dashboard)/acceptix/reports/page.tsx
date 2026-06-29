@@ -244,11 +244,11 @@ function ReportsContent() {
 
         <div className="flex gap-2">
           <Button variant="outline" onClick={handleExcel} disabled={!report || loading}>
-            <FileSpreadsheet className="ml-2 h-4 w-4" />
+            <FileSpreadsheet className="ms-2 h-4 w-4" />
             {t("exportExcel")}
           </Button>
           <Button variant="outline" onClick={handlePdf} disabled={!report || loading}>
-            <Printer className="ml-2 h-4 w-4" />
+            <Printer className="ms-2 h-4 w-4" />
             {t("exportPdf")}
           </Button>
         </div>
@@ -354,7 +354,7 @@ function ReportsContent() {
 
           <div className="flex justify-start">
             <Button onClick={runReport} disabled={loading}>
-              {loading && <Loader2 className="ml-2 h-4 w-4 animate-spin" />}
+              {loading && <Loader2 className="ms-2 h-4 w-4 animate-spin" />}
               {t("runReport")}
             </Button>
           </div>
@@ -497,7 +497,7 @@ function DisbursementTable({
           onClick={onSettleAll}
           disabled={loading || pendingCount === 0}
         >
-          <BadgeCheck className="ml-2 h-4 w-4" />
+          <BadgeCheck className="ms-2 h-4 w-4" />
           {t("settleAllPending")} ({pendingCount})
         </Button>
       </CardHeader>
@@ -519,9 +519,9 @@ function DisbursementTable({
                 <TableHead>{t("student")}</TableHead>
                 <TableHead>{t("agent")}</TableHead>
                 <TableHead>{t("course")}</TableHead>
-                <TableHead className="text-right">{t("commission")}</TableHead>
+                <TableHead className="text-end">{t("commission")}</TableHead>
                 <TableHead>{t("payout")}</TableHead>
-                <TableHead className="text-right">{t("action")}</TableHead>
+                <TableHead className="text-end">{t("action")}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -537,7 +537,7 @@ function DisbursementTable({
                     <TableCell className="text-muted-foreground">
                       {s.courseName || "—"}
                     </TableCell>
-                    <TableCell dir="ltr" className="text-right font-medium text-primary">
+                    <TableCell dir="ltr" className="text-end font-medium text-primary">
                       {commissionFor(s).toLocaleString("en-US")} {s.currency || currency}
                     </TableCell>
                     <TableCell>
@@ -552,7 +552,7 @@ function DisbursementTable({
                         </span>
                       )}
                     </TableCell>
-                    <TableCell className="text-right">
+                    <TableCell className="text-end">
                       <Button
                         size="sm"
                         variant={disbursed ? "ghost" : "outline"}
@@ -563,12 +563,12 @@ function DisbursementTable({
                           <Loader2 className="h-4 w-4 animate-spin" />
                         ) : disbursed ? (
                           <>
-                            <RotateCcw className="ml-1 h-3.5 w-3.5" />
+                            <RotateCcw className="ms-1 h-3.5 w-3.5" />
                             {t("undo")}
                           </>
                         ) : (
                           <>
-                            <BadgeCheck className="ml-1 h-3.5 w-3.5" />
+                            <BadgeCheck className="ms-1 h-3.5 w-3.5" />
                             {t("markPaid")}
                           </>
                         )}

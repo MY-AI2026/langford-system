@@ -456,7 +456,7 @@ function AttendanceContent() {
         </div>
         <div className="flex gap-2 pt-5">
           <Button onClick={handleSaveAttendance} disabled={saving || records.length === 0}>
-            <Save className="mr-2 h-4 w-4" />
+            <Save className="me-2 h-4 w-4" />
             {saving ? t("saving") : t("saveAttendance")}
           </Button>
           <Button
@@ -464,7 +464,7 @@ function AttendanceContent() {
             onClick={handlePrint}
             disabled={records.length === 0}
           >
-            <Printer className="mr-2 h-4 w-4" />
+            <Printer className="me-2 h-4 w-4" />
             {t("print")}
           </Button>
         </div>

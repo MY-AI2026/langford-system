@@ -135,7 +135,7 @@ export default function SummerClubStudentDetailPage() {
         <p className="text-muted-foreground">{t("studentNotFound")}</p>
         <Link href="/summer-club">
           <Button variant="outline">
-            <ArrowLeft className="mr-2 h-4 w-4" />
+            <ArrowLeft className="me-2 h-4 w-4" />
             {t("back")}
           </Button>
         </Link>
@@ -150,7 +150,7 @@ export default function SummerClubStudentDetailPage() {
         <p className="text-muted-foreground">{t("noPermissionViewStudent")}</p>
         <Link href="/summer-club">
           <Button variant="outline">
-            <ArrowLeft className="mr-2 h-4 w-4" />
+            <ArrowLeft className="me-2 h-4 w-4" />
             {t("back")}
           </Button>
         </Link>
@@ -174,7 +174,7 @@ export default function SummerClubStudentDetailPage() {
           action={
             canDelete && (
               <Button variant="destructive" size="sm" onClick={handleDelete}>
-                <Trash2 className="mr-2 h-4 w-4" />
+                <Trash2 className="me-2 h-4 w-4" />
                 {t("delete")}
               </Button>
             )

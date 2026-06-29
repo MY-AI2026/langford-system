@@ -191,7 +191,7 @@ function EditUserContent() {
                   disabled={isSelf}
                   title={isSelf ? t("cannotDeleteOwnAccount") : undefined}
                 >
-                  <Trash2 className="mr-2 h-4 w-4" />
+                  <Trash2 className="me-2 h-4 w-4" />
                   {t("deleteUser")}
                 </Button>
                 <Button
@@ -200,13 +200,13 @@ function EditUserContent() {
                   disabled={sendingReset}
                 >
                   {sendingReset
-                    ? <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    : <Mail className="mr-2 h-4 w-4" />}
+                    ? <Loader2 className="me-2 h-4 w-4 animate-spin" />
+                    : <Mail className="me-2 h-4 w-4" />}
                   {t("resetPassword")}
                 </Button>
               </div>
               <Button onClick={handleSave} disabled={saving}>
-                {saving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                {saving && <Loader2 className="me-2 h-4 w-4 animate-spin" />}
                 {t("saveChanges")}
               </Button>
             </div>

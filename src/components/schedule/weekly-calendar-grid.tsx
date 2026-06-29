@@ -82,7 +82,7 @@ export function WeeklyCalendarGrid({
             return (
               <div
                 key={day.value}
-                className="border-l p-2 text-center"
+                className="border-s p-2 text-center"
               >
                 <p className="text-sm font-semibold">{day.short}</p>
                 {dayEntries.length > 0 && (
@@ -104,11 +104,11 @@ export function WeeklyCalendarGrid({
               className="col-span-full grid grid-cols-[72px_repeat(6,1fr)] border-b border-dashed border-muted"
               style={{ height: "64px" }}
             >
-              <div className="flex items-start justify-end pr-2 pt-1 text-xs text-muted-foreground">
+              <div className="flex items-start justify-end pe-2 pt-1 text-xs text-muted-foreground">
                 {formatHour(h)}
               </div>
               {WEEK_DAYS.map((day) => (
-                <div key={day.value} className="border-l" />
+                <div key={day.value} className="border-s" />
               ))}
             </div>
           ))}
@@ -167,7 +167,7 @@ export function WeeklyCalendarGrid({
               >
                 {day.short}
                 {count > 0 && (
-                  <span className="ml-1 rounded-full bg-primary/10 px-1.5 text-xs font-medium">
+                  <span className="ms-1 rounded-full bg-primary/10 px-1.5 text-xs font-medium">
                     {count}
                   </span>
                 )}

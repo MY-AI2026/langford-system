@@ -14,7 +14,8 @@ import {
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Eye } from "lucide-react";
+import { EmptyState } from "@/components/ui/empty-state";
+import { Eye, Sun } from "lucide-react";
 
 interface Props {
   students: SummerClubStudent[];
@@ -25,8 +26,8 @@ export function SummerClubListTable({ students, showSalesRep = false }: Props) {
   const { t } = useLanguage();
   if (students.length === 0) {
     return (
-      <div className="flex h-40 items-center justify-center rounded-lg border border-dashed">
-        <p className="text-sm text-muted-foreground">{t("noData")}</p>
+      <div className="rounded-lg border border-dashed">
+        <EmptyState icon={Sun} title={t("noData")} />
       </div>
     );
   }

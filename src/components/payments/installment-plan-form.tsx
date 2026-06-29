@@ -155,7 +155,7 @@ export function InstallmentPlanForm({
                   </div>
                 ))}
               </div>
-              <p className="text-xs text-muted-foreground text-right">
+              <p className="text-xs text-muted-foreground text-end">
                 {t("total")}: {formatCurrency(totalFeesNum)}
               </p>
             </div>

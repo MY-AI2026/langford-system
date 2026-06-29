@@ -98,7 +98,7 @@ export function NotificationBell() {
                   onClick={handleMarkAll}
                   className="text-xs"
                 >
-                  <CheckCheck className="ml-1 h-4 w-4" />
+                  <CheckCheck className="ms-1 h-4 w-4" />
                   Mark all as read
                 </Button>
               )}
@@ -118,7 +118,7 @@ export function NotificationBell() {
                     <button
                       onClick={() => handleClickItem(notif)}
                       className={[
-                        "flex w-full items-start gap-3 px-4 py-3 text-left transition-colors hover:bg-muted/50",
+                        "flex w-full items-start gap-3 px-4 py-3 text-start transition-colors hover:bg-muted/50",
                         notif.isRead ? "" : "bg-primary/5",
                       ].join(" ")}
                     >

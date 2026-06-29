@@ -93,7 +93,7 @@ export function PaymentForm({
             <Label htmlFor="amount">
               {t("amount")} *
               {remainingBalance !== undefined && (
-                <span className="ml-2 text-xs text-muted-foreground">
+                <span className="ms-2 text-xs text-muted-foreground">
                   ({t("remaining")}: {remainingBalance.toFixed(3)} KWD)
                 </span>
               )}
@@ -182,7 +182,7 @@ export function PaymentForm({
             </Button>
             <Button type="submit" disabled={isSubmitting}>
               {isSubmitting && (
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                <Loader2 className="me-2 h-4 w-4 animate-spin" />
               )}
               {t("recordPayment")}
             </Button>

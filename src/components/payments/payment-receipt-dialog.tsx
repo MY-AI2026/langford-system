@@ -266,7 +266,7 @@ export function PaymentReceiptDialog({
             {payment.notes && (
               <div className="flex justify-between text-xs">
                 <span className="text-muted-foreground">Notes:</span>
-                <span className="max-w-36 text-right">{payment.notes}</span>
+                <span className="max-w-36 text-end">{payment.notes}</span>
               </div>
             )}
           </div>
@@ -294,11 +294,11 @@ export function PaymentReceiptDialog({
             className="flex-1"
             onClick={() => onOpenChange(false)}
           >
-            <X className="mr-2 h-4 w-4" />
+            <X className="me-2 h-4 w-4" />
             {t("close")}
           </Button>
           <Button className="flex-1" onClick={handlePrint}>
-            <Printer className="mr-2 h-4 w-4" />
+            <Printer className="me-2 h-4 w-4" />
             {t("printReceipt")}
           </Button>
         </div>

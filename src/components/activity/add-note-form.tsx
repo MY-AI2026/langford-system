@@ -90,7 +90,7 @@ export function AddNoteForm({ onSubmit }: AddNoteFormProps) {
 
       <div className="flex justify-end">
         <Button type="submit" size="sm" disabled={isSubmitting}>
-          {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+          {isSubmitting && <Loader2 className="me-2 h-4 w-4 animate-spin" />}
           {t("add")} {noteType === "follow_up" ? t("followUp") : t("note")}
         </Button>
       </div>

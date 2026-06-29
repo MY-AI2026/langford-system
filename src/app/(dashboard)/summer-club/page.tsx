@@ -123,13 +123,13 @@ export default function SummerClubPage() {
                 onClick={() => exportCSV(students)}
                 disabled={students.length === 0}
               >
-                <Download className="mr-2 h-4 w-4" />
+                <Download className="me-2 h-4 w-4" />
                 {t("export")}
               </Button>
               {role !== "accountant" && (
                 <Link href="/summer-club/new">
                   <Button>
-                    <Plus className="mr-2 h-4 w-4" />
+                    <Plus className="me-2 h-4 w-4" />
                     {t("addStudent")}
                   </Button>
                 </Link>

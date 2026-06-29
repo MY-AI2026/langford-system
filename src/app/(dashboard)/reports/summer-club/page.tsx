@@ -185,7 +185,7 @@ export default function SummerClubReportPage() {
           }
           action={
             <Button variant="outline" onClick={exportReport} disabled={filtered.length === 0}>
-              <Download className="mr-2 h-4 w-4" />
+              <Download className="me-2 h-4 w-4" />
               {t("exportCSV")}
             </Button>
           }

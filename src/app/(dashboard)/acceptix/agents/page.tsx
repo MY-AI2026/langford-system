@@ -130,7 +130,7 @@ function AdminAgentsContent() {
 
         <Link href={REG_ROUTES.adminAgentNew}>
           <Button>
-            <UserPlus className="ml-2 h-4 w-4" />
+            <UserPlus className="ms-2 h-4 w-4" />
             {t("newAgent")}
           </Button>
         </Link>
@@ -152,7 +152,7 @@ function AdminAgentsContent() {
             </p>
             <Link href={REG_ROUTES.adminAgentNew}>
               <Button className="mt-4">
-                <UserPlus className="ml-2 h-4 w-4" />
+                <UserPlus className="ms-2 h-4 w-4" />
                 {t("addAgent")}
               </Button>
             </Link>
@@ -176,7 +176,7 @@ function AdminAgentsContent() {
                 return (
                   <TableRow key={a.uid}>
                     <TableCell className="font-medium">{a.displayName}</TableCell>
-                    <TableCell dir="ltr" className="text-left">
+                    <TableCell dir="ltr" className="text-start">
                       {a.email}
                     </TableCell>
                     <TableCell>
@@ -197,7 +197,7 @@ function AdminAgentsContent() {
                           onClick={() => setResetTarget(a)}
                           aria-label={t("resetPassword")}
                         >
-                          <Key className="ml-1 h-4 w-4" />
+                          <Key className="ms-1 h-4 w-4" />
                           {t("password")}
                         </Button>
                         <Button
@@ -208,11 +208,11 @@ function AdminAgentsContent() {
                           aria-label={active ? t("disable") : t("enable")}
                         >
                           {togglingUid === a.uid ? (
-                            <Loader2 className="ml-1 h-4 w-4 animate-spin" />
+                            <Loader2 className="ms-1 h-4 w-4 animate-spin" />
                           ) : active ? (
-                            <PowerOff className="ml-1 h-4 w-4 text-destructive" />
+                            <PowerOff className="ms-1 h-4 w-4 text-destructive" />
                           ) : (
-                            <Power className="ml-1 h-4 w-4 text-green-600" />
+                            <Power className="ms-1 h-4 w-4 text-green-600" />
                           )}
                           {active ? t("disable") : t("enable")}
                         </Button>
@@ -256,7 +256,7 @@ function AdminAgentsContent() {
                   onChange={(e) => setResetPw(e.target.value)}
                   placeholder={t("passwordPlaceholderShort")}
                   dir="ltr"
-                  className="text-left"
+                  className="text-start"
                 />
                 <p className="text-xs text-muted-foreground">
                   {t("passwordRequirements")}
@@ -276,7 +276,7 @@ function AdminAgentsContent() {
               {t("cancel")}
             </Button>
             <Button onClick={handleResetSubmit} disabled={resetSubmitting}>
-              {resetSubmitting && <Loader2 className="ml-2 h-4 w-4 animate-spin" />}
+              {resetSubmitting && <Loader2 className="ms-2 h-4 w-4 animate-spin" />}
               {t("setPassword")}
             </Button>
           </DialogFooter>

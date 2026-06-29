@@ -34,7 +34,7 @@ export function StudentListTable({
   const { t } = useLanguage();
   if (students.length === 0) {
     return (
-      <div className="rounded-lg border border-dashed">
+      <div className="rounded-xl border border-dashed">
         <EmptyState
           icon={GraduationCap}
           title={t("noStudents")}
@@ -45,10 +45,10 @@ export function StudentListTable({
   }
 
   return (
-    <div className="rounded-lg border">
+    <div className="overflow-hidden rounded-xl border bg-card shadow-sm">
       <Table>
         <TableHeader>
-          <TableRow>
+          <TableRow className="hover:bg-transparent">
             <TableHead>{t("name")}</TableHead>
             <TableHead>{t("phone")}</TableHead>
             <TableHead>{t("status")}</TableHead>
@@ -67,7 +67,7 @@ export function StudentListTable({
             const remainingBalance = student.paymentSummary?.remainingBalance ?? 0;
             return (
               <TableRow key={student.id}>
-                <TableCell>
+                <TableCell className="py-3">
                   <Link
                     href={`/students/${student.id}`}
                     className="font-medium hover:text-primary hover:underline"
@@ -75,21 +75,21 @@ export function StudentListTable({
                     {student.fullName || "—"}
                   </Link>
                 </TableCell>
-                <TableCell className="text-muted-foreground">
+                <TableCell className="py-3 text-muted-foreground tabular-nums">
                   {formatPhone(student.phone || "")}
                 </TableCell>
-                <TableCell>
+                <TableCell className="py-3">
                   <StudentStatusBadge status={student.status || "new"} />
                 </TableCell>
-                <TableCell className="text-muted-foreground">
+                <TableCell className="py-3 text-muted-foreground">
                   {student.leadSource || "—"}
                 </TableCell>
                 {showSalesRep && (
-                  <TableCell className="text-muted-foreground">
+                  <TableCell className="py-3 text-muted-foreground">
                     {student.assignedSalesRepName || "—"}
                   </TableCell>
                 )}
-                <TableCell>
+                <TableCell className="py-3">
                   <div className="flex flex-col">
                     <Badge
                       variant="secondary"
@@ -102,17 +102,17 @@ export function StudentListTable({
                       {paymentConfig?.label || t("unpaid")}
                     </Badge>
                     {remainingBalance > 0 && (
-                      <span className="mt-1 text-xs text-muted-foreground">
+                      <span className="mt-1 text-xs text-muted-foreground tabular-nums">
                         {formatCurrency(remainingBalance)}{" "}
                         {t("remaining")}
                       </span>
                     )}
                   </div>
                 </TableCell>
-                <TableCell className="text-muted-foreground">
+                <TableCell className="py-3 text-muted-foreground tabular-nums">
                   {formatDate(student.registrationDate || student.createdAt)}
                 </TableCell>
-                <TableCell>
+                <TableCell className="py-3">
                   <div className="flex items-center justify-end gap-1">
                     <WhatsAppButton
                       phone={student.phone || ""}

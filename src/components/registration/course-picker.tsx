@@ -97,9 +97,9 @@ export function CoursePicker({
         {selected ? (
           <span className="flex min-w-0 flex-1 items-center gap-2">
             <GraduationCap className="h-4 w-4 shrink-0 text-primary" />
-            <span className="truncate text-left">{selected.name}</span>
+            <span className="truncate text-start">{selected.name}</span>
             {selected.fee > 0 && (
-              <Badge variant="secondary" className="ml-auto border-0">
+              <Badge variant="secondary" className="ms-auto border-0">
                 {selected.fee.toLocaleString("en-US")}{" "}
                 {selected.currency || REG_DEFAULT_CURRENCY}
               </Badge>
@@ -108,7 +108,7 @@ export function CoursePicker({
         ) : (
           <span className="text-muted-foreground">{placeholder}</span>
         )}
-        <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+        <ChevronsUpDown className="ms-2 h-4 w-4 shrink-0 opacity-50" />
       </PopoverTrigger>
 
       <PopoverContent
@@ -125,7 +125,7 @@ export function CoursePicker({
               placeholder="Search courses, tier, or category…"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              className="pl-8"
+              className="ps-8"
             />
           </div>
         </div>
@@ -161,7 +161,7 @@ export function CoursePicker({
                             type="button"
                             onClick={() => handlePick(c.id)}
                             className={[
-                              "flex w-full items-start gap-3 rounded-md px-3 py-2.5 text-left transition-colors hover:bg-muted",
+                              "flex w-full items-start gap-3 rounded-md px-3 py-2.5 text-start transition-colors hover:bg-muted",
                               isSelected ? "bg-primary/5" : "",
                             ].join(" ")}
                           >
@@ -182,7 +182,7 @@ export function CoursePicker({
                                     variant="secondary"
                                     className="shrink-0 border-0 bg-amber-100 text-[10px] text-amber-800"
                                   >
-                                    <Sparkles className="mr-0.5 h-3 w-3" />
+                                    <Sparkles className="me-0.5 h-3 w-3" />
                                     ESP
                                   </Badge>
                                 )}
@@ -217,7 +217,7 @@ export function CoursePicker({
                                 </p>
                               )}
                             </div>
-                            <div className="shrink-0 text-right">
+                            <div className="shrink-0 text-end">
                               <div className="text-sm font-semibold">
                                 {c.fee > 0
                                   ? `${c.fee.toLocaleString("en-US")} ${c.currency || REG_DEFAULT_CURRENCY}`

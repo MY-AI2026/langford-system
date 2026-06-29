@@ -288,11 +288,11 @@ export function CertificateDialog({
             className="flex-1"
             onClick={() => onOpenChange(false)}
           >
-            <X className="mr-2 h-4 w-4" />
+            <X className="me-2 h-4 w-4" />
             {t("close")}
           </Button>
           <Button className="flex-1" onClick={handlePrint}>
-            <Printer className="mr-2 h-4 w-4" />
+            <Printer className="me-2 h-4 w-4" />
             {t("printCertificate")}
           </Button>
         </div>

@@ -217,14 +217,14 @@ function AdminCoursesContent() {
         <div className="flex gap-2">
           <Button variant="outline" onClick={handleSeed} disabled={seeding}>
             {seeding ? (
-              <Loader2 className="ml-2 h-4 w-4 animate-spin" />
+              <Loader2 className="ms-2 h-4 w-4 animate-spin" />
             ) : (
-              <Sparkles className="ml-2 h-4 w-4" />
+              <Sparkles className="ms-2 h-4 w-4" />
             )}
             {t("loadDefaultCatalogue")}
           </Button>
           <Button onClick={openCreate}>
-            <Plus className="ml-2 h-4 w-4" />
+            <Plus className="ms-2 h-4 w-4" />
             {t("newCourse")}
           </Button>
         </div>
@@ -246,11 +246,11 @@ function AdminCoursesContent() {
             </p>
             <div className="mt-4 flex gap-2">
               <Button variant="outline" onClick={handleSeed} disabled={seeding}>
-                <Sparkles className="ml-2 h-4 w-4" />
+                <Sparkles className="ms-2 h-4 w-4" />
                 {t("loadDefaults")}
               </Button>
               <Button onClick={openCreate}>
-                <Plus className="ml-2 h-4 w-4" />
+                <Plus className="ms-2 h-4 w-4" />
                 {t("newCourse")}
               </Button>
             </div>
@@ -572,7 +572,7 @@ function CourseDialog({
               {t("cancel")}
             </Button>
             <Button type="submit" disabled={isSubmitting}>
-              {isSubmitting && <Loader2 className="ml-2 h-4 w-4 animate-spin" />}
+              {isSubmitting && <Loader2 className="ms-2 h-4 w-4 animate-spin" />}
               {t("save")}
             </Button>
           </DialogFooter>

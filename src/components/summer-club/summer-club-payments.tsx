@@ -145,7 +145,7 @@ export function SummerClubPayments({ student, canEdit, onChanged }: Props) {
         <CardTitle>{t("payments")}</CardTitle>
         {canEdit && (
           <Button size="sm" onClick={() => setShowForm((v) => !v)}>
-            <Plus className="mr-2 h-4 w-4" />
+            <Plus className="me-2 h-4 w-4" />
             {t("addPayment")}
           </Button>
         )}
