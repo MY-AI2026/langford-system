@@ -306,9 +306,9 @@ export default function StudentDetailPage() {
         createdByName: userData.displayName,
         followUpDate: data.followUpDate ?? null,
       });
-      toast.success(data.type === "follow_up" ? "Follow-up scheduled" : "Note added");
+      toast.success(data.type === "follow_up" ? t("followUpScheduled") : t("noteAdded"));
     } catch {
-      toast.error("Failed to add note");
+      toast.error(t("failedToAddNote"));
     }
   }
 
@@ -316,10 +316,10 @@ export default function StudentDetailPage() {
     if (!firebaseUser || !userData) return;
     try {
       await archiveStudent(studentId, firebaseUser.uid, userData.displayName);
-      toast.success("Student archived");
+      toast.success(t("studentArchived"));
       router.push("/students");
     } catch {
-      toast.error("Failed to archive student");
+      toast.error(t("failedToArchiveStudent"));
     }
   }
 
@@ -328,9 +328,9 @@ export default function StudentDetailPage() {
     try {
       await restoreStudent(studentId, firebaseUser.uid, userData.displayName);
       setStudent((prev) => prev ? { ...prev, isArchived: false } : null);
-      toast.success("Student restored");
+      toast.success(t("studentRestored"));
     } catch {
-      toast.error("Failed to restore student");
+      toast.error(t("failedToRestoreStudent"));
     }
   }
 

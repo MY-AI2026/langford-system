@@ -361,7 +361,7 @@ export function ScheduleEntryForm({
                   <SelectItem value="sun_tue_thu">
                     Sun - Tue - Thu (أحد - ثلاثاء - خميس)
                   </SelectItem>
-                  <SelectItem value="custom">Custom Days</SelectItem>
+                  <SelectItem value="custom">{t("customDays")}</SelectItem>
                 </SelectContent>
               </Select>
 
@@ -387,7 +387,7 @@ export function ScheduleEntryForm({
           {/* Time */}
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1.5">
-              <Label>Start Time</Label>
+              <Label>{t("startTime")}</Label>
               <Select value={startTime} onValueChange={(val) => val && setStartTime(val)}>
                 <SelectTrigger>
                   <SelectValue />
@@ -402,7 +402,7 @@ export function ScheduleEntryForm({
               </Select>
             </div>
             <div className="space-y-1.5">
-              <Label>End Time</Label>
+              <Label>{t("endTime")}</Label>
               <Select value={endTime} onValueChange={(val) => val && setEndTime(val)}>
                 <SelectTrigger>
                   <SelectValue />
@@ -421,9 +421,9 @@ export function ScheduleEntryForm({
 
           {/* Room */}
           <div className="space-y-1.5">
-            <Label>Room</Label>
+            <Label>{t("room")}</Label>
             <Input
-              placeholder="e.g., Room 101"
+              placeholder={t("roomPlaceholder")}
               value={room}
               onChange={(e) => setRoom(e.target.value)}
             />
