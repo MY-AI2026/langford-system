@@ -356,18 +356,18 @@ export default function StudentDetailPage() {
             <Link href={`/students/${studentId}/edit`}>
               <Button variant="outline" size="sm">
                 <Pencil className="mr-2 h-4 w-4" />
-                Edit
+                {t("edit")}
               </Button>
             </Link>
             {student.isArchived ? (
               <Button variant="outline" size="sm" onClick={handleRestore}>
                 <RotateCcw className="mr-2 h-4 w-4" />
-                Restore
+                {t("restore")}
               </Button>
             ) : (
               <Button variant="outline" size="sm" onClick={handleArchive}>
                 <Archive className="mr-2 h-4 w-4" />
-                Archive
+                {t("archive")}
               </Button>
             )}
             {role === "admin" && (
@@ -377,7 +377,7 @@ export default function StudentDetailPage() {
                 onClick={() => setDeleteDialogOpen(true)}
               >
                 <Trash2 className="mr-2 h-4 w-4" />
-                Delete
+                {t("delete")}
               </Button>
             )}
           </div>
@@ -402,24 +402,24 @@ export default function StudentDetailPage() {
                   {STUDENT_STATUS_CONFIG[s].label}
                 </SelectItem>
               ))}
-              <SelectItem value="lost">Lost</SelectItem>
+              <SelectItem value="lost">{t("lost")}</SelectItem>
             </SelectContent>
           </Select>
         )}
         {student.lostReason && (
-          <Badge variant="destructive">Lost: {student.lostReason}</Badge>
+          <Badge variant="destructive">{t("lost")}: {student.lostReason}</Badge>
         )}
       </div>
 
       <Tabs defaultValue="overview">
         <TabsList>
-          <TabsTrigger value="overview">Overview</TabsTrigger>
-          <TabsTrigger value="enrollments">Enrollments</TabsTrigger>
-          <TabsTrigger value="evaluation">Evaluation</TabsTrigger>
-          <TabsTrigger value="payments">Payments</TabsTrigger>
-          <TabsTrigger value="activity">Activity</TabsTrigger>
-          <TabsTrigger value="attendance">Attendance</TabsTrigger>
-          <TabsTrigger value="documents">Documents</TabsTrigger>
+          <TabsTrigger value="overview">{t("overview")}</TabsTrigger>
+          <TabsTrigger value="enrollments">{t("enrollments")}</TabsTrigger>
+          <TabsTrigger value="evaluation">{t("evaluation")}</TabsTrigger>
+          <TabsTrigger value="payments">{t("payments")}</TabsTrigger>
+          <TabsTrigger value="activity">{t("activity")}</TabsTrigger>
+          <TabsTrigger value="attendance">{t("attendance")}</TabsTrigger>
+          <TabsTrigger value="documents">{t("documents")}</TabsTrigger>
         </TabsList>
 
         {/* Overview Tab */}
@@ -435,7 +435,7 @@ export default function StudentDetailPage() {
                       href={`https://wa.me/965${student.phone.replace(/\D/g, "").replace(/^965/, "")}`}
                       target="_blank"
                       rel="noopener noreferrer"
-                      title="Open in WhatsApp"
+                      title={t("openInWhatsApp")}
                       className="inline-flex items-center gap-1 rounded-md px-2 py-0.5 text-xs font-medium bg-green-100 text-green-700 hover:bg-green-200 transition-colors"
                     >
                       <MessageCircle className="h-3 w-3" />
@@ -451,26 +451,26 @@ export default function StudentDetailPage() {
                   {student.civilId && (
                     <div className="flex items-center gap-2">
                       <UserCircle className="h-4 w-4 text-muted-foreground" />
-                      <span className="text-sm">Civil ID: {student.civilId}</span>
+                      <span className="text-sm">{t("civilId")}: {student.civilId}</span>
                     </div>
                   )}
                   <div className="flex items-center gap-2">
                     <Calendar className="h-4 w-4 text-muted-foreground" />
                     <span className="text-sm">
-                      Registered: {formatDate(student.registrationDate)}
+                      {t("registrationDate")}: {formatDate(student.registrationDate)}
                     </span>
                   </div>
                   <div className="flex items-center gap-2">
                     <UserCircle className="h-4 w-4 text-muted-foreground" />
                     <span className="text-sm">
-                      Sales Rep: {student.assignedSalesRepName}
+                      {t("salesRep")}: {student.assignedSalesRepName}
                     </span>
                   </div>
                   {student.interestedCourse && (
                     <div className="flex items-center gap-2">
                       <BookOpen className="h-4 w-4 text-muted-foreground" />
                       <span className="text-sm">
-                        Interested In: {student.interestedCourse}
+                        {t("interestedCourse")}: {student.interestedCourse}
                       </span>
                     </div>
                   )}
@@ -481,7 +481,7 @@ export default function StudentDetailPage() {
             <Card>
               <CardHeader className="pb-2">
                 <CardTitle className="text-sm text-muted-foreground">
-                  Lead Source
+                  {t("leadSource")}
                 </CardTitle>
               </CardHeader>
               <CardContent>
