@@ -259,9 +259,9 @@ export default function StudentDetailPage() {
       );
       const updated = await getStudent(studentId);
       if (updated) setStudent(updated);
-      toast.success("IELTS payment recorded");
+      toast.success(t("ieltsPaymentRecorded"));
     } catch {
-      toast.error("Failed to record IELTS payment");
+      toast.error(t("failedToRecordIeltsPayment"));
     }
   }
 
@@ -271,9 +271,9 @@ export default function StudentDetailPage() {
       await deletePayment(studentId, payment, firebaseUser.uid, userData.displayName);
       const updated = await getStudent(studentId);
       if (updated) setStudent(updated);
-      toast.success("Payment deleted successfully");
+      toast.success(t("paymentDeleted"));
     } catch {
-      toast.error("Failed to delete payment");
+      toast.error(t("failedToDeletePayment"));
     }
   }
 
@@ -281,7 +281,7 @@ export default function StudentDetailPage() {
     if (!firebaseUser || !userData) return;
     const fees = parseFloat(totalFeesInput);
     if (isNaN(fees) || fees <= 0) {
-      toast.error("Please enter a valid amount");
+      toast.error(t("pleaseEnterValidAmount"));
       return;
     }
     try {
@@ -290,9 +290,9 @@ export default function StudentDetailPage() {
       if (updated) setStudent(updated);
       setFeesDialogOpen(false);
       setTotalFeesInput("");
-      toast.success("Total fees updated");
+      toast.success(t("totalFeesUpdated"));
     } catch {
-      toast.error("Failed to update fees");
+      toast.error(t("failedToUpdateFees"));
     }
   }
 

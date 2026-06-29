@@ -281,13 +281,13 @@ export function ScheduleEntryForm({
         <div className="space-y-4 py-2">
           {/* Instructor display */}
           <div>
-            <Label className="text-muted-foreground text-xs">Instructor</Label>
+            <Label className="text-muted-foreground text-xs">{t("instructor")}</Label>
             <p className="font-medium">{instructorName}</p>
           </div>
 
           {/* Course Source */}
           <div className="space-y-2">
-            <Label>Course</Label>
+            <Label>{t("course")}</Label>
             <div className="flex gap-2">
               <Button
                 type="button"
@@ -295,7 +295,7 @@ export function ScheduleEntryForm({
                 variant={courseSource === "existing" ? "default" : "outline"}
                 onClick={() => setCourseSource("existing")}
               >
-                From Courses
+                {t("fromCourses")}
               </Button>
               <Button
                 type="button"
@@ -303,7 +303,7 @@ export function ScheduleEntryForm({
                 variant={courseSource === "manual" ? "default" : "outline"}
                 onClick={() => setCourseSource("manual")}
               >
-                Manual Entry
+                {t("manualEntry")}
               </Button>
             </div>
 
@@ -313,7 +313,7 @@ export function ScheduleEntryForm({
                 onValueChange={(val) => setCourseId(val)}
               >
                 <SelectTrigger>
-                  <SelectValue placeholder="Select a course" />
+                  <SelectValue placeholder={t("selectACourse")} />
                 </SelectTrigger>
                 <SelectContent>
                   {courses.map((c) => (
@@ -325,7 +325,7 @@ export function ScheduleEntryForm({
               </Select>
             ) : (
               <Input
-                placeholder="Enter course name"
+                placeholder={t("enterCourseName")}
                 value={courseName}
                 onChange={(e) => setCourseName(e.target.value)}
               />
@@ -335,7 +335,7 @@ export function ScheduleEntryForm({
               if (!c || (!c.startDate && !c.endDate)) return null;
               return (
                 <p className="text-xs text-muted-foreground">
-                  Course period: {c.startDate ? formatDate(c.startDate) : "—"}
+                  {t("coursePeriod")}: {c.startDate ? formatDate(c.startDate) : "—"}
                   {" → "}
                   {c.endDate ? formatDate(c.endDate) : "—"}
                 </p>
@@ -346,7 +346,7 @@ export function ScheduleEntryForm({
           {/* Day Pattern (only for new entries) */}
           {!isEdit && (
             <div className="space-y-2">
-              <Label>Day Pattern</Label>
+              <Label>{t("dayPattern")}</Label>
               <Select
                 value={dayPattern}
                 onValueChange={(val) => setDayPattern(val as DayPattern)}
