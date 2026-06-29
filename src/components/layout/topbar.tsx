@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useAuth } from "@/contexts/auth-context";
 import { signOut } from "@/lib/firebase/auth";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -24,11 +24,52 @@ interface TopbarProps {
   onMenuClick: () => void;
 }
 
+/** Human-readable title for the current route, shown on the left of the topbar
+ * so the user always knows where they are. Falls back to a humanised segment. */
+function derivePageTitle(pathname: string): string {
+  const map: Record<string, string> = {
+    dashboard: "Dashboard",
+    students: "Students",
+    pipeline: "Pipeline",
+    payments: "Payments",
+    embassy: "Embassy Transfers",
+    "summer-club": "Summer Club",
+    acceptix: "Acceptix",
+    agents: "Agents",
+    courses: "Courses",
+    reports: "Reports",
+    "outstanding-balances": "Outstanding Balances",
+    "student-notes": "Student Notes",
+    logins: "Login Report",
+    audit: "Audit Log",
+    settings: "Settings",
+    schedule: "Schedule",
+    attendance: "Attendance",
+    profile: "My Profile",
+    new: "New",
+    edit: "Edit",
+  };
+  const segments = pathname.split("/").filter(Boolean);
+  // Walk from the end, skipping dynamic id-like segments, to the first known label.
+  for (let i = segments.length - 1; i >= 0; i--) {
+    const seg = segments[i];
+    if (map[seg]) return map[seg];
+  }
+  const last = segments[segments.length - 1] ?? "";
+  if (!last) return "Dashboard";
+  return last
+    .split("-")
+    .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+    .join(" ");
+}
+
 export function Topbar({ onMenuClick }: TopbarProps) {
   const { userData, role: userRole } = useAuth();
   const router = useRouter();
+  const pathname = usePathname();
   const { language, setLanguage, t } = useLanguage();
   const [searchOpen, setSearchOpen] = useState(false);
+  const pageTitle = derivePageTitle(pathname);
 
   useEffect(() => {
     function handleKeyDown(e: KeyboardEvent) {
@@ -68,7 +109,7 @@ export function Topbar({ onMenuClick }: TopbarProps) {
           <Menu className="h-5 w-5" />
         </Button>
 
-        <div className="hidden lg:block" />
+        <h1 className="hidden text-base font-semibold lg:block">{pageTitle}</h1>
 
         <div className="flex items-center gap-3">
           <Button

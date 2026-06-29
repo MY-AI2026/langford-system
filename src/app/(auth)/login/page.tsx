@@ -33,7 +33,7 @@ export default function LoginPage() {
         }}
       />
 
-      <div className="relative z-10 w-full max-w-md">
+      <div className="animate-page-in relative z-10 w-full max-w-md">
         <div className="mb-7 flex flex-col items-center">
           <Image
             src="/logo.png"

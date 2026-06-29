@@ -15,7 +15,8 @@ import {
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Eye } from "lucide-react";
+import { EmptyState } from "@/components/ui/empty-state";
+import { Eye, GraduationCap } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { WhatsAppButton } from "./whatsapp-button";
 import { QuickNoteButton } from "./quick-note-button";
@@ -31,8 +32,12 @@ export function StudentListTable({
 }: StudentListTableProps) {
   if (students.length === 0) {
     return (
-      <div className="flex h-40 items-center justify-center rounded-lg border border-dashed">
-        <p className="text-sm text-muted-foreground">No students found</p>
+      <div className="rounded-lg border border-dashed">
+        <EmptyState
+          icon={GraduationCap}
+          title="No students found"
+          description="Try adjusting your search or filters — new students will appear here."
+        />
       </div>
     );
   }

@@ -194,3 +194,36 @@
     animation-duration: 0.01ms !important;
   }
 }
+
+/* ───────────────────────────────────────────────────────────────────────────
+   Print — strip app chrome (sidebar, topbar, footer, action buttons) so
+   reports print clean on white. Add `print:hidden` to anything else you want
+   gone, or `no-print` as a utility hook.
+   ─────────────────────────────────────────────────────────────────────────── */
+@media print {
+  aside,
+  header,
+  footer,
+  .no-print,
+  [data-slot="button"] {
+    display: none !important;
+  }
+  /* Drop the sidebar offset so content uses the full page width */
+  .lg\:pl-64 {
+    padding-left: 0 !important;
+  }
+  main {
+    padding: 0 !important;
+  }
+  body {
+    background: #fff !important;
+    color: #000 !important;
+  }
+  .animate-page-in {
+    animation: none !important;
+  }
+  [data-slot="card"] {
+    box-shadow: none !important;
+    break-inside: avoid;
+  }
+}
