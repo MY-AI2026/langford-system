@@ -10,6 +10,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
+import { EmptyState } from "@/components/ui/empty-state";
 import { Plus, CheckCircle2, Award, BookOpen, Clock, GraduationCap, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { EnrollDialog } from "./enroll-dialog";
@@ -156,8 +157,8 @@ export function EnrollmentTab({ studentId, studentName, studentCivilId, readOnly
 
       {/* Enrollments list */}
       {enrollments.length === 0 ? (
-        <div className="flex h-24 items-center justify-center rounded-lg border border-dashed">
-          <p className="text-sm text-muted-foreground">{t("noEnrollmentsYet")}</p>
+        <div className="rounded-lg border border-dashed">
+          <EmptyState icon={BookOpen} title={t("noEnrollmentsYet")} />
         </div>
       ) : (
         <div className="space-y-3">

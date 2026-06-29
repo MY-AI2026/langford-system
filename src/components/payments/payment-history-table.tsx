@@ -15,7 +15,8 @@ import {
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Printer, Trash2 } from "lucide-react";
+import { EmptyState } from "@/components/ui/empty-state";
+import { Printer, Trash2, Receipt } from "lucide-react";
 import { PaymentReceiptDialog } from "./payment-receipt-dialog";
 import {
   Dialog,
@@ -61,8 +62,8 @@ export function PaymentHistoryTable({
 
   if (payments.length === 0) {
     return (
-      <div className="flex h-32 items-center justify-center rounded-lg border border-dashed">
-        <p className="text-sm text-muted-foreground">{t("noPayments")}</p>
+      <div className="rounded-lg border border-dashed">
+        <EmptyState icon={Receipt} title={t("noPayments")} />
       </div>
     );
   }
