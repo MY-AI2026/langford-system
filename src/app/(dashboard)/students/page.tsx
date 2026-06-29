@@ -14,6 +14,7 @@ import { Plus, Download } from "lucide-react";
 import Link from "next/link";
 import { formatDate } from "@/lib/utils/format";
 import { exportToExcel } from "@/lib/utils/excel";
+import { DEFAULT_LEAD_SOURCES } from "@/lib/utils/constants";
 
 function toDate(val: unknown): Date | null {
   if (!val) return null;
@@ -59,6 +60,8 @@ export default function StudentsPage() {
   const [showArchived, setShowArchived] = useState(false);
   const [dateFrom, setDateFrom] = useState("");
   const [dateTo, setDateTo] = useState("");
+  const [leadSourceFilter, setLeadSourceFilter] = useState("all");
+  const [paymentFilter, setPaymentFilter] = useState("all");
 
   useEffect(() => {
     if (!firebaseUser || !role) return;
@@ -95,25 +98,36 @@ export default function StudentsPage() {
     }
   }, [firebaseUser, role, statusFilter, showArchived, search]);
 
-  // Client-side date filter
+  // Client-side filters: date range + lead source + payment status
   const filtered = useMemo(() => {
-    if (!dateFrom && !dateTo) return students;
     const from = dateFrom ? new Date(dateFrom + "T00:00:00") : null;
     const to = dateTo ? new Date(dateTo + "T23:59:59") : null;
     return students.filter((s) => {
-      const d = toDate(s.registrationDate ?? s.createdAt);
-      if (!d) return true;
-      if (from && d < from) return false;
-      if (to && d > to) return false;
+      if (leadSourceFilter !== "all" && s.leadSource !== leadSourceFilter) {
+        return false;
+      }
+      if (
+        paymentFilter !== "all" &&
+        (s.paymentSummary?.paymentStatus ?? "pending") !== paymentFilter
+      ) {
+        return false;
+      }
+      if (from || to) {
+        const d = toDate(s.registrationDate ?? s.createdAt);
+        if (d) {
+          if (from && d < from) return false;
+          if (to && d > to) return false;
+        }
+      }
       return true;
     });
-  }, [students, dateFrom, dateTo]);
+  }, [students, dateFrom, dateTo, leadSourceFilter, paymentFilter]);
 
   return (
     <div className="space-y-6">
       <PageHeader
         title={t("students")}
-        description={`${filtered.length} ${t("studentsCount")}${dateFrom || dateTo ? ` (${t("filtered")})` : ""}`}
+        description={`${filtered.length} ${t("studentsCount")}${dateFrom || dateTo || leadSourceFilter !== "all" || paymentFilter !== "all" ? ` (${t("filtered")})` : ""}`}
         action={
           <div className="flex gap-2">
             <Button
@@ -155,6 +169,11 @@ export default function StudentsPage() {
         onDateFromChange={setDateFrom}
         onDateToChange={setDateTo}
         isAdmin={role === "admin"}
+        leadSourceFilter={leadSourceFilter}
+        onLeadSourceFilterChange={setLeadSourceFilter}
+        leadSources={DEFAULT_LEAD_SOURCES}
+        paymentFilter={paymentFilter}
+        onPaymentFilterChange={setPaymentFilter}
       />
 
       <StudentListTable
