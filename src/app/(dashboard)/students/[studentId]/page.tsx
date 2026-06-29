@@ -156,9 +156,9 @@ export default function StudentDetailPage() {
     try {
       await updateStudentStatus(studentId, newStatus, firebaseUser.uid, userData.displayName);
       setStudent({ ...student, status: newStatus });
-      toast.success(`Status updated to ${STUDENT_STATUS_CONFIG[newStatus].label}`);
+      toast.success(`${t("statusUpdatedTo")} ${STUDENT_STATUS_CONFIG[newStatus].label}`);
     } catch {
-      toast.error("Failed to update status");
+      toast.error(t("failedToUpdateStatus"));
     }
   }
 
@@ -167,12 +167,12 @@ export default function StudentDetailPage() {
     try {
       await updateStudentStatus(studentId, pendingStatus, firebaseUser.uid, userData.displayName, lostReason);
       setStudent({ ...student, status: pendingStatus, lostReason });
-      toast.success("Student marked as lost");
+      toast.success(t("studentMarkedAsLost"));
       setLostDialogOpen(false);
       setLostReason("");
       setPendingStatus(null);
     } catch {
-      toast.error("Failed to update status");
+      toast.error(t("failedToUpdateStatus"));
     }
   }
 
@@ -213,9 +213,9 @@ export default function StudentDetailPage() {
 
       const updated = await getStudent(studentId);
       if (updated) setStudent(updated);
-      toast.success("Evaluation saved");
+      toast.success(t("evaluationSaved"));
     } catch {
-      toast.error("Failed to save evaluation");
+      toast.error(t("failedToSaveEvaluation"));
     }
   }
 
@@ -237,9 +237,9 @@ export default function StudentDetailPage() {
       );
       const updated = await getStudent(studentId);
       if (updated) setStudent(updated);
-      toast.success("Payment recorded");
+      toast.success(t("paymentRecorded"));
     } catch {
-      toast.error("Failed to record payment");
+      toast.error(t("failedToRecordPayment"));
     }
   }
 

@@ -255,7 +255,7 @@ export function ScheduleEntryForm({
             patternData,
             dayPattern as "sat_mon_wed" | "sun_tue_thu"
           );
-          toast.success("3 schedule entries created");
+          toast.success(`3 ${t("scheduleEntriesCreated")}`);
         }
       }
 
@@ -263,7 +263,7 @@ export function ScheduleEntryForm({
       onSuccess();
     } catch (err) {
       console.error("Failed to save schedule:", err);
-      toast.error("Failed to save schedule entry");
+      toast.error(t("failedToSaveSchedule"));
     } finally {
       setSaving(false);
     }
@@ -274,7 +274,7 @@ export function ScheduleEntryForm({
       <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>
-            {isEdit ? "Edit Schedule Entry" : "Add Schedule Entry"}
+            {isEdit ? t("editScheduleEntry") : t("addScheduleEntry")}
           </DialogTitle>
         </DialogHeader>
 

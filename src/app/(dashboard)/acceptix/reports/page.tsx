@@ -605,6 +605,7 @@ function BreakdownTable({
   loading: boolean;
   showOutstanding?: boolean;
 }) {
+  const { t } = useLanguage();
   return (
     <Card>
       <CardHeader className="pb-3">
@@ -618,16 +619,16 @@ function BreakdownTable({
             ))}
           </div>
         ) : rows.length === 0 ? (
-          <p className="py-8 text-center text-sm text-muted-foreground">No data</p>
+          <p className="py-8 text-center text-sm text-muted-foreground">{t("noData")}</p>
         ) : (
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Name</TableHead>
-                <TableHead>Count</TableHead>
-                <TableHead>Fee</TableHead>
-                <TableHead>Commission</TableHead>
-                {showOutstanding && <TableHead>Outstanding</TableHead>}
+                <TableHead>{t("name")}</TableHead>
+                <TableHead>{t("count")}</TableHead>
+                <TableHead>{t("fee")}</TableHead>
+                <TableHead>{t("commission")}</TableHead>
+                {showOutstanding && <TableHead>{t("outstanding")}</TableHead>}
               </TableRow>
             </TableHeader>
             <TableBody>
