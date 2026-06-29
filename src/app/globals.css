@@ -136,5 +136,94 @@
   }
   html {
     @apply font-sans;
+    scroll-behavior: smooth;
+  }
+}
+
+/* ───────────────────────────────────────────────────────────────────────────
+   Motion & polish — smooth page transitions, refined scrollbars.
+   All animation is disabled for users who prefer reduced motion.
+   ─────────────────────────────────────────────────────────────────────────── */
+@keyframes page-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-page-in {
+  animation: page-in 0.28s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+/* Refined, less obtrusive scrollbars */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: color-mix(in oklch, var(--foreground) 18%, transparent)
+    transparent;
+}
+*::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+*::-webkit-scrollbar-track {
+  background: transparent;
+}
+*::-webkit-scrollbar-thumb {
+  background-color: color-mix(in oklch, var(--foreground) 18%, transparent);
+  border-radius: 9999px;
+}
+*::-webkit-scrollbar-thumb:hover {
+  background-color: color-mix(in oklch, var(--foreground) 32%, transparent);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  .animate-page-in {
+    animation: none;
+  }
+  *,
+  *::before,
+  *::after {
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+  }
+}
+
+/* ───────────────────────────────────────────────────────────────────────────
+   Print — strip app chrome (sidebar, topbar, footer, action buttons) so
+   reports print clean on white. Add `print:hidden` to anything else you want
+   gone, or `no-print` as a utility hook.
+   ─────────────────────────────────────────────────────────────────────────── */
+@media print {
+  aside,
+  header,
+  footer,
+  .no-print,
+  [data-slot="button"] {
+    display: none !important;
+  }
+  /* Drop the sidebar offset so content uses the full page width */
+  .lg\:pl-64 {
+    padding-left: 0 !important;
+  }
+  main {
+    padding: 0 !important;
+  }
+  body {
+    background: #fff !important;
+    color: #000 !important;
+  }
+  .animate-page-in {
+    animation: none !important;
+  }
+  [data-slot="card"] {
+    box-shadow: none !important;
+    break-inside: avoid;
   }
 }

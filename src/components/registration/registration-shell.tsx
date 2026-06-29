@@ -12,6 +12,7 @@ import { UserRole } from "@/lib/types";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet";
 import { ThemeToggle } from "@/components/theme-toggle";
+import { AppFooter } from "@/components/layout/app-footer";
 import { LogOut, Menu, UserPlus, ListChecks } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 
@@ -58,7 +59,7 @@ export function RegistrationShell({ children }: { children: React.ReactNode }) {
   }
 
   return (
-    <div className="min-h-screen bg-background" dir="ltr">
+    <div className="flex min-h-screen flex-col bg-background" dir="ltr">
       {/* ── Topbar — dual brand (Acceptix + Langford) ──────────────────────── */}
       <header className="sticky top-0 z-30 border-b bg-card/80 backdrop-blur">
         <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4">
@@ -140,7 +141,7 @@ export function RegistrationShell({ children }: { children: React.ReactNode }) {
       </header>
 
       {/* ── Body: sidebar (desktop) + content ──────────────────────────────── */}
-      <div className="mx-auto flex max-w-7xl">
+      <div className="mx-auto flex w-full max-w-7xl flex-1">
         {links.length > 0 && (
           <aside className="sticky top-16 hidden h-[calc(100vh-4rem)] w-60 shrink-0 border-r lg:block">
             <SidebarBody links={links} pathname={pathname} />
@@ -148,6 +149,8 @@ export function RegistrationShell({ children }: { children: React.ReactNode }) {
         )}
         <main className="min-w-0 flex-1 p-4 lg:p-6">{children}</main>
       </div>
+
+      <AppFooter />
     </div>
   );
 }

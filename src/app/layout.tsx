@@ -5,6 +5,7 @@ import { LanguageProvider } from "@/contexts/language-context";
 import { ThemeProvider } from "@/components/theme-provider";
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import { PWARegister } from "@/components/pwa-register";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -65,6 +66,7 @@ export default function RootLayout({
               <TooltipProvider>
                 {children}
                 <Toaster />
+                <PWARegister />
               </TooltipProvider>
             </AuthProvider>
           </LanguageProvider>
