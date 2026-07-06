@@ -3,7 +3,7 @@
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { evaluationSchema, EvaluationFormData } from "@/lib/utils/validators";
-import { DEFAULT_LEVELS } from "@/lib/utils/constants";
+import { useSystemSettings } from "@/hooks/use-system-settings";
 import { Evaluation } from "@/lib/types";
 import { useLanguage } from "@/contexts/language-context";
 import { Button } from "@/components/ui/button";
@@ -30,6 +30,7 @@ export function EvaluationForm({
   onSubmit,
 }: EvaluationFormProps) {
   const { t } = useLanguage();
+  const { settings } = useSystemSettings();
   const {
     register,
     handleSubmit,
@@ -77,7 +78,7 @@ export function EvaluationForm({
               <SelectValue placeholder={t("selectLevel")} />
             </SelectTrigger>
             <SelectContent>
-              {DEFAULT_LEVELS.map((level) => (
+              {settings.levels.map((level) => (
                 <SelectItem key={level} value={level}>
                   {level}
                 </SelectItem>

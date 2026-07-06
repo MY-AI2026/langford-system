@@ -184,6 +184,15 @@ service cloud.firestore {
       allow update, delete: if false;
     }
 
+    // ─── systemSettings ─ main-app config (institute info, lead sources, levels) ──
+    // Any signed-in user may read (forms consume lead sources / levels);
+    // only an admin may write.
+    match /systemSettings/{settingId} {
+      allow read: if isSignedIn();
+      allow create, update: if isAdmin();
+      allow delete: if false;
+    }
+
     // ─── regSettings ─ admin-tunable module settings (email recipients, etc.) ──
     match /regSettings/{settingId} {
       allow read: if regIsAdmin();

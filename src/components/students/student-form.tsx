@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { studentSchema, StudentFormData } from "@/lib/utils/validators";
-import { DEFAULT_LEAD_SOURCES } from "@/lib/utils/constants";
+import { useSystemSettings } from "@/hooks/use-system-settings";
 import { getSalesUsers } from "@/lib/services/user-service";
 import { subscribeToCourses } from "@/lib/services/course-service";
 import { useAuth } from "@/contexts/auth-context";
@@ -35,6 +35,7 @@ export function StudentForm({
 }: StudentFormProps) {
   const { role, firebaseUser, userData } = useAuth();
   const { t } = useLanguage();
+  const { settings } = useSystemSettings();
   const [salesUsers, setSalesUsers] = useState<User[]>([]);
   const [courses, setCourses] = useState<Course[]>([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -146,7 +147,7 @@ export function StudentForm({
               <SelectValue placeholder={t("selectLeadSource")} />
             </SelectTrigger>
             <SelectContent>
-              {DEFAULT_LEAD_SOURCES.map((source) => (
+              {settings.leadSources.map((source) => (
                 <SelectItem key={source} value={source}>
                   {source}
                 </SelectItem>
