@@ -27,6 +27,15 @@ export const EXPORTABLE_COLLECTIONS = [
 
 export type ExportBundle = Record<string, Record<string, unknown>[]>;
 
+// Per-student subcollections included only in a deep backup.
+export const STUDENT_SUBCOLLECTIONS = [
+  "payments",
+  "enrollments",
+  "activityLog",
+  "installmentPlans",
+  "attendance",
+] as const;
+
 export async function fetchAllCollections(): Promise<ExportBundle> {
   const entries = await Promise.all(
     EXPORTABLE_COLLECTIONS.map(async (name) => {
@@ -40,6 +49,51 @@ export async function fetchAllCollections(): Promise<ExportBundle> {
     })
   );
   return Object.fromEntries(entries);
+}
+
+/**
+ * Deep backup: the flat collections plus every per-student subcollection,
+ * each flattened into its own array with a `_studentId` back-reference.
+ * Runs the per-student fan-out in small concurrent batches to stay polite to
+ * Firestore while remaining reasonably fast.
+ */
+export async function fetchDeepBundle(
+  onProgress?: (done: number, total: number) => void
+): Promise<ExportBundle> {
+  const bundle = await fetchAllCollections();
+  const students = (bundle.students ?? []) as { id?: string }[];
+  const total = students.length;
+
+  const subAgg: Record<string, Record<string, unknown>[]> = {};
+  for (const sub of STUDENT_SUBCOLLECTIONS) subAgg[sub] = [];
+
+  const CONCURRENCY = 8;
+  let done = 0;
+  for (let i = 0; i < students.length; i += CONCURRENCY) {
+    const slice = students.slice(i, i + CONCURRENCY);
+    await Promise.all(
+      slice.map(async (st) => {
+        const sid = st.id;
+        if (!sid) return;
+        await Promise.all(
+          STUDENT_SUBCOLLECTIONS.map(async (sub) => {
+            try {
+              const rows = (await fetchCollection(
+                `students/${sid}/${sub}`
+              )) as Record<string, unknown>[];
+              for (const r of rows) subAgg[sub].push({ _studentId: sid, ...r });
+            } catch (e) {
+              console.error(`[data-export] ${sub} for ${sid} failed:`, e);
+            }
+          })
+        );
+      })
+    );
+    done = Math.min(i + CONCURRENCY, total);
+    onProgress?.(done, total);
+  }
+
+  return { ...bundle, ...subAgg };
 }
 
 // Turn nested/date values into flat cell-friendly strings for a spreadsheet.

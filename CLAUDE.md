@@ -50,12 +50,16 @@ Student management and sales tracking system for Langford International Institut
 | `students/{id}/attendance` | Attendance records |
 | `courses` | Course definitions |
 | `schedules` | Instructor weekly schedule entries |
+| `embassyPayments` | Embassy/sponsor payment records |
+| `summerClubStudents` | Summer club enrollments and payments |
+| `systemSettings` | **Main-app settings** — institute info, lead sources, levels, commission rate (`systemSettings/general`) |
 | `loginLogs` | Login audit trail |
 | `auditLog` | System audit log |
 | `regCourses` | **Registration module** — Acceptix-aware course catalogue (admin-managed) |
 | `regStudents` | **Registration module** — student registrations (agent-owned, creator-bound) |
 | `regAuditLog` | **Registration module** — append-only audit (rules-enforced immutable) |
 | `regNotifications` | **Registration module** — admin notification inbox (in-app; email lands in PR #4) |
+| `regSettings` | **Registration module** — admin-tunable module settings (email recipients) |
 
 ## Important Files
 - `src/lib/firebase/rest-helpers.ts` — Core Firestore REST operations (restCreate, restUpdate, restDelete, runQuery, fetchCollection)
@@ -71,6 +75,11 @@ Student management and sales tracking system for Langford International Institut
 2. Push: `git push origin main` (may need token in URL for auth)
 3. Deploy: `npx vercel --prod --yes`
 4. If new Firestore collection added: `npx firebase deploy --only firestore:rules`
+
+## Recent Changes (2026-07-06)
+- **Settings screens shipped** — `/settings/system` (admin-editable institute info, lead sources, levels, and the Acceptix commission rate — persisted to `systemSettings/general`) and `/settings/export` (Excel + JSON + deep JSON backup of all collections). New collection `systemSettings` (rules: read any signed-in, write admin).
+- **System Settings wired into the app** — student form reads lead sources, evaluation form reads levels, reports reads lead sources, and new Acceptix registrations snapshot the configured commission rate. All with a safe fallback to the `constants.ts` defaults.
+- **Sidebar follow-up badge re-enabled** — `useFollowupCount` now derives from the students collection via shared `followups.ts` logic (no collection-group index needed), consistent with the dashboard reminders widget.
 
 ## Recent Changes (2026-05-20)
 - **Registration module foundation (PR #1)** — new self-contained portal for Langford × Acceptix referrals. Adds collections `regCourses`, `regStudents`, `regAuditLog`, `regNotifications`; new role `acceptix_agent`; strict Firestore rules (creator-bound isolation, append-only audit, soft delete only, immutable identity fields); Zod schemas + strong-password validator; service layer + seed catalogue. UI lands in PR #2-#4. See `docs/registration-module.md`.

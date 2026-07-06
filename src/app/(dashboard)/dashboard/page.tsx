@@ -47,6 +47,7 @@ import { subscribeToCourses } from "@/lib/services/course-service";
 import { subscribeToEmbassyPayments } from "@/lib/services/embassy-payment-service";
 import { getCollectedTotalByUser } from "@/lib/services/payment-service";
 import { Student, ActivityLogEntry, User, Course, EmbassyPayment } from "@/lib/types";
+import { followUpThresholdDays } from "@/lib/utils/followups";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -232,8 +233,9 @@ export default function DashboardPage() {
           (now.getTime() - updated.getTime()) / (1000 * 60 * 60 * 24)
         );
 
-        // Flag students not touched in 3+ days (lead/contacted) or 7+ days (evaluated/enrolled)
-        const threshold = s.status === "lead" || s.status === "contacted" ? 3 : 7;
+        // Flag students not touched past their status threshold (shared with
+        // the sidebar follow-up badge so the two never disagree).
+        const threshold = followUpThresholdDays(s.status);
         if (daysSinceUpdate >= threshold) {
           const isOverdue = daysSinceUpdate > threshold + 2;
           items.push({

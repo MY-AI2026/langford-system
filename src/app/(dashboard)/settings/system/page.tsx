@@ -128,6 +128,38 @@ function SystemSettingsContent() {
         </CardContent>
       </Card>
 
+      {/* Acceptix commission */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base">{t("acceptixCommission")}</CardTitle>
+          <p className="text-xs text-muted-foreground">{t("commissionRateHint")}</p>
+        </CardHeader>
+        <CardContent>
+          <div className="max-w-xs space-y-2">
+            <Label htmlFor="commissionRate">{t("commissionRatePct")}</Label>
+            <div className="relative">
+              <Input
+                id="commissionRate"
+                type="number"
+                min={0}
+                max={100}
+                step={0.5}
+                value={Math.round(settings.commissionRate * 1000) / 10}
+                onChange={(e) => {
+                  const pct = Number(e.target.value);
+                  const frac = Number.isFinite(pct) ? Math.min(100, Math.max(0, pct)) / 100 : 0;
+                  set("commissionRate", frac);
+                }}
+                className="pe-8"
+              />
+              <span className="pointer-events-none absolute end-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground">
+                %
+              </span>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
       <div className="grid gap-6 lg:grid-cols-2">
         <EditableList
           title={t("leadSources")}

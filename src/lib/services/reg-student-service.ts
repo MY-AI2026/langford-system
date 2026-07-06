@@ -39,6 +39,7 @@ import {
 import { writeRegAuditLog } from "./reg-audit-service";
 import { emitNewStudentNotification } from "./reg-notification-service";
 import { getCourse } from "./reg-course-service";
+import { getCommissionRate } from "./system-settings-service";
 
 const COLLECTION = "regStudents";
 
@@ -232,7 +233,9 @@ export async function createStudent(
 
   const courseFee = typeof course.fee === "number" ? course.fee : 0;
   const currency = course.currency || REG_DEFAULT_CURRENCY;
-  const commissionRate = ACCEPTIX_COMMISSION_RATE;
+  // Rate is admin-configurable via System Settings; snapshotted here so a later
+  // rate change never rewrites this registration's commission.
+  const commissionRate = await getCommissionRate();
   const commissionAmount = computeCommission(courseFee, commissionRate);
 
   // ── Build document — every field is explicit; no nullish surprises ────────

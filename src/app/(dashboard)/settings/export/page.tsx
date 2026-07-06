@@ -6,11 +6,12 @@ import { RoleGate } from "@/components/auth/role-gate";
 import { PageHeader } from "@/components/layout/page-header";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, FileSpreadsheet, FileJson, Loader2, Database } from "lucide-react";
+import { ArrowLeft, FileSpreadsheet, FileJson, Loader2, Database, Layers } from "lucide-react";
 import { toast } from "sonner";
 import { useLanguage } from "@/contexts/language-context";
 import {
   fetchAllCollections,
+  fetchDeepBundle,
   bundleToExcel,
   bundleToJson,
   countRecords,
@@ -27,7 +28,8 @@ export default function DataExportPage() {
 
 function DataExportContent() {
   const { t } = useLanguage();
-  const [busy, setBusy] = useState<null | "excel" | "json">(null);
+  const [busy, setBusy] = useState<null | "excel" | "json" | "deep">(null);
+  const [deepProgress, setDeepProgress] = useState<{ done: number; total: number } | null>(null);
 
   async function run(kind: "excel" | "json") {
     setBusy(kind);
@@ -42,6 +44,23 @@ function DataExportContent() {
       toast.error(t("exportFailed"));
     } finally {
       setBusy(null);
+    }
+  }
+
+  async function runDeep() {
+    setBusy("deep");
+    setDeepProgress({ done: 0, total: 0 });
+    try {
+      const bundle = await fetchDeepBundle((done, total) => setDeepProgress({ done, total }));
+      const total = countRecords(bundle);
+      bundleToJson(bundle, "langford-deep-backup");
+      toast.success(t("exportDone").replace("{count}", String(total)));
+    } catch (e) {
+      console.error("[data-export] deep failed:", e);
+      toast.error(t("exportFailed"));
+    } finally {
+      setBusy(null);
+      setDeepProgress(null);
     }
   }
 
@@ -107,6 +126,40 @@ function DataExportContent() {
           </CardContent>
         </Card>
       </div>
+
+      <Card>
+        <CardHeader>
+          <div className="flex items-center gap-3">
+            <div className="rounded-lg bg-amber-50 p-2">
+              <Layers className="h-5 w-5 text-amber-600" />
+            </div>
+            <CardTitle className="text-base">{t("exportDeepTitle")}</CardTitle>
+          </div>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <p className="text-sm text-muted-foreground">{t("exportDeepDesc")}</p>
+          {busy === "deep" && deepProgress && deepProgress.total > 0 && (
+            <p className="text-xs text-muted-foreground">
+              {t("exportDeepProgress")
+                .replace("{done}", String(deepProgress.done))
+                .replace("{total}", String(deepProgress.total))}
+            </p>
+          )}
+          <Button
+            onClick={runDeep}
+            disabled={busy !== null}
+            variant="outline"
+            className="w-full sm:w-auto"
+          >
+            {busy === "deep" ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <Layers className="h-4 w-4" />
+            )}
+            {t("exportDeepBtn")}
+          </Button>
+        </CardContent>
+      </Card>
 
       <Card>
         <CardHeader>

@@ -7,10 +7,10 @@ import { regStudentSchema, RegStudentFormData } from "@/lib/utils/validators";
 import { subscribeToActiveCourses } from "@/lib/services/reg-course-service";
 import { RegCourse } from "@/lib/types";
 import {
-  ACCEPTIX_COMMISSION_RATE,
   REG_DEFAULT_CURRENCY,
   computeCommission,
 } from "@/lib/registration/constants";
+import { useSystemSettings } from "@/hooks/use-system-settings";
 import { CoursePicker } from "./course-picker";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -39,6 +39,7 @@ export function RegisterStudentForm({
   const [courses, setCourses] = useState<RegCourse[]>([]);
   const [loadingCourses, setLoadingCourses] = useState(true);
   const [idempotencyKey, setIdempotencyKey] = useState(() => makeIdempotencyKey());
+  const { settings } = useSystemSettings();
 
   const {
     register,
@@ -72,7 +73,7 @@ export function RegisterStudentForm({
     [courses, selectedCourseId]
   );
   const commissionPreview = selectedCourse
-    ? computeCommission(selectedCourse.fee ?? 0, ACCEPTIX_COMMISSION_RATE)
+    ? computeCommission(selectedCourse.fee ?? 0, settings.commissionRate)
     : 0;
 
   async function handleFormSubmit(data: RegStudentFormData) {

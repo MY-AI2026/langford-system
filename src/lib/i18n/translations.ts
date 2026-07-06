@@ -623,6 +623,10 @@ export const translations: Record<Language, Record<string, string>> = {
     leadSourcesHint: "Options shown when adding a student's lead source.",
     levelsHint: "Options shown in the evaluation's final level.",
     addItem: "Add item…",
+    acceptixCommission: "Acceptix Commission",
+    commissionRateHint:
+      "Applied to new registrations. Existing records keep the rate they were created with.",
+    commissionRatePct: "Commission rate (%)",
     // Data export
     exportDone: "Exported {count} records",
     exportFailed: "Export failed. Please try again.",
@@ -634,7 +638,12 @@ export const translations: Record<Language, Record<string, string>> = {
     exportJsonBtn: "Download JSON",
     exportIncludedTitle: "Included collections",
     exportNote:
-      "Covers top-level records. Per-student subcollections (payments, enrollments, notes) are not included in this export.",
+      "Excel and standard JSON cover top-level records. For per-student subcollections (payments, enrollments, notes), use the Deep Backup below.",
+    exportDeepTitle: "Deep Backup (JSON)",
+    exportDeepDesc:
+      "Everything above plus every per-student subcollection (payments, enrollments, activity log, installment plans, attendance). Larger and slower — best for a full archive.",
+    exportDeepBtn: "Download Deep Backup",
+    exportDeepProgress: "Collecting student records… {done}/{total}",
     coursesDescription: "Manage course and program offerings",
     coursesCount: "course(s)",
     noCoursesFound: "No courses found",
@@ -1533,6 +1542,10 @@ export const translations: Record<Language, Record<string, string>> = {
     leadSourcesHint: "الخيارات اللي بتظهر وقت إضافة مصدر العميل للطالب.",
     levelsHint: "الخيارات اللي بتظهر في المستوى النهائي بالتقييم.",
     addItem: "إضافة عنصر…",
+    acceptixCommission: "عمولة Acceptix",
+    commissionRateHint:
+      "بتتطبّق على التسجيلات الجديدة. السجلات القديمة بتحتفظ بالنسبة اللي اتعملت بيها.",
+    commissionRatePct: "نسبة العمولة (%)",
     // تصدير البيانات
     exportDone: "اتصدّر {count} سجل",
     exportFailed: "التصدير فشل. جرّب تاني.",
@@ -1544,7 +1557,12 @@ export const translations: Record<Language, Record<string, string>> = {
     exportJsonBtn: "تحميل JSON",
     exportIncludedTitle: "المجموعات المتضمَّنة",
     exportNote:
-      "بيشمل السجلات الرئيسية. المجموعات الفرعية لكل طالب (المدفوعات، التسجيلات، الملاحظات) مش متضمّنة في التصدير ده.",
+      "الـ Excel والـ JSON العادي بيشملوا السجلات الرئيسية. عشان المجموعات الفرعية لكل طالب (مدفوعات، تسجيلات، ملاحظات) استخدم النسخة الكاملة تحت.",
+    exportDeepTitle: "نسخة كاملة (JSON)",
+    exportDeepDesc:
+      "كل اللي فوق + كل المجموعات الفرعية لكل طالب (المدفوعات، التسجيلات، سجل النشاط، خطط التقسيط، الحضور). أكبر وأبطأ — الأنسب للأرشفة الكاملة.",
+    exportDeepBtn: "تحميل النسخة الكاملة",
+    exportDeepProgress: "بنجمّع سجلات الطلاب… {done}/{total}",
     coursesDescription: "إدارة الدورات والبرامج المتاحة",
     coursesCount: "دورة",
     noCoursesFound: "مفيش دورات",

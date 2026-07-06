@@ -9,7 +9,8 @@ import { subscribeToStudents } from "@/lib/services/student-service";
 import { getAllUsers } from "@/lib/services/user-service";
 import { Student, User } from "@/lib/types";
 import { formatCurrency } from "@/lib/utils/format";
-import { STUDENT_STATUS_CONFIG, DEFAULT_LEAD_SOURCES } from "@/lib/utils/constants";
+import { STUDENT_STATUS_CONFIG } from "@/lib/utils/constants";
+import { useSystemSettings } from "@/hooks/use-system-settings";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Table,
@@ -48,6 +49,7 @@ export default function ReportsPage() {
 
 function ReportsContent() {
   const { role, firebaseUser } = useAuth();
+  const { settings } = useSystemSettings();
   const { t } = useLanguage();
   const [students, setStudents] = useState<Student[]>([]);
   const [users, setUsers] = useState<User[]>([]);
@@ -89,7 +91,7 @@ function ReportsContent() {
     });
 
   // Lead source data
-  const leadSourceData = DEFAULT_LEAD_SOURCES.map((source) => {
+  const leadSourceData = settings.leadSources.map((source) => {
     const sourceStudents = students.filter((s) => s.leadSource === source);
     const enrolled = sourceStudents.filter(
       (s) => s.status === "enrolled" || s.status === "paid"

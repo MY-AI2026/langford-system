@@ -9,6 +9,7 @@
 
 import { fetchDoc, restSet } from "@/lib/firebase/rest-helpers";
 import { DEFAULT_LEAD_SOURCES, DEFAULT_LEVELS } from "@/lib/utils/constants";
+import { ACCEPTIX_COMMISSION_RATE } from "@/lib/registration/constants";
 
 const SETTINGS_PATH = "systemSettings/general";
 
@@ -19,6 +20,8 @@ export interface SystemSettings {
   address: string;
   leadSources: string[];
   levels: string[];
+  /** Acceptix commission as a fraction (0.1 = 10%). */
+  commissionRate: number;
   updatedBy?: string;
   updatedAt?: unknown;
 }
@@ -30,7 +33,15 @@ export const SYSTEM_SETTINGS_DEFAULTS: SystemSettings = {
   address: "Kuwait",
   leadSources: DEFAULT_LEAD_SOURCES,
   levels: DEFAULT_LEVELS,
+  commissionRate: ACCEPTIX_COMMISSION_RATE,
 };
+
+/** Clamp a commission rate to a sane [0, 1] fraction, else fall back. */
+function cleanRate(value: unknown, fallback: number): number {
+  const n = typeof value === "number" ? value : Number(value);
+  if (!Number.isFinite(n) || n < 0 || n > 1) return fallback;
+  return n;
+}
 
 function cleanList(value: unknown, fallback: string[]): string[] {
   if (!Array.isArray(value)) return fallback;
@@ -55,7 +66,17 @@ export async function getSystemSettings(): Promise<SystemSettings> {
     address: typeof doc.address === "string" ? doc.address : SYSTEM_SETTINGS_DEFAULTS.address,
     leadSources: cleanList(doc.leadSources, SYSTEM_SETTINGS_DEFAULTS.leadSources),
     levels: cleanList(doc.levels, SYSTEM_SETTINGS_DEFAULTS.levels),
+    commissionRate: cleanRate(doc.commissionRate, SYSTEM_SETTINGS_DEFAULTS.commissionRate),
   };
+}
+
+/** Convenience: just the commission rate (fraction), with safe fallback. */
+export async function getCommissionRate(): Promise<number> {
+  try {
+    return (await getSystemSettings()).commissionRate;
+  } catch {
+    return SYSTEM_SETTINGS_DEFAULTS.commissionRate;
+  }
 }
 
 export async function saveSystemSettings(
@@ -69,6 +90,7 @@ export async function saveSystemSettings(
     address: settings.address.trim(),
     leadSources: cleanList(settings.leadSources, DEFAULT_LEAD_SOURCES),
     levels: cleanList(settings.levels, DEFAULT_LEVELS),
+    commissionRate: cleanRate(settings.commissionRate, ACCEPTIX_COMMISSION_RATE),
     updatedBy: actorUid,
     updatedAt: new Date(),
   });
