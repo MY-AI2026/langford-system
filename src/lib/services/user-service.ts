@@ -18,8 +18,13 @@ export function subscribeToUsers(callback: (users: User[]) => void): () => void 
   return createSubscription<User>(
     async () => {
       const results = await fetchCollection("users", "createdAt", "DESCENDING");
-      // Map id -> uid for User type
-      return results.map((r) => ({ ...r, uid: r.id })) as User[];
+      // Map id -> uid for User type. Academic-organizer accounts are hidden
+      // from the general users list — the portal is invisible to everyone,
+      // even admins; those accounts are only managed from the secret
+      // /organizer-admin page.
+      return results
+        .map((r) => ({ ...r, uid: r.id }))
+        .filter((u) => (u as User).role !== "academic_organizer") as User[];
     },
     callback,
     5000

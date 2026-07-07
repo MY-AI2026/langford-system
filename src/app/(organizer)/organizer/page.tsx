@@ -16,7 +16,8 @@ export default function OrganizerEntryPage() {
 
   useEffect(() => {
     if (loading) return;
-    if (role === "academic_organizer" || role === "admin") {
+    // Portal is exclusive to academic organizers — even admins are bounced out.
+    if (role === "academic_organizer") {
       router.replace(ORG_ROUTES.students);
     } else {
       router.replace("/dashboard");

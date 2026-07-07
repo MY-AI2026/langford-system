@@ -21,11 +21,3 @@ export {
   regResetAgentPassword,
 } from "./registration/manage-agent";
 export { onRegStudentCreated } from "./registration/email-trigger";
-
-// ─── Academic Organizer module ───────────────────────────────────────────────
-
-export { orgCreateAcademicOrganizer } from "./organizer/create-organizer";
-export {
-  orgToggleOrganizerActive,
-  orgResetOrganizerPassword,
-} from "./organizer/manage-organizer";

@@ -268,7 +268,7 @@ function PaidStudentsScreen() {
 
 export default function OrganizerStudentsPage() {
   return (
-    <RoleGate allowedRoles={["academic_organizer", "admin"]}>
+    <RoleGate allowedRoles={["academic_organizer"]}>
       <PaidStudentsScreen />
     </RoleGate>
   );
