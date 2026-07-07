@@ -61,6 +61,7 @@ export const userSchema = z.object({
     "coordinator",
     "accountant",
     "acceptix_agent",
+    "academic_organizer",
   ]),
   phone: z.string(),
   monthlyTarget: z.number().min(0),
