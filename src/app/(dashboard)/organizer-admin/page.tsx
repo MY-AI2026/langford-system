@@ -4,11 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 import { RoleGate } from "@/components/auth/role-gate";
 import { PageHeader } from "@/components/layout/page-header";
 import { fetchCollection } from "@/lib/firebase/rest-helpers";
-import {
-  callCreateAcademicOrganizer,
-  callToggleOrganizerActive,
-  callResetOrganizerPassword,
-} from "@/lib/firebase/functions";
+import { createUser, updateUser } from "@/lib/services/user-service";
 import { User } from "@/lib/types";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -32,23 +28,20 @@ import {
 } from "@/components/ui/dialog";
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
-import {
-  UserPlus,
-  Users,
-  Key,
-  Power,
-  PowerOff,
-  Loader2,
-} from "lucide-react";
+import { UserPlus, Users, Power, PowerOff, Loader2, EyeOff } from "lucide-react";
 
-function strongPasswordError(pw: string): string | null {
-  if (pw.length < 12) return "الباسورد لازم 12 حرف على الأقل";
-  if (!/[A-Z]/.test(pw)) return "لازم حرف كبير (A-Z)";
-  if (!/[a-z]/.test(pw)) return "لازم حرف صغير (a-z)";
-  if (!/\d/.test(pw)) return "لازم رقم (0-9)";
-  if (!/[^A-Za-z0-9]/.test(pw)) return "لازم رمز خاص (!@#$...)";
-  return null;
-}
+/**
+ * SECRET, UNLISTED provisioning page for Academic-Organizer accounts.
+ *
+ * Deliberately NOT linked from any sidebar/menu — reachable only by typing
+ * `/organizer-admin` directly. The portal itself is invisible to everyone in
+ * the normal system (including other admins browsing menus); this page is the
+ * only surface that references it, and it lives behind an admin RoleGate
+ * because provisioning a user still needs admin permissions.
+ *
+ * Fully client-side (Identity Toolkit signUp + Firestore REST) — no Cloud
+ * Function deploy required.
+ */
 
 async function fetchOrganizers(): Promise<User[]> {
   const rows = await fetchCollection("users");
@@ -57,22 +50,16 @@ async function fetchOrganizers(): Promise<User[]> {
     .filter((u) => u.role === "academic_organizer");
 }
 
-function OrganizersContent() {
+function OrganizerAdminContent() {
   const [organizers, setOrganizers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
 
-  // Create form
   const [createOpen, setCreateOpen] = useState(false);
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
   const [password, setPassword] = useState("");
   const [creating, setCreating] = useState(false);
-
-  // Reset / toggle
-  const [resetTarget, setResetTarget] = useState<User | null>(null);
-  const [resetPw, setResetPw] = useState("");
-  const [resetSubmitting, setResetSubmitting] = useState(false);
   const [togglingUid, setTogglingUid] = useState<string | null>(null);
 
   const refresh = useCallback(() => {
@@ -88,26 +75,20 @@ function OrganizersContent() {
   }, [refresh]);
 
   async function handleCreate() {
-    if (fullName.trim().length < 2) {
-      toast.error("اكتب اسم صحيح");
-      return;
-    }
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) {
-      toast.error("إيميل غير صحيح");
-      return;
-    }
-    const pwErr = strongPasswordError(password);
-    if (pwErr) {
-      toast.error(pwErr);
-      return;
-    }
+    if (fullName.trim().length < 2) return toast.error("اكتب اسم صحيح");
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim()))
+      return toast.error("إيميل غير صحيح");
+    if (password.length < 6) return toast.error("الباسورد لازم 6 حروف على الأقل");
+
     setCreating(true);
     try {
-      await callCreateAcademicOrganizer({
-        fullName: fullName.trim(),
+      await createUser({
         email: email.trim(),
-        phone: phone.trim() || undefined,
         password,
+        displayName: fullName.trim(),
+        role: "academic_organizer",
+        phone: phone.trim(),
+        monthlyTarget: 0,
       });
       toast.success("تم إنشاء حساب المنظّم ✅");
       setCreateOpen(false);
@@ -128,7 +109,7 @@ function OrganizersContent() {
     setTogglingUid(u.uid);
     try {
       const nextActive = !(u.isActive !== false);
-      await callToggleOrganizerActive({ uid: u.uid, isActive: nextActive });
+      await updateUser(u.uid, { isActive: nextActive });
       toast.success(nextActive ? "تم تفعيل الحساب" : "تم تعطيل الحساب");
       refresh();
     } catch (e) {
@@ -139,32 +120,11 @@ function OrganizersContent() {
     }
   }
 
-  async function handleResetSubmit() {
-    if (!resetTarget) return;
-    const pwErr = strongPasswordError(resetPw);
-    if (pwErr) {
-      toast.error(pwErr);
-      return;
-    }
-    setResetSubmitting(true);
-    try {
-      await callResetOrganizerPassword({ uid: resetTarget.uid, password: resetPw });
-      toast.success(`تم تعيين باسورد جديد لـ ${resetTarget.displayName}`);
-      setResetTarget(null);
-      setResetPw("");
-    } catch (e) {
-      const err = e as { message?: string };
-      toast.error(err.message || "تعذّر تعيين الباسورد");
-    } finally {
-      setResetSubmitting(false);
-    }
-  }
-
   return (
     <div className="space-y-6">
       <PageHeader
-        title="المنظّمون الأكاديميون"
-        description="إنشاء وإدارة حسابات بورتال المنظّم الأكاديمي (لكل حساب يوزر وباسور منفصل)."
+        title="المنظّمون الأكاديميون (سرّي)"
+        description="صفحة مستترة لإنشاء وإدارة حسابات بورتال المنظّم الأكاديمي. مش مدرجة في أي منيو."
         action={
           <Button onClick={() => setCreateOpen(true)}>
             <UserPlus className="ms-2 h-4 w-4" />
@@ -172,6 +132,11 @@ function OrganizersContent() {
           </Button>
         }
       />
+
+      <div className="flex items-center gap-2 rounded-md border border-dashed bg-muted/40 p-3 text-xs text-muted-foreground">
+        <EyeOff className="h-4 w-4 shrink-0" />
+        البورتال ده مخفي عن الجميع. الوصول ليه بس عن طريق تسجيل الدخول بحساب منظّم على <code>/organizer</code>.
+      </div>
 
       {loading ? (
         <div className="space-y-2">
@@ -201,7 +166,7 @@ function OrganizersContent() {
                 <TableHead>الاسم</TableHead>
                 <TableHead>الإيميل</TableHead>
                 <TableHead>الحالة</TableHead>
-                <TableHead className="w-44"></TableHead>
+                <TableHead className="w-32"></TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -225,31 +190,21 @@ function OrganizersContent() {
                       )}
                     </TableCell>
                     <TableCell>
-                      <div className="flex gap-1">
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => setResetTarget(u)}
-                        >
-                          <Key className="ms-1 h-4 w-4" />
-                          الباسورد
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => handleToggle(u)}
-                          disabled={togglingUid === u.uid}
-                        >
-                          {togglingUid === u.uid ? (
-                            <Loader2 className="ms-1 h-4 w-4 animate-spin" />
-                          ) : active ? (
-                            <PowerOff className="ms-1 h-4 w-4 text-destructive" />
-                          ) : (
-                            <Power className="ms-1 h-4 w-4 text-green-600" />
-                          )}
-                          {active ? "تعطيل" : "تفعيل"}
-                        </Button>
-                      </div>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleToggle(u)}
+                        disabled={togglingUid === u.uid}
+                      >
+                        {togglingUid === u.uid ? (
+                          <Loader2 className="ms-1 h-4 w-4 animate-spin" />
+                        ) : active ? (
+                          <PowerOff className="ms-1 h-4 w-4 text-destructive" />
+                        ) : (
+                          <Power className="ms-1 h-4 w-4 text-green-600" />
+                        )}
+                        {active ? "تعطيل" : "تفعيل"}
+                      </Button>
                     </TableCell>
                   </TableRow>
                 );
@@ -259,7 +214,6 @@ function OrganizersContent() {
         </div>
       )}
 
-      {/* Create dialog */}
       <Dialog open={createOpen} onOpenChange={setCreateOpen}>
         <DialogContent dir="rtl">
           <DialogHeader>
@@ -271,7 +225,7 @@ function OrganizersContent() {
               <Input value={fullName} onChange={(e) => setFullName(e.target.value)} />
             </div>
             <div className="space-y-2">
-              <Label>الإيميل</Label>
+              <Label>الإيميل (اليوزر)</Label>
               <Input
                 type="email"
                 dir="ltr"
@@ -298,9 +252,7 @@ function OrganizersContent() {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
               />
-              <p className="text-xs text-muted-foreground">
-                12 حرف على الأقل، وفيها حرف كبير وصغير ورقم ورمز خاص.
-              </p>
+              <p className="text-xs text-muted-foreground">6 حروف على الأقل.</p>
             </div>
           </div>
           <DialogFooter>
@@ -318,67 +270,14 @@ function OrganizersContent() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-
-      {/* Reset password dialog */}
-      <Dialog
-        open={!!resetTarget}
-        onOpenChange={(open) => {
-          if (!open) {
-            setResetTarget(null);
-            setResetPw("");
-          }
-        }}
-      >
-        <DialogContent dir="rtl">
-          <DialogHeader>
-            <DialogTitle>تعيين باسورد جديد</DialogTitle>
-          </DialogHeader>
-          {resetTarget && (
-            <div className="space-y-3">
-              <div className="rounded-md bg-muted/50 p-3 text-sm">
-                <p className="font-medium">{resetTarget.displayName}</p>
-                <p className="text-xs text-muted-foreground" dir="ltr">
-                  {resetTarget.email}
-                </p>
-              </div>
-              <div className="space-y-2">
-                <Label>الباسورد الجديد</Label>
-                <Input
-                  type="password"
-                  dir="ltr"
-                  className="text-start"
-                  value={resetPw}
-                  onChange={(e) => setResetPw(e.target.value)}
-                />
-              </div>
-            </div>
-          )}
-          <DialogFooter>
-            <Button
-              variant="outline"
-              onClick={() => {
-                setResetTarget(null);
-                setResetPw("");
-              }}
-              disabled={resetSubmitting}
-            >
-              إلغاء
-            </Button>
-            <Button onClick={handleResetSubmit} disabled={resetSubmitting}>
-              {resetSubmitting && <Loader2 className="ms-2 h-4 w-4 animate-spin" />}
-              حفظ
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
     </div>
   );
 }
 
-export default function OrganizersAdminPage() {
+export default function OrganizerAdminPage() {
   return (
     <RoleGate allowedRoles={["admin"]}>
-      <OrganizersContent />
+      <OrganizerAdminContent />
     </RoleGate>
   );
 }

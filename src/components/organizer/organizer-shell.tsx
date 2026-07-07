@@ -22,9 +22,9 @@ interface NavLink {
   icon: LucideIcon;
 }
 
-/** Only the academic organizer (and admin, for oversight) see this shell. */
+/** Exclusive to the academic organizer — no other role (not even admin). */
 function navLinksForRole(role: UserRole | null): NavLink[] {
-  if (role === "academic_organizer" || role === "admin") {
+  if (role === "academic_organizer") {
     return [
       { href: ORG_ROUTES.students, label: "الطلبة المدفوعين", icon: Users },
       { href: ORG_ROUTES.classes, label: "الجداول والحصص", icon: CalendarClock },

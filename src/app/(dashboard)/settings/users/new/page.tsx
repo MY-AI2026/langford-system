@@ -122,15 +122,7 @@ function NewUserContent() {
                 <Select
                   value={watch("role")}
                   onValueChange={(val) =>
-                    setValue(
-                      "role",
-                      val as
-                        | "admin"
-                        | "sales"
-                        | "instructor"
-                        | "coordinator"
-                        | "academic_organizer"
-                    )
+                    setValue("role", val as "admin" | "sales" | "instructor" | "coordinator")
                   }
                 >
                   <SelectTrigger>
@@ -141,7 +133,6 @@ function NewUserContent() {
                     <SelectItem value="coordinator">{t("administrativeCoordinator")}</SelectItem>
                     <SelectItem value="sales">{t("sales")}</SelectItem>
                     <SelectItem value="instructor">{t("instructor")}</SelectItem>
-                    <SelectItem value="academic_organizer">منظّم أكاديمي</SelectItem>
                   </SelectContent>
                 </Select>
               </div>

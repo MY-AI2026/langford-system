@@ -237,7 +237,7 @@ function ClassesScreen() {
 
 export default function OrganizerClassesPage() {
   return (
-    <RoleGate allowedRoles={["academic_organizer", "admin"]}>
+    <RoleGate allowedRoles={["academic_organizer"]}>
       <ClassesScreen />
     </RoleGate>
   );
