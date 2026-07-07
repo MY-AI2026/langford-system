@@ -18,6 +18,7 @@ import {
   ClipboardCheck,
   MessageSquare,
   CalendarDays,
+  CalendarClock,
   FileCheck,
   Wallet,
   Sun,
@@ -105,6 +106,7 @@ export function Sidebar({ open, onClose }: SidebarProps) {
         { href: "/settings", label: t("settings"), icon: Settings },
         { href: "/settings/courses", label: t("courses"), icon: BookOpen },
         { href: "/schedule", label: t("schedule"), icon: CalendarDays },
+        { href: "/settings/organizers", label: "المنظّمون الأكاديميون", icon: CalendarClock },
       ],
     },
   ];

@@ -6,7 +6,8 @@ export type UserRole =
   | "instructor"
   | "coordinator"
   | "accountant"
-  | "acceptix_agent";
+  | "acceptix_agent"
+  | "academic_organizer";
 
 export type StudentStatus =
   | "lead"
@@ -77,6 +78,14 @@ export interface ScheduleEntry {
   createdBy: string;
   createdAt: Timestamp;
   updatedAt: Timestamp;
+  /**
+   * Optional student roster attached DIRECTLY to the entry by the Academic
+   * Organizer portal (a snapshot — name/level/phone at build time). When
+   * present, the schedule card shows these instead of deriving the roster
+   * from enrollments via `courseId`. Legacy course-linked entries leave this
+   * undefined and keep the enrollment-derived behaviour.
+   */
+  students?: ScheduleEntryStudent[];
 }
 
 export interface ScheduleStudent {
@@ -84,6 +93,14 @@ export interface ScheduleStudent {
   studentName: string;
   level: string | null;
   enrollmentId: string;
+}
+
+/** A student snapshot stored directly on an organizer-built schedule entry. */
+export interface ScheduleEntryStudent {
+  studentId: string;
+  studentName: string;
+  level: string | null;
+  phone: string;
 }
 
 export type InstallmentStatus = "pending" | "paid" | "overdue";

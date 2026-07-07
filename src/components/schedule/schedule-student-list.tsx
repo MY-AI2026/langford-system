@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { ScheduleStudent } from "@/lib/types";
+import { ScheduleStudent, ScheduleEntryStudent } from "@/lib/types";
 import { fetchStudentsForCourse } from "@/lib/services/schedule-service";
 import { deleteEnrollment } from "@/lib/services/enrollment-service";
 import { useAuth } from "@/contexts/auth-context";
@@ -15,19 +15,29 @@ import { toast } from "sonner";
 interface ScheduleStudentListProps {
   courseId: string | null;
   courseName?: string;
+  /**
+   * Roster attached directly to the entry (Academic Organizer classes). When
+   * provided, it is rendered as-is (read-only) and no enrollment lookup runs.
+   */
+  directStudents?: ScheduleEntryStudent[];
 }
 
-export function ScheduleStudentList({ courseId, courseName }: ScheduleStudentListProps) {
+export function ScheduleStudentList({
+  courseId,
+  courseName,
+  directStudents,
+}: ScheduleStudentListProps) {
   const { role, firebaseUser, userData } = useAuth();
   const { t } = useLanguage();
   const [students, setStudents] = useState<ScheduleStudent[]>([]);
   const [loading, setLoading] = useState(false);
   const [removing, setRemoving] = useState<string | null>(null);
 
-  const canRemove = role === "admin" || role === "coordinator";
+  const hasDirect = Array.isArray(directStudents);
+  const canRemove = !hasDirect && (role === "admin" || role === "coordinator");
 
   useEffect(() => {
-    if (!courseId) {
+    if (hasDirect || !courseId) {
       setStudents([]);
       return;
     }
@@ -35,7 +45,43 @@ export function ScheduleStudentList({ courseId, courseName }: ScheduleStudentLis
     fetchStudentsForCourse(courseId)
       .then(setStudents)
       .finally(() => setLoading(false));
-  }, [courseId]);
+  }, [courseId, hasDirect]);
+
+  // Organizer-built class — render the attached snapshot roster directly.
+  if (hasDirect) {
+    const roster = directStudents ?? [];
+    if (roster.length === 0) {
+      return (
+        <div className="flex items-center gap-2 py-3 text-sm text-muted-foreground">
+          <Users className="h-4 w-4" />
+          {t("noStudentsEnrolled")}
+        </div>
+      );
+    }
+    return (
+      <div className="space-y-1.5">
+        <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
+          <Users className="h-4 w-4" />
+          {roster.length} {roster.length !== 1 ? t("students") : t("student")}
+        </div>
+        <div className="space-y-1">
+          {roster.map((s) => (
+            <div
+              key={s.studentId}
+              className="flex items-center justify-between rounded-md bg-muted/50 px-3 py-1.5"
+            >
+              <span className="text-sm">{s.studentName}</span>
+              {s.level && (
+                <Badge variant="outline" className="text-xs">
+                  {s.level}
+                </Badge>
+              )}
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  }
 
   async function handleRemove(s: ScheduleStudent) {
     if (!firebaseUser || !userData || !courseId) return;

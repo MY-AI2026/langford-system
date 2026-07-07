@@ -63,3 +63,33 @@ export const callResetAgentPassword = httpsCallable<
   ResetAgentPasswordPayload,
   ResetAgentPasswordResult
 >(functions, "regResetAgentPassword");
+
+// ─── Academic Organizer lifecycle ────────────────────────────────────────────
+
+export interface CreateOrganizerPayload {
+  fullName: string;
+  email: string;
+  phone?: string;
+  password: string;
+}
+
+export interface CreateOrganizerResult {
+  uid: string;
+  email: string;
+  fullName: string;
+}
+
+export const callCreateAcademicOrganizer = httpsCallable<
+  CreateOrganizerPayload,
+  CreateOrganizerResult
+>(functions, "orgCreateAcademicOrganizer");
+
+export const callToggleOrganizerActive = httpsCallable<
+  ToggleAgentActivePayload,
+  ToggleAgentActiveResult
+>(functions, "orgToggleOrganizerActive");
+
+export const callResetOrganizerPassword = httpsCallable<
+  ResetAgentPasswordPayload,
+  ResetAgentPasswordResult
+>(functions, "orgResetOrganizerPassword");
