@@ -11,6 +11,7 @@ import { doc, getDoc } from "firebase/firestore";
 import { db } from "@/lib/firebase/config";
 import { loginSchema, LoginFormData } from "@/lib/utils/validators";
 import { REG_ROUTES } from "@/lib/registration/constants";
+import { ORG_ROUTES } from "@/lib/organizer/constants";
 import { UserRole } from "@/lib/types";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -38,6 +39,10 @@ function landingRouteForRole(
   }
   if (role === "acceptix_agent") {
     return { href: REG_ROUTES.registerStudent, blocked: false };
+  }
+  if (role === "academic_organizer") {
+    // Academic organizers live in their own portal — never the main dashboard.
+    return { href: ORG_ROUTES.students, blocked: false };
   }
   return { href: "/dashboard", blocked: false };
 }

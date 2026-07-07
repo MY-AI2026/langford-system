@@ -116,7 +116,11 @@ export function ScheduleEntryCard({
           </div>
 
           <div className="border-t pt-3">
-            <ScheduleStudentList courseId={entry.courseId} courseName={entry.courseName} />
+            <ScheduleStudentList
+              courseId={entry.courseId}
+              courseName={entry.courseName}
+              directStudents={entry.students}
+            />
           </div>
 
           <div className="flex gap-2 border-t pt-3">
