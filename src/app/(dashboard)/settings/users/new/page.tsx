@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { useForm } from "react-hook-form";
+import { useForm, type FieldErrors } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { RoleGate } from "@/components/auth/role-gate";
 import { PageHeader } from "@/components/layout/page-header";
@@ -76,12 +76,22 @@ function NewUserContent() {
     }
   }
 
+  // Surface validation failures instead of silently doing nothing — a field
+  // with no error UI (e.g. monthlyTarget) could otherwise block submit
+  // invisibly, so clicking "Create User" appeared to do nothing.
+  function onInvalid(formErrors: FieldErrors<UserFormData>) {
+    const firstMsg = Object.values(formErrors).find((e) => e?.message)?.message as
+      | string
+      | undefined;
+    toast.error(firstMsg ?? "راجع البيانات المدخلة");
+  }
+
   return (
     <div className="space-y-6">
       <PageHeader title={t("addNewUser")} />
       <Card>
         <CardContent className="pt-6">
-          <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+          <form onSubmit={handleSubmit(onSubmit, onInvalid)} className="space-y-4">
             <div className="grid gap-4 sm:grid-cols-2">
               <div className="space-y-2">
                 <Label htmlFor="displayName">{t("fullName")} *</Label>
@@ -148,8 +158,19 @@ function NewUserContent() {
                   id="monthlyTarget"
                   type="number"
                   step="0.001"
-                  {...register("monthlyTarget")}
+                  {...register("monthlyTarget", {
+                    // RHF hands <input type="number"> value as a STRING; the
+                    // schema expects a number. Convert here (empty => 0) so
+                    // validation doesn't fail silently and block the submit.
+                    setValueAs: (v) =>
+                      v === "" || v === null || v === undefined ? 0 : Number(v),
+                  })}
                 />
+                {errors.monthlyTarget && (
+                  <p className="text-sm text-destructive">
+                    {errors.monthlyTarget.message}
+                  </p>
+                )}
               </div>
             </div>
 
