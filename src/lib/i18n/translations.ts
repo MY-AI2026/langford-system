@@ -386,6 +386,7 @@ export const translations: Record<Language, Record<string, string>> = {
     newUser: "New User",
     accountant: "Accountant",
     acceptixAgent: "Acceptix Agent",
+    academicOrganizer: "Academic Organizer",
     monthlyTarget: "Monthly Target",
 
     // ── Acceptix & registration ──────────────────────────────────────────
@@ -1305,6 +1306,7 @@ export const translations: Record<Language, Record<string, string>> = {
     newUser: "مستخدم جديد",
     accountant: "محاسب",
     acceptixAgent: "وكيل Acceptix",
+    academicOrganizer: "منظّم أكاديمي",
     monthlyTarget: "الهدف الشهري",
 
     // ── Acceptix & registration ──────────────────────────────────────────
