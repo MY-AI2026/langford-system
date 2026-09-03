@@ -8,6 +8,7 @@ import { RoleGate } from "@/components/auth/role-gate";
 import { PageHeader } from "@/components/layout/page-header";
 import { createUser } from "@/lib/services/user-service";
 import { userSchema, UserFormData } from "@/lib/utils/validators";
+import { UserRole } from "@/lib/types";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -131,9 +132,7 @@ function NewUserContent() {
                 <Label>{t("role")} *</Label>
                 <Select
                   value={watch("role")}
-                  onValueChange={(val) =>
-                    setValue("role", val as "admin" | "sales" | "instructor" | "coordinator")
-                  }
+                  onValueChange={(val) => setValue("role", val as UserRole)}
                 >
                   <SelectTrigger>
                     <SelectValue />
@@ -143,6 +142,8 @@ function NewUserContent() {
                     <SelectItem value="coordinator">{t("administrativeCoordinator")}</SelectItem>
                     <SelectItem value="sales">{t("sales")}</SelectItem>
                     <SelectItem value="instructor">{t("instructor")}</SelectItem>
+                    <SelectItem value="accountant">{t("accountant")}</SelectItem>
+                    <SelectItem value="academic_organizer">{t("academicOrganizer")}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
